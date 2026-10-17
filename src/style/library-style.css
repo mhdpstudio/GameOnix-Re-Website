@@ -1,0 +1,508 @@
+
+.library-page {
+    width: 100%;
+    min-width: 0;
+    padding: 28px 30px 48px;
+    box-sizing: border-box;
+    color: var(--text-primary);
+}
+
+/* Welcome banner */
+.library-welcome {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 205px;
+    padding: 30px 34px;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid rgba(139, 92, 246, 0.24);
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse at 85% 50%, rgba(125, 85, 255, 0.2), transparent 45%),
+        linear-gradient(120deg, #171923, #11131b);
+}
+
+.library-welcome-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 570px;
+}
+
+.library-eyebrow,
+.library-kicker {
+    color: #a995ff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+}
+
+.library-welcome h1 {
+    margin: 16px 0 10px;
+    font-size: clamp(28px, 3vw, 42px);
+    line-height: 1.15;
+    letter-spacing: -1.4px;
+}
+
+.library-welcome h1 span {
+    color: #a38aff;
+}
+
+.library-welcome-copy > p {
+    max-width: 440px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.library-welcome-art {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 125px;
+    height: 125px;
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 32px;
+    background: rgba(139, 92, 246, 0.08);
+    color: rgba(167, 139, 250, 0.8);
+    font-size: 76px;
+    transform: rotate(8deg);
+}
+
+/* Collection section */
+.library-section {
+    min-width: 0;
+    margin-top: 38px;
+}
+
+.library-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 25px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.library-heading h2 {
+    margin: 7px 0 5px;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+}
+
+.library-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.library-count {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+
+/* Games grid */
+.library-games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    align-items: stretch;
+    gap: 20px 16px;
+    min-width: 0;
+}
+
+/* Game card */
+.library-game-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    color: inherit;
+    text-decoration: none;
+    transition:
+        transform 200ms ease,
+        border-color 200ms ease,
+        box-shadow 200ms ease;
+}
+
+.library-game-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(145, 114, 255, 0.55);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.library-game-card:focus-visible {
+    outline: 2px solid #a995ff;
+    outline-offset: 3px;
+}
+
+/* Portrait poster */
+.library-game-poster {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #191b25;
+}
+
+.library-game-poster > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 300ms ease;
+}
+
+.library-game-card:hover .library-game-poster > img {
+    transform: scale(1.045);
+}
+
+/* Saved badge */
+.library-favorite-badge {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    z-index: 1;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: rgba(12, 13, 20, 0.82);
+    color: #ff9bbd;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+}
+
+.library-game-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    min-height: 180px;
+    color: #a995ff;
+    font-size: 11px;
+}
+
+.library-game-placeholder span:first-child {
+    font-size: 34px;
+}
+
+/* Card details */
+.library-game-info {
+    min-width: 0;
+    padding: 12px 12px 15px;
+    box-sizing: border-box;
+}
+
+.library-game-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin-bottom: 10px;
+}
+
+.library-game-platform,
+.library-game-category {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px 7px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: 0.3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.library-game-platform {
+    background: rgba(139, 92, 246, 0.17);
+    border-color: rgba(139, 92, 246, 0.25);
+    color: #c4b5fd;
+}
+
+.library-game-category {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary, #b3b3bd);
+}
+
+.library-game-info h3 {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.library-game-info > p {
+    overflow: hidden;
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Loading and errors */
+.library-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-height: 250px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.library-status p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.library-loader {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: #9172ff;
+    border-radius: 50%;
+    animation: library-spin 0.75s linear infinite;
+}
+
+.library-retry {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.library-retry:hover {
+    border-color: #9172ff;
+}
+
+@keyframes library-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty collection */
+.library-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 270px;
+    padding: 30px 18px;
+    border: 1px dashed var(--border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.015);
+    text-align: center;
+}
+
+.library-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(145, 114, 255, 0.25);
+    border-radius: 18px;
+    background: rgba(139, 92, 246, 0.1);
+    color: #a995ff;
+    font-size: 30px;
+}
+
+.library-empty h2 {
+    margin: 0 0 9px;
+    font-size: 20px;
+}
+
+.library-empty p {
+    max-width: 340px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.library-explore {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 20px;
+    padding: 11px 15px;
+    border: 1px solid rgba(145, 114, 255, 0.3);
+    border-radius: 9px;
+    background: rgba(124, 92, 255, 0.12);
+    color: #c4b5fd;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+    transition:
+        background 180ms ease,
+        border-color 180ms ease;
+}
+
+.library-explore:hover {
+    border-color: #9172ff;
+    background: rgba(124, 92, 255, 0.2);
+}
+
+/* Responsive */
+@media (min-width: 1500px) {
+    .library-games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(175px, 190px));
+    }
+}
+
+@media (max-width: 1050px) {
+    .library-page {
+        padding: 22px 20px 36px;
+    }
+
+    .library-games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .library-welcome-art {
+        width: 105px;
+        height: 105px;
+        font-size: 60px;
+    }
+}
+
+@media (max-width: 640px) {
+    .library-page {
+        padding: 17px 13px 30px;
+    }
+
+    .library-welcome {
+        min-height: 175px;
+        padding: 23px 19px;
+        border-radius: 15px;
+    }
+
+    .library-welcome h1 {
+        font-size: 28px;
+    }
+
+    .library-welcome-art {
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        width: 95px;
+        height: 95px;
+        font-size: 48px;
+        opacity: 0.35;
+    }
+
+    .library-welcome-copy > p {
+        max-width: 290px;
+        font-size: 12px;
+    }
+
+    .library-section {
+        margin-top: 30px;
+    }
+
+    .library-heading {
+        margin-bottom: 20px;
+    }
+
+    .library-heading h2 {
+        font-size: 21px;
+    }
+
+    .library-games-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 11px;
+    }
+
+    .library-game-info {
+        padding: 10px 10px 13px;
+    }
+
+    .library-game-meta {
+        gap: 4px;
+    }
+
+    .library-game-platform,
+    .library-game-category {
+        padding: 4px 5px;
+        font-size: 8px;
+    }
+
+    .library-game-info h3 {
+        font-size: 11px;
+    }
+
+    .library-game-info > p {
+        margin-top: 7px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .library-page {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .library-games-grid {
+        gap: 11px 9px;
+    }
+
+    .library-game-info {
+        padding: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .library-loader {
+        animation: none;
+    }
+
+    .library-game-card,
+    .library-game-poster > img,
+    .library-explore {
+        transition: none;
+    }
+}

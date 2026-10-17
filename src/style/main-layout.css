@@ -1,0 +1,163 @@
+
+@import './../constants/colors.css';
+@import './../constants/fonts.css';
+@import './../constants/times.css';
+
+/* ==============================
+   GAMEONIX MAIN LAYOUT
+============================== */
+
+:root {
+  --topbar-height: 63px;
+  --sidebar-width: 248px;
+  --sidebar-collapsed-width: 76px;
+}
+
+.app-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100dvh;
+
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ==============================
+   MAIN CONTENT
+============================== */
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100dvh;
+
+  margin-left: 0;
+  padding-top: var(--topbar-height);
+
+  box-sizing: border-box;
+  overflow-x: clip;
+
+  background: var(--bg-primary);
+
+  transition:
+    background-color 250ms ease,
+    color 250ms ease;
+}
+
+/* Page content */
+
+.page-container {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100dvh - var(--topbar-height));
+
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+/* ==============================
+   SIDEBAR COLLAPSED
+============================== */
+
+/*
+  الـ Sidebar عندك داخل flex layout،
+  لذلك لا نضيف margin-left هنا إلا لو
+  الـ Sidebar نفسه خارج تدفق الصفحة باستخدام position: fixed.
+*/
+
+/* ==============================
+   WELCOME PAGE
+============================== */
+
+.welcome-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 50px;
+}
+
+.welcome-page h1 {
+  margin: 14px 0 10px;
+
+  color: var(--text-primary);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 750;
+  letter-spacing: -1.2px;
+}
+
+.welcome-page p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.welcome-badge {
+  display: inline-flex;
+  padding: 7px 11px;
+
+  border: 1px solid var(--primary-border);
+  border-radius: 8px;
+
+  color: var(--primary-hover);
+  background: var(--primary-subtle);
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.welcome-page a {
+  color: var(--primary-hover);
+  text-decoration: none;
+}
+
+.welcome-page a:hover {
+  text-decoration: underline;
+}
+
+/* ==============================
+   MEDIUM SCREENS
+============================== */
+
+@media (max-width: 1050px) {
+  .page-container {
+    padding: 24px 22px;
+  }
+}
+
+/* ==============================
+   MOBILE
+============================== */
+
+@media (max-width: 650px) {
+  :root {
+    --topbar-height: 64px;
+  }
+
+  .main-content {
+    padding-top: var(--topbar-height);
+  }
+
+  .page-container {
+    min-height: calc(100dvh - var(--topbar-height));
+    padding: 20px 16px;
+  }
+
+  .welcome-page {
+    padding-top: 24px;
+  }
+}
+
+/* ==============================
+   ACCESSIBILITY
+============================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-toggle,
+  .sidebar-link,
+  .sidebar-link-indicator,
+  .sidebar-account-link,
+  .main-content {
+    transition: none;
+  }
+}
