@@ -1,9 +1,10 @@
+import { authFetch } from "./session";
+
 const API_URL = "https://gameonix-backend.vercel.app/api/auth/favorites";
 
 async function request(method, body) {
-  const response = await fetch(API_URL, {
+  const response = await authFetch(API_URL, {
     method,
-    credentials: "include",
     headers: body ? { "Content-Type": "application/json" } : {},
     ...(body ? { body: JSON.stringify(body) } : {}),
   });

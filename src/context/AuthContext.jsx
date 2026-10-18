@@ -6,6 +6,11 @@ import {
   useEffect,
   useState,
 } from "react";
+import {
+  authFetch,
+  clearSessionToken,
+  storeSessionToken,
+} from "../api/session";
 
 const API_URL = "https://gameonix-backend.vercel.app/api/auth";
 
@@ -20,15 +25,15 @@ export function AuthProvider({ children }) {
     setAuthLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/me`, {
+      const response = await authFetch(`${API_URL}/me`, {
         method: "GET",
-        credentials: "include",
         headers: {
           Accept: "application/json",
         },
       });
 
       if (response.status === 401) {
+        clearSessionToken();
         setUser(null);
         return null;
       }
@@ -53,9 +58,8 @@ export function AuthProvider({ children }) {
 
   // Sign out and update the Sidebar immediately.
   const logout = useCallback(async () => {
-    const response = await fetch(`${API_URL}/logout`, {
+    const response = await authFetch(`${API_URL}/logout`, {
       method: "POST",
-      credentials: "include",
       headers: {
         Accept: "application/json",
       },
@@ -67,11 +71,16 @@ export function AuthProvider({ children }) {
 
     // React updates every component using useAuth().
     // No page reload is required.
+    clearSessionToken();
     setUser(null);
   }, []);
 
   // Update the current user after login or email verification.
-  const login = useCallback((userData) => {
+  const login = useCallback((userData, sessionToken, rememberMe = true) => {
+    if (sessionToken) {
+      storeSessionToken(sessionToken, rememberMe);
+    }
+
     setUser(userData || null);
   }, []);
 

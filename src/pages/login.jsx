@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faGamepad,
@@ -16,11 +17,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Loader from "../widgets/components/Loader";
+import { useAuth } from "../context/AuthContext";
 import "./../style/login-style.css";
 
 const API_URL = "https://gameonix-backend.vercel.app/api/auth";
 
 function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [mode, setMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -173,14 +177,14 @@ function Login() {
     setMessage("");
 
     try {
-      await postJson("login", {
+      const data = await postJson("login", {
         identity: loginData.identity.trim(),
         password: loginData.password,
         rememberMe,
       });
 
-      // Full page reload and redirect to Home after successful login
-      window.location.replace("/");
+      login(data.user, data.sessionToken, rememberMe);
+      navigate("/", { replace: true });
     } catch (error) {
       if (error.data?.verificationRequired) {
         setVerification({
@@ -312,6 +316,12 @@ function Login() {
         code,
         rememberMe,
       });
+
+      if (data.sessionToken) {
+        login(data.user, data.sessionToken, rememberMe);
+        navigate("/", { replace: true });
+        return;
+      }
 
       setLoginData((previous) => ({
         ...previous,

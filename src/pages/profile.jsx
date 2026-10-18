@@ -20,6 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { authFetch } from "../api/session";
 import "./../style/profile-style.css";
 
 const API_URL = "https://gameonix-backend.vercel.app/api/auth";
@@ -122,9 +123,8 @@ function Profile() {
   }
 
   async function sendRequest(endpoint, body) {
-    const response = await fetch(`${API_URL}/${endpoint}`, {
+    const response = await authFetch(`${API_URL}/${endpoint}`, {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
