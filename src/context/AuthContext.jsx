@@ -1,4 +1,3 @@
-
 import {
   createContext,
   useCallback,
@@ -6,6 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import {
   authFetch,
   clearSessionToken,
@@ -33,13 +33,16 @@ export function AuthProvider({ children }) {
       });
 
       if (response.status === 401) {
-        clearSessionToken();
+        // Do not immediately delete a saved token.
+        // The user is not authenticated for this request.
         setUser(null);
         return null;
       }
 
       if (!response.ok) {
-        throw new Error("Unable to restore the session.");
+        throw new Error(
+          `Unable to restore the session (${response.status}).`
+        );
       }
 
       const data = await response.json();
@@ -49,6 +52,8 @@ export function AuthProvider({ children }) {
       return currentUser;
     } catch (error) {
       console.error("Session restore failed:", error);
+      // Keep the saved token so a temporary network error
+      // does not erase the user's local session.
       setUser(null);
       return null;
     } finally {
@@ -56,32 +61,36 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Sign out and update the Sidebar immediately.
+  // Sign in and store the token according to "Remember me".
+  const login = useCallback(
+    (userData, sessionToken, rememberMe = true) => {
+      if (sessionToken) {
+        storeSessionToken(sessionToken, rememberMe);
+      }
+
+      setUser(userData || null);
+    },
+    []
+  );
+
+  // Sign out from the backend and clear the local session.
   const logout = useCallback(async () => {
-    const response = await authFetch(`${API_URL}/logout`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    try {
+      const response = await authFetch(`${API_URL}/logout`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Unable to sign out.");
+      if (!response.ok) {
+        throw new Error("Unable to sign out.");
+      }
+    } finally {
+      // Clear local state even if the logout request fails.
+      clearSessionToken();
+      setUser(null);
     }
-
-    // React updates every component using useAuth().
-    // No page reload is required.
-    clearSessionToken();
-    setUser(null);
-  }, []);
-
-  // Update the current user after login or email verification.
-  const login = useCallback((userData, sessionToken, rememberMe = true) => {
-    if (sessionToken) {
-      storeSessionToken(sessionToken, rememberMe);
-    }
-
-    setUser(userData || null);
   }, []);
 
   useEffect(() => {
