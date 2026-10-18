@@ -183,6 +183,12 @@ function Login() {
         rememberMe,
       });
 
+      if (!data.sessionToken) {
+        throw new Error(
+          "The server did not create a persistent session. Please update the backend and try again."
+        );
+      }
+
       login(data.user, data.sessionToken, rememberMe);
       navigate("/", { replace: true });
     } catch (error) {
