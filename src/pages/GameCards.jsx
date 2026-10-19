@@ -673,10 +673,9 @@ function GameCards() {
             aria-labelledby="gc-modal-title"
           >
             <header className="gc-checkout-header">
-              <div className="gc-currency">
+              <div className="gc-currency" aria-label="Currency: Egyptian pound">
                 <span className="gc-egypt-flag">🇪🇬</span>
                 <strong>EGP</strong>
-                <span className="gc-currency-chevron">⌄</span>
               </div>
 
               <h2>Checkout</h2>
