@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -13,6 +12,7 @@ import Profile from "./pages/profile";
 import Games from "./pages/games";
 import GameDetails from "./pages/game-details";
 import SearchResults from "./pages/search-results";
+import GameCards from "./pages/GameCards";
 
 import PageTitle from "./components/PageTitle";
 
@@ -32,6 +32,12 @@ function App() {
           <Route path="/games" element={<Games />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/game/:slug" element={<GameDetails />} />
+
+          {/* Shopping */}
+          <Route
+            path="/shopping/game-cards"
+            element={<GameCards />}
+          />
 
           <Route path="*" element={<NotFound />} />
         </Route>

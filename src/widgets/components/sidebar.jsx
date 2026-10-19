@@ -12,6 +12,8 @@ import {
   faChevronRight,
   faArrowRightFromBracket,
   faXmark,
+  faCreditCard,
+  faBagShopping,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -20,9 +22,25 @@ const DEFAULT_AVATAR =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-All/main/0.png";
 
 const navigation = [
-  { label: "Home", to: "/", icon: faHouse, end: true },
-  { label: "Discover", to: "/discover", icon: faCompass },
-  { label: "My Library", to: "/library", icon: faBookOpen },
+  {
+    section: "MENU",
+    items: [
+      { label: "Home", to: "/", icon: faHouse, end: true },
+      { label: "Discover", to: "/discover", icon: faCompass },
+      { label: "My Library", to: "/library", icon: faBookOpen },
+    ],
+  },
+  {
+    section: "SHOPPING",
+    items: [
+      {
+        label: "Game Cards",
+        to: "/shopping/game-cards",
+        icon: faCreditCard,
+        badge: "Coming soon",
+      },
+    ],
+  },
 ];
 
 function UserAvatar({ user, className = "" }) {
@@ -59,12 +77,7 @@ function UserAvatar({ user, className = "" }) {
   );
 }
 
-function LogoutPopup({
-  onClose,
-  onConfirm,
-  loggingOut,
-  logoutError,
-}) {
+function LogoutPopup({ onClose, onConfirm, loggingOut, logoutError }) {
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === "Escape" && !loggingOut) {
@@ -73,10 +86,7 @@ function LogoutPopup({
     }
 
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, loggingOut]);
 
   return createPortal(
@@ -161,7 +171,6 @@ function Sidebar({ collapsed, onToggle }) {
 
   function closeLogoutPopup() {
     if (loggingOut) return;
-
     setShowLogoutPopup(false);
     setLogoutError("");
   }
@@ -186,7 +195,7 @@ function Sidebar({ collapsed, onToggle }) {
 
   return (
     <>
-      <aside className="sidebar">
+      <aside className={`sidebar${collapsed ? " is-collapsed" : ""}`}>
         <div className="sidebar-header">
           <Link
             to="/"
@@ -211,37 +220,49 @@ function Sidebar({ collapsed, onToggle }) {
         <div className="sidebar-divider" />
 
         <nav className="sidebar-nav" aria-label="Main navigation">
-          {!collapsed && (
-            <p className="sidebar-section-label">MENU</p>
-          )}
-
-          {navigation.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              title={collapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `sidebar-link${isActive ? " active" : ""}`
-              }
-            >
-              <FontAwesomeIcon
-                icon={item.icon}
-                className="sidebar-link-icon"
-              />
-
+          {navigation.map((group) => (
+            <div className="sidebar-nav-group" key={group.section}>
               {!collapsed && (
-                <>
-                  <span className="sidebar-link-label">
-                    {item.label}
-                  </span>
-
-                  <span className="sidebar-link-indicator">
-                    <FontAwesomeIcon icon={faChevronRight} />
-                  </span>
-                </>
+                <p className="sidebar-section-label">{group.section}</p>
               )}
-            </NavLink>
+
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  title={
+                    collapsed
+                      ? [item.label, item.badge].filter(Boolean).join(" — ")
+                      : undefined
+                  }
+                  className={({ isActive }) =>
+                    `sidebar-link${isActive ? " active" : ""}`
+                  }
+                >
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    className="sidebar-link-icon"
+                  />
+
+                  {!collapsed && (
+                    <>
+                      <span className="sidebar-link-label">
+                        {item.label}
+                      </span>
+
+                      {item.badge && (
+                        <span className="sidebar-link-badge">{item.badge}</span>
+                      )}
+
+                      <span className="sidebar-link-indicator">
+                        <FontAwesomeIcon icon={faChevronRight} />
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -256,9 +277,7 @@ function Sidebar({ collapsed, onToggle }) {
 
               {!collapsed && (
                 <span className="account-copy">
-                  <span className="account-title">
-                    Loading account...
-                  </span>
+                  <span className="account-title">Loading account...</span>
                 </span>
               )}
             </div>
@@ -283,7 +302,6 @@ function Sidebar({ collapsed, onToggle }) {
                     <span className="account-title">
                       {user.name || user.username}
                     </span>
-
                     <span className="account-subtitle">
                       @{user.username}
                     </span>

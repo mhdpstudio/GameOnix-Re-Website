@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faGamepad,
@@ -24,7 +24,14 @@ const API_URL = "https://gameonix-backend.vercel.app/api/auth";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const redirectTo =
+    typeof location.state?.from === "string" &&
+    location.state.from.startsWith("/") &&
+    !location.state.from.startsWith("//")
+      ? location.state.from
+      : "/";
   const [mode, setMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -190,7 +197,7 @@ function Login() {
       }
 
       login(data.user, data.sessionToken, rememberMe);
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       if (error.data?.verificationRequired) {
         setVerification({
@@ -325,7 +332,7 @@ function Login() {
 
       if (data.sessionToken) {
         login(data.user, data.sessionToken, rememberMe);
-        navigate("/", { replace: true });
+        navigate(redirectTo, { replace: true });
         return;
       }
 
