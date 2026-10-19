@@ -3,7 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import MainLayout from "./widgets/layouts/main-layout";
 
-import Home from "./pages/Home";
+import Home from "./pages/home";
 import Discover from "./pages/discover";
 import Library from "./pages/library";
 import NotFound from "./pages/not-found";
