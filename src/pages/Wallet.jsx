@@ -13,6 +13,8 @@ import "./../style/wallet-style.css";
 const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_API_URL =
   "https://gameonixfav.vercel.app/api/auth/wallet";
+const PAYMENTS_URL =
+  "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
 
 function formatBalance(value) {
   return new Intl.NumberFormat("en-EG", {
@@ -27,6 +29,70 @@ function Wallet() {
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(true);
+  const [paymentMethodsError, setPaymentMethodsError] = useState("");
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [requestError, setRequestError] = useState("");
+  const selectedPaymentMethod = paymentMethods.find(
+    (method) => method.name === paymentMethod
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPaymentMethods() {
+      try {
+        const response = await fetch(PAYMENTS_URL, { cache: "no-cache" });
+
+        if (!response.ok) {
+          throw new Error(
+            `Payment methods request failed (${response.status}).`
+          );
+        }
+
+        const data = await response.json();
+
+        if (
+          !Array.isArray(data) ||
+          data.some(
+            (method) =>
+              !method ||
+              typeof method.name !== "string" ||
+              typeof method.av !== "boolean" ||
+              typeof method["mobile-number"] !== "boolean"
+          )
+        ) {
+          throw new Error("Unexpected payment methods format.");
+        }
+
+        const availableMethods = data.filter((method) => method.av);
+        if (active) {
+          setPaymentMethods(availableMethods);
+          setPaymentMethod(availableMethods[0]?.name || "");
+        }
+      } catch (loadError) {
+        console.error("Wallet payment methods load failed:", loadError);
+        if (active) {
+          setPaymentMethodsError(
+            "Unable to load available payment methods. Please try again."
+          );
+        }
+      } finally {
+        if (active) setPaymentMethodsLoading(false);
+      }
+    }
+
+    loadPaymentMethods();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const fetchWallet = useCallback(async () => {
     const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
@@ -104,6 +170,84 @@ function Wallet() {
     }
   }
 
+  async function submitTopUpRequest(event) {
+    event.preventDefault();
+    setRequestError("");
+    setRequestMessage("");
+
+    const requestedAmount = Number(amount);
+    if (
+      !Number.isFinite(requestedAmount) ||
+      requestedAmount < 1 ||
+      requestedAmount > 100000
+    ) {
+      setRequestError("Enter an amount between EGP 1 and EGP 100,000.");
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      setRequestError("Choose an available payment method.");
+      return;
+    }
+
+    if (
+      selectedPaymentMethod["mobile-number"] &&
+      !mobileNumber.trim()
+    ) {
+      setRequestError("Enter the mobile number used for payment.");
+      return;
+    }
+
+    setRequestLoading(true);
+
+    try {
+      const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const tokenData = await tokenResponse.json().catch(() => ({}));
+
+      if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+        throw new Error(
+          tokenData.error ||
+            "Your session expired. Sign in again to send a request."
+        );
+      }
+
+      const response = await fetch(WALLET_API_URL, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenData.token}`,
+        },
+        credentials: "omit",
+        body: JSON.stringify({
+          amount: requestedAmount,
+          paymentMethod: selectedPaymentMethod.name,
+          mobileNumber,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to send your top-up request.");
+      }
+
+      setRequestMessage(data.message);
+      setAmount("");
+      setMobileNumber("");
+    } catch (submitError) {
+      console.error("Wallet top-up request failed:", submitError);
+      setRequestError(
+        submitError.message || "Unable to send your request. Please try again."
+      );
+    } finally {
+      setRequestLoading(false);
+    }
+  }
+
   return (
     <section className="wallet-page">
       <header className="wallet-heading">
@@ -156,21 +300,101 @@ function Wallet() {
             </span>
           </article>
 
-          <article className="wallet-funding-card">
-            <div className="wallet-funding-icon">
-              <FontAwesomeIcon icon={faArrowDown} />
+          <form className="wallet-funding-card" onSubmit={submitTopUpRequest}>
+            <div className="wallet-funding-title">
+              <span className="wallet-funding-icon">
+                <FontAwesomeIcon icon={faArrowDown} />
+              </span>
+              <div className="wallet-funding-copy">
+                <h2>Request a top-up</h2>
+                <p>
+                  Your request will be sent to the admin. Funds are added only
+                  after the payment is reviewed.
+                </p>
+              </div>
             </div>
-            <div className="wallet-funding-copy">
-              <h2>Add funds</h2>
-              <p>
-                Wallet top-ups will be available when a payment provider is
-                connected.
+
+            <label className="wallet-field">
+              <span>Amount (EGP)</span>
+              <input
+                type="number"
+                min="1"
+                max="100000"
+                step="0.01"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="Enter amount"
+                required
+              />
+            </label>
+
+            <label className="wallet-field">
+              <span>Payment method</span>
+              <select
+                value={paymentMethod}
+                onChange={(event) => {
+                  setPaymentMethod(event.target.value);
+                  setRequestError("");
+                }}
+                disabled={paymentMethodsLoading || paymentMethods.length === 0}
+                required
+              >
+                <option value="">
+                  {paymentMethodsLoading
+                    ? "Loading payment methods..."
+                    : "Select a payment method"}
+                </option>
+                {paymentMethods.map((method) => (
+                  <option value={method.name} key={method.name}>
+                    {method.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedPaymentMethod?.["mobile-number"] && (
+              <label className="wallet-field">
+                <span>Mobile number used for payment</span>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={mobileNumber}
+                  onChange={(event) => setMobileNumber(event.target.value)}
+                  placeholder="Enter your mobile number"
+                  required
+                />
+              </label>
+            )}
+
+            {paymentMethodsError && (
+              <p className="wallet-form-message error" role="alert">
+                {paymentMethodsError}
               </p>
-            </div>
-            <button type="button" disabled>
-              Coming soon
+            )}
+            {requestError && (
+              <p className="wallet-form-message error" role="alert">
+                {requestError}
+              </p>
+            )}
+            {requestMessage && (
+              <p className="wallet-form-message success" role="status">
+                {requestMessage}
+              </p>
+            )}
+
+            <button
+              className="wallet-submit"
+              type="submit"
+              disabled={
+                requestLoading ||
+                paymentMethodsLoading ||
+                paymentMethods.length === 0
+              }
+            >
+              {requestLoading ? "Sending request..." : "Send top-up request"}
             </button>
-          </article>
+          </form>
 
           {error && (
             <div className="wallet-message error" role="alert">

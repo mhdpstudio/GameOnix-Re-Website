@@ -104,12 +104,18 @@
 
 .wallet-funding-card {
   display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column;
+  gap: 14px;
   padding: 20px;
   border: 1px solid #303034;
   border-radius: 16px;
   background: #19191c;
+}
+
+.wallet-funding-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .wallet-funding-icon {
@@ -133,7 +139,7 @@
   line-height: 1.6;
 }
 
-.wallet-funding-card > button,
+.wallet-submit,
 .wallet-primary-link {
   display: inline-flex;
   min-height: 38px;
@@ -150,9 +156,62 @@
   text-decoration: none;
 }
 
-.wallet-funding-card > button:disabled {
+.wallet-submit {
+  align-self: flex-start;
+  min-width: 190px;
+  cursor: pointer;
+}
+
+.wallet-submit:disabled {
   cursor: not-allowed;
   opacity: 0.75;
+}
+
+.wallet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.wallet-field > span {
+  color: #c5c5cd;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wallet-field input,
+.wallet-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #3a3a40;
+  border-radius: 9px;
+  outline: none;
+  background: #131315;
+  color: white;
+  font: inherit;
+  font-size: 12px;
+}
+
+.wallet-field input:focus,
+.wallet-field select:focus {
+  border-color: #9b64e9;
+  box-shadow: 0 0 0 3px #9b64e91c;
+}
+
+.wallet-form-message {
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid #a83d465c;
+  border-radius: 9px;
+  color: #ffb7bd;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.wallet-form-message.success {
+  border-color: #30d59a55;
+  color: #8de7c0;
 }
 
 .wallet-note,
@@ -222,13 +281,11 @@
     padding: 20px;
   }
 
-  .wallet-funding-card {
+  .wallet-funding-title {
     align-items: flex-start;
-    flex-wrap: wrap;
-    padding: 16px;
   }
 
-  .wallet-funding-card > button {
+  .wallet-submit {
     width: 100%;
   }
 }
