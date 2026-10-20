@@ -5,9 +5,20 @@ import { faGamepad } from "@fortawesome/free-solid-svg-icons";
 
 import "../style/game-card.css";
 
+function capitalizeFirstLetter(value) {
+  const label = String(value || "").trim();
+
+  return label ? label[0].toUpperCase() + label.slice(1) : "";
+}
+
 function getPlatformLabel(value) {
   if (Array.isArray(value)) {
-    return value.map((platform) => String(platform).trim()).filter(Boolean).join(", ") || "Platform";
+    return (
+      value
+        .map((platform) => getPlatformLabel(platform))
+        .filter(Boolean)
+        .join(", ") || "Platform"
+    );
   }
 
   const platform = String(value || "").trim().toLowerCase();
@@ -33,7 +44,8 @@ function GameCard({ game, showNewBadge = false, className = "" }) {
   const [failedPoster, setFailedPoster] = useState("");
   const title = game?.title || "Untitled Game";
   const platformLabel = getPlatformLabel(game?.platform);
-  const categoryLabel = String(game?.gameType || "Other").trim() || "Other";
+  const categoryLabel = capitalizeFirstLetter(game?.gameType) || "Other";
+  const fileTypeLabel = capitalizeFirstLetter(game?.fileType);
   const imageFailed = failedPoster === poster;
 
   return (
@@ -74,6 +86,14 @@ function GameCard({ game, showNewBadge = false, className = "" }) {
           >
             {categoryLabel}
           </span>
+          {fileTypeLabel && (
+            <span
+              className="game-card-file-type"
+              title={`File type: ${fileTypeLabel}`}
+            >
+              {fileTypeLabel}
+            </span>
+          )}
         </div>
 
         <h3 className="game-card-title" title={title}>

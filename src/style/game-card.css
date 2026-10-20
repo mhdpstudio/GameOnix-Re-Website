@@ -93,7 +93,8 @@
 }
 
 .game-card-platform,
-.game-card-category {
+.game-card-category,
+.game-card-file-type {
   display: inline-flex;
   width: fit-content;
   max-width: 100%;
@@ -112,7 +113,8 @@
   box-sizing: border-box;
 }
 
-.game-card-platform {
+.game-card-platform,
+.game-card-file-type {
   border-color: rgba(139, 92, 246, 0.25);
   background: rgba(139, 92, 246, 0.17);
   color: #c4b5fd;
