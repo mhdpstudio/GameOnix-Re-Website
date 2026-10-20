@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -25,16 +25,25 @@ function formatBalance(value) {
 }
 
 function getTransactionDescription(transaction) {
-  if (transaction.description.startsWith("{")) {
-    try {
-      const details = JSON.parse(transaction.description);
-      return `Top-up request · ${details.paymentMethod || "Payment method"}`;
-    } catch {
-      return "Wallet transaction";
-    }
-  }
+  const details = getTopUpDetails(transaction);
+  if (details) return `Top-up request · ${details.paymentMethod || "Payment method"}`;
 
   return transaction.description || "Wallet transaction";
+}
+
+function getTopUpDetails(transaction) {
+  if (
+    transaction.type !== "top_up_request" ||
+    !transaction.description.startsWith("{")
+  ) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(transaction.description);
+  } catch {
+    return null;
+  }
 }
 
 function formatTransactionDate(value) {
@@ -58,11 +67,14 @@ function Wallet() {
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
-  const [requestMessage, setRequestMessage] = useState("");
   const [requestError, setRequestError] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const paymentDropdownRef = useRef(null);
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.name === paymentMethod
   );
@@ -215,10 +227,29 @@ function Wallet() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [topUpOpen]);
 
+  useEffect(() => {
+    if (!paymentDropdownOpen) return undefined;
+
+    function closeDropdown(event) {
+      if (!paymentDropdownRef.current?.contains(event.target)) {
+        setPaymentDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeDropdown);
+    return () => document.removeEventListener("mousedown", closeDropdown);
+  }, [paymentDropdownOpen]);
+
+  useEffect(() => {
+    if (!toastMessage) return undefined;
+
+    const timeout = window.setTimeout(() => setToastMessage(""), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [toastMessage]);
+
   async function submitTopUpRequest(event) {
     event.preventDefault();
     setRequestError("");
-    setRequestMessage("");
 
     const requestedAmount = Number(amount);
     if (
@@ -240,6 +271,11 @@ function Wallet() {
       !mobileNumber.trim()
     ) {
       setRequestError("Enter the mobile number used for payment.");
+      return;
+    }
+
+    if (!/^[+\d][\d\s()-]{5,28}$/.test(whatsappNumber.trim())) {
+      setRequestError("Enter a valid WhatsApp contact number.");
       return;
     }
 
@@ -272,6 +308,7 @@ function Wallet() {
           amount: requestedAmount,
           paymentMethod: selectedPaymentMethod.name,
           mobileNumber,
+          whatsappNumber,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -280,15 +317,22 @@ function Wallet() {
         throw new Error(data.error || "Unable to send your top-up request.");
       }
 
-      setRequestMessage(data.message);
+      setTopUpOpen(false);
+      setPaymentDropdownOpen(false);
       setAmount("");
       setMobileNumber("");
+      setWhatsappNumber("");
       setTransactions((current) => [
         {
           id: data.requestId,
           type: "top_up_request",
           description: JSON.stringify({
+            currentBalance: balance,
             paymentMethod: selectedPaymentMethod.name,
+            mobileNumber: selectedPaymentMethod["mobile-number"]
+              ? mobileNumber.trim()
+              : "Not required",
+            whatsappNumber: whatsappNumber.trim(),
           }),
           amount: requestedAmount,
           status: "pending",
@@ -296,6 +340,7 @@ function Wallet() {
         },
         ...current,
       ]);
+      setToastMessage("Your top-up request was sent successfully.");
     } catch (submitError) {
       console.error("Wallet top-up request failed:", submitError);
       setRequestError(
@@ -373,7 +418,6 @@ function Wallet() {
               type="button"
               onClick={() => {
                 setRequestError("");
-                setRequestMessage("");
                 setTopUpOpen(true);
               }}
             >
@@ -411,6 +455,13 @@ function Wallet() {
                       <strong>
                         {getTransactionDescription(transaction)}
                       </strong>
+                      {getTopUpDetails(transaction) && (
+                          <span>
+                            Request {transaction.id.slice(0, 8)} · WhatsApp{" "}
+                            {getTopUpDetails(transaction).whatsappNumber ||
+                              "not provided"}
+                          </span>
+                        )}
                       <span>{formatTransactionDate(transaction.createdAt)}</span>
                     </div>
                     <div className="wallet-transaction-amount">
@@ -484,31 +535,145 @@ function Wallet() {
 
                   <label className="wallet-field">
                     <span>Payment method</span>
-                    <span className="wallet-select-wrap">
-                      <select
-                        className="wallet-custom-select"
-                        value={paymentMethod}
-                        onChange={(event) => {
-                          setPaymentMethod(event.target.value);
-                          setRequestError("");
-                        }}
+                    <div
+                      className="wallet-payment-dropdown"
+                      ref={paymentDropdownRef}
+                    >
+                      <button
+                        type="button"
+                        className="wallet-payment-trigger"
+                        aria-haspopup="listbox"
+                        aria-expanded={paymentDropdownOpen}
+                        aria-controls="wallet-payment-options"
                         disabled={
                           paymentMethodsLoading || paymentMethods.length === 0
                         }
-                        required
+                        onClick={() =>
+                          setPaymentDropdownOpen((isOpen) => !isOpen)
+                        }
                       >
-                        <option value="">
-                          {paymentMethodsLoading
-                            ? "Loading payment methods..."
-                            : "Select a payment method"}
-                        </option>
-                        {paymentMethods.map((method) => (
-                          <option value={method.name} key={method.name}>
-                            {method.name}
-                          </option>
-                        ))}
-                      </select>
-                    </span>
+                        {selectedPaymentMethod?.logo ? (
+                          <img
+                            className="wallet-payment-logo"
+                            src={selectedPaymentMethod.logo}
+                            alt=""
+                          />
+                        ) : (
+                          <span className="wallet-payment-logo-fallback">
+                            {selectedPaymentMethod?.name?.charAt(0) || "?"}
+                          </span>
+                        )}
+                        <span className="wallet-payment-trigger-copy">
+                          <strong>
+                            {paymentMethodsLoading
+                              ? "Loading payment methods..."
+                              : selectedPaymentMethod?.name ||
+                                "Select a payment method"}
+                          </strong>
+                          <small>
+                            {selectedPaymentMethod
+                              ? selectedPaymentMethod["mobile-number"]
+                                ? "Payment mobile number required"
+                                : "No payment mobile number needed"
+                              : "Choose how you want to pay"}
+                          </small>
+                        </span>
+                        <span
+                          className={`wallet-payment-chevron ${
+                            paymentDropdownOpen ? "open" : ""
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                      {paymentDropdownOpen && (
+                        <div
+                          className="wallet-payment-options"
+                          id="wallet-payment-options"
+                          role="listbox"
+                          aria-label="Available payment methods"
+                        >
+                          {paymentMethods.map((method) => (
+                            <button
+                              type="button"
+                              className={`wallet-payment-option ${
+                                method.name === paymentMethod ? "selected" : ""
+                              }`}
+                              key={method.name}
+                              role="option"
+                              aria-selected={method.name === paymentMethod}
+                              onClick={() => {
+                                setPaymentMethod(method.name);
+                                setMobileNumber("");
+                                setRequestError("");
+                                setPaymentDropdownOpen(false);
+                              }}
+                              onKeyDown={(event) => {
+                                const options = [
+                                  ...paymentDropdownRef.current.querySelectorAll(
+                                    '[role="option"]'
+                                  ),
+                                ];
+                                const optionIndex = options.indexOf(
+                                  event.currentTarget
+                                );
+                                let nextIndex;
+
+                                if (event.key === "ArrowDown") {
+                                  nextIndex = (optionIndex + 1) % options.length;
+                                } else if (event.key === "ArrowUp") {
+                                  nextIndex =
+                                    (optionIndex - 1 + options.length) %
+                                    options.length;
+                                } else if (event.key === "Home") {
+                                  nextIndex = 0;
+                                } else if (event.key === "End") {
+                                  nextIndex = options.length - 1;
+                                } else if (event.key === "Escape") {
+                                  setPaymentDropdownOpen(false);
+                                  paymentDropdownRef.current
+                                    .querySelector(".wallet-payment-trigger")
+                                    .focus();
+                                  return;
+                                } else {
+                                  return;
+                                }
+
+                                event.preventDefault();
+                                options[nextIndex]?.focus();
+                              }}
+                            >
+                              {method.logo ? (
+                                <img
+                                  className="wallet-payment-logo"
+                                  src={method.logo}
+                                  alt=""
+                                />
+                              ) : (
+                                <span className="wallet-payment-logo-fallback">
+                                  {method.name.charAt(0)}
+                                </span>
+                              )}
+                              <span className="wallet-payment-option-copy">
+                                <strong>{method.name}</strong>
+                                <small>
+                                  {method["mobile-number"]
+                                    ? "Mobile number required"
+                                    : "No mobile number required"}
+                                </small>
+                              </span>
+                              {method.name === paymentMethod && (
+                                <span
+                                  className="wallet-payment-selected-mark"
+                                  aria-hidden="true"
+                                >
+                                  ✓
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </label>
 
                   {selectedPaymentMethod?.["mobile-number"] && (
@@ -526,6 +691,21 @@ function Wallet() {
                     </label>
                   )}
 
+                  <label className="wallet-field">
+                    <span>WhatsApp contact number</span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={whatsappNumber}
+                      onChange={(event) =>
+                        setWhatsappNumber(event.target.value)
+                      }
+                      placeholder="Enter a number we can reach you on"
+                      required
+                    />
+                  </label>
+
                   {paymentMethodsError && (
                     <p className="wallet-form-message error" role="alert">
                       {paymentMethodsError}
@@ -536,12 +716,6 @@ function Wallet() {
                       {requestError}
                     </p>
                   )}
-                  {requestMessage && (
-                    <p className="wallet-form-message success" role="status">
-                      {requestMessage}
-                    </p>
-                  )}
-
                   <button
                     className="wallet-submit"
                     type="submit"
@@ -565,6 +739,11 @@ function Wallet() {
               support if it does not look right.
             </span>
           </div>
+        </div>
+      )}
+      {toastMessage && (
+        <div className="wallet-toast" role="status" aria-live="polite">
+          {toastMessage}
         </div>
       )}
     </section>
