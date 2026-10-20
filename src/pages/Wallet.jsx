@@ -12,7 +12,7 @@ import { authFetch } from "../api/session";
 import "./../style/wallet-style.css";
 
 const WALLET_API_URL =
-  "https://gameonix-backend.vercel.app/api/auth/wallet";
+  "https://gameonixfav.vercel.app/api/auth/wallet";
 
 function formatBalance(value) {
   return new Intl.NumberFormat("en-EG", {
