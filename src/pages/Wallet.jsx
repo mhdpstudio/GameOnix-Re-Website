@@ -24,6 +24,29 @@ function formatBalance(value) {
   }).format(value);
 }
 
+function getTransactionDescription(transaction) {
+  if (transaction.description.startsWith("{")) {
+    try {
+      const details = JSON.parse(transaction.description);
+      return `Top-up request · ${details.paymentMethod || "Payment method"}`;
+    } catch {
+      return "Wallet transaction";
+    }
+  }
+
+  return transaction.description || "Wallet transaction";
+}
+
+function formatTransactionDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Date unavailable"
+    : date.toLocaleString("en-EG", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+}
+
 function Wallet() {
   const { user, authLoading } = useAuth();
   const [balance, setBalance] = useState(null);
@@ -38,6 +61,8 @@ function Wallet() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [requestError, setRequestError] = useState("");
+  const [transactions, setTransactions] = useState([]);
+  const [topUpOpen, setTopUpOpen] = useState(false);
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.name === paymentMethod
   );
@@ -123,11 +148,15 @@ function Wallet() {
       throw new Error(data.error || "Unable to load your wallet.");
     }
 
-    if (!Number.isFinite(data.balance) || data.balance < 0) {
+    if (
+      !Number.isFinite(data.balance) ||
+      data.balance < 0 ||
+      !Array.isArray(data.transactions)
+    ) {
       throw new Error("The wallet balance returned by the server is invalid.");
     }
 
-    return data.balance;
+    return { balance: data.balance, transactions: data.transactions };
   }, []);
 
   useEffect(() => {
@@ -136,8 +165,11 @@ function Wallet() {
     let active = true;
 
     fetchWallet()
-      .then((walletBalance) => {
-        if (active) setBalance(walletBalance);
+      .then((wallet) => {
+        if (active) {
+          setBalance(wallet.balance);
+          setTransactions(wallet.transactions);
+        }
       })
       .catch((loadError) => {
         console.error("Wallet load failed:", loadError);
@@ -160,7 +192,9 @@ function Wallet() {
     setError("");
 
     try {
-      setBalance(await fetchWallet());
+      const wallet = await fetchWallet();
+      setBalance(wallet.balance);
+      setTransactions(wallet.transactions);
     } catch (loadError) {
       console.error("Wallet load failed:", loadError);
       setError(loadError.message || "Unable to load your wallet.");
@@ -169,6 +203,17 @@ function Wallet() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!topUpOpen) return undefined;
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setTopUpOpen(false);
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [topUpOpen]);
 
   async function submitTopUpRequest(event) {
     event.preventDefault();
@@ -238,6 +283,19 @@ function Wallet() {
       setRequestMessage(data.message);
       setAmount("");
       setMobileNumber("");
+      setTransactions((current) => [
+        {
+          id: data.requestId,
+          type: "top_up_request",
+          description: JSON.stringify({
+            paymentMethod: selectedPaymentMethod.name,
+          }),
+          amount: requestedAmount,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        },
+        ...current,
+      ]);
     } catch (submitError) {
       console.error("Wallet top-up request failed:", submitError);
       setRequestError(
@@ -300,101 +358,72 @@ function Wallet() {
             </span>
           </article>
 
-          <form className="wallet-funding-card" onSubmit={submitTopUpRequest}>
+          <article className="wallet-funding-card">
             <div className="wallet-funding-title">
               <span className="wallet-funding-icon">
                 <FontAwesomeIcon icon={faArrowDown} />
               </span>
               <div className="wallet-funding-copy">
-                <h2>Request a top-up</h2>
-                <p>
-                  Your request will be sent to the admin. Funds are added only
-                  after the payment is reviewed.
-                </p>
+                <h2>Add funds</h2>
+                <p>Send a top-up request to the admin for review.</p>
               </div>
             </div>
-
-            <label className="wallet-field">
-              <span>Amount (EGP)</span>
-              <input
-                type="number"
-                min="1"
-                max="100000"
-                step="0.01"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="Enter amount"
-                required
-              />
-            </label>
-
-            <label className="wallet-field">
-              <span>Payment method</span>
-              <select
-                value={paymentMethod}
-                onChange={(event) => {
-                  setPaymentMethod(event.target.value);
-                  setRequestError("");
-                }}
-                disabled={paymentMethodsLoading || paymentMethods.length === 0}
-                required
-              >
-                <option value="">
-                  {paymentMethodsLoading
-                    ? "Loading payment methods..."
-                    : "Select a payment method"}
-                </option>
-                {paymentMethods.map((method) => (
-                  <option value={method.name} key={method.name}>
-                    {method.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {selectedPaymentMethod?.["mobile-number"] && (
-              <label className="wallet-field">
-                <span>Mobile number used for payment</span>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  value={mobileNumber}
-                  onChange={(event) => setMobileNumber(event.target.value)}
-                  placeholder="Enter your mobile number"
-                  required
-                />
-              </label>
-            )}
-
-            {paymentMethodsError && (
-              <p className="wallet-form-message error" role="alert">
-                {paymentMethodsError}
-              </p>
-            )}
-            {requestError && (
-              <p className="wallet-form-message error" role="alert">
-                {requestError}
-              </p>
-            )}
-            {requestMessage && (
-              <p className="wallet-form-message success" role="status">
-                {requestMessage}
-              </p>
-            )}
-
             <button
               className="wallet-submit"
-              type="submit"
-              disabled={
-                requestLoading ||
-                paymentMethodsLoading ||
-                paymentMethods.length === 0
-              }
+              type="button"
+              onClick={() => {
+                setRequestError("");
+                setRequestMessage("");
+                setTopUpOpen(true);
+              }}
             >
-              {requestLoading ? "Sending request..." : "Send top-up request"}
+              Add funds
             </button>
-          </form>
+          </article>
+
+          <section className="wallet-history">
+            <div className="wallet-history-heading">
+              <div>
+                <span className="wallet-eyebrow">ACCOUNT ACTIVITY</span>
+                <h2>Wallet statement</h2>
+              </div>
+              <span>{transactions.length} transactions</span>
+            </div>
+
+            {transactions.length === 0 ? (
+              <div className="wallet-empty-history">
+                No wallet activity yet. Top-up requests will appear here;
+                purchases will show after wallet checkout is connected.
+              </div>
+            ) : (
+              <div className="wallet-transaction-list">
+                {transactions.map((transaction) => (
+                  <article
+                    className="wallet-transaction"
+                    key={transaction.id}
+                  >
+                    <span
+                      className={`wallet-transaction-icon ${transaction.type}`}
+                    >
+                      <FontAwesomeIcon icon={faWallet} />
+                    </span>
+                    <div className="wallet-transaction-details">
+                      <strong>
+                        {getTransactionDescription(transaction)}
+                      </strong>
+                      <span>{formatTransactionDate(transaction.createdAt)}</span>
+                    </div>
+                    <div className="wallet-transaction-amount">
+                      <strong>{formatBalance(transaction.amount)}</strong>
+                      <span className={`wallet-status ${transaction.status}`}>
+                        {transaction.status.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
 
           {error && (
             <div className="wallet-message error" role="alert">
@@ -402,6 +431,130 @@ function Wallet() {
               <button type="button" onClick={refreshWallet} disabled={loading}>
                 Try again
               </button>
+            </div>
+          )}
+
+          {topUpOpen && (
+            <div
+              className="wallet-modal-overlay"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setTopUpOpen(false);
+              }}
+            >
+              <section
+                className="wallet-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="wallet-top-up-title"
+              >
+                <button
+                  className="wallet-modal-close"
+                  type="button"
+                  onClick={() => setTopUpOpen(false)}
+                  aria-label="Close add funds dialog"
+                >
+                  ×
+                </button>
+                <div className="wallet-funding-title">
+                  <span className="wallet-funding-icon">
+                    <FontAwesomeIcon icon={faArrowDown} />
+                  </span>
+                  <div className="wallet-funding-copy">
+                    <h2 id="wallet-top-up-title">Request a top-up</h2>
+                    <p>
+                      The admin reviews your request before adding funds.
+                    </p>
+                  </div>
+                </div>
+
+                <form className="wallet-top-up-form" onSubmit={submitTopUpRequest}>
+                  <label className="wallet-field">
+                    <span>Amount (EGP)</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100000"
+                      step="0.01"
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
+                      placeholder="Enter amount"
+                      required
+                    />
+                  </label>
+
+                  <label className="wallet-field">
+                    <span>Payment method</span>
+                    <span className="wallet-select-wrap">
+                      <select
+                        className="wallet-custom-select"
+                        value={paymentMethod}
+                        onChange={(event) => {
+                          setPaymentMethod(event.target.value);
+                          setRequestError("");
+                        }}
+                        disabled={
+                          paymentMethodsLoading || paymentMethods.length === 0
+                        }
+                        required
+                      >
+                        <option value="">
+                          {paymentMethodsLoading
+                            ? "Loading payment methods..."
+                            : "Select a payment method"}
+                        </option>
+                        {paymentMethods.map((method) => (
+                          <option value={method.name} key={method.name}>
+                            {method.name}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                  </label>
+
+                  {selectedPaymentMethod?.["mobile-number"] && (
+                    <label className="wallet-field">
+                      <span>Mobile number used for payment</span>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={mobileNumber}
+                        onChange={(event) => setMobileNumber(event.target.value)}
+                        placeholder="Enter your mobile number"
+                        required
+                      />
+                    </label>
+                  )}
+
+                  {paymentMethodsError && (
+                    <p className="wallet-form-message error" role="alert">
+                      {paymentMethodsError}
+                    </p>
+                  )}
+                  {requestError && (
+                    <p className="wallet-form-message error" role="alert">
+                      {requestError}
+                    </p>
+                  )}
+                  {requestMessage && (
+                    <p className="wallet-form-message success" role="status">
+                      {requestMessage}
+                    </p>
+                  )}
+
+                  <button
+                    className="wallet-submit"
+                    type="submit"
+                    disabled={
+                      requestLoading ||
+                      paymentMethodsLoading ||
+                      paymentMethods.length === 0
+                    }
+                  >
+                    {requestLoading ? "Sending request..." : "Send top-up request"}
+                  </button>
+                </form>
+              </section>
             </div>
           )}
 

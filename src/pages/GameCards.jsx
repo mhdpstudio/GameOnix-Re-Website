@@ -15,6 +15,7 @@ import {
   faGift,
   faCheck,
   faShieldHalved,
+  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,11 @@ const DATA_URL =
 
 const PAYMENTS_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
+
+const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
+const WALLET_API_URL =
+  "https://gameonixfav.vercel.app/api/auth/wallet";
+const WALLET_PAYMENT_ID = "__gameonix_wallet__";
 
 const RAW_ASSET_BASE =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/";
@@ -186,6 +192,21 @@ function GameCards() {
   const [isGift, setIsGift] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
+  const [walletBalanceError, setWalletBalanceError] = useState("");
+
+  const walletPaymentMethod = {
+    id: WALLET_PAYMENT_ID,
+    name: "Wallet",
+    av: walletBalance !== null && !walletBalanceLoading,
+    isWallet: true,
+  };
+
+  const selectedPaymentMethod =
+    selectedPayment === WALLET_PAYMENT_ID
+      ? walletPaymentMethod
+      : paymentMethods.find((method) => method.name === selectedPayment);
 
   async function loadCatalog() {
     setLoading(true);
@@ -257,10 +278,6 @@ function GameCards() {
     loadPaymentMethods();
   }, []);
 
-  const selectedPaymentMethod = paymentMethods.find(
-    (method) => method.name === selectedPayment
-  );
-
   const categories = useMemo(() => {
     const types = [...new Set(catalog.map((item) => item.type).filter(Boolean))];
 
@@ -321,17 +338,60 @@ function GameCards() {
     0
   );
 
-  function openProduct(product) {
+  async function openProduct(product) {
     setSelectedProduct(product);
     setSelectedPack(null);
     setQuantity(1);
-    setSelectedPayment("vodafone");
+    setSelectedPayment(paymentMethods.find((method) => method.av)?.name || "");
     setPlayerId("");
     setServerId("");
     setEmail(user?.email || "");
     setRecipient("");
     setIsGift(false);
     setCheckoutMessage("");
+    setWalletBalance(null);
+    setWalletBalanceError("");
+
+    if (!user) return;
+
+    setWalletBalanceLoading(true);
+    try {
+      const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const tokenData = await tokenResponse.json().catch(() => ({}));
+
+      if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+        throw new Error(tokenData.error || "Sign in to load your wallet.");
+      }
+
+      const response = await fetch(WALLET_API_URL, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${tokenData.token}`,
+        },
+        credentials: "omit",
+      });
+      const walletData = await response.json().catch(() => ({}));
+
+      if (
+        !response.ok ||
+        !Number.isFinite(walletData.balance) ||
+        walletData.balance < 0
+      ) {
+        throw new Error(walletData.error || "Unable to load wallet balance.");
+      }
+
+      setWalletBalance(walletData.balance);
+    } catch (walletError) {
+      console.error("Checkout wallet balance load failed:", walletError);
+      setWalletBalanceError(walletError.message);
+    } finally {
+      setWalletBalanceLoading(false);
+    }
   }
 
   function closeProduct() {
@@ -405,10 +465,32 @@ function GameCards() {
     }
 
     if (
-      selectedPaymentMethod["mobile-number"] &&
+      !selectedPaymentMethod?.isWallet &&
+      selectedPaymentMethod?.["mobile-number"] &&
       !phoneNumber.trim()
     ) {
       setCheckoutMessage("اكتب رقم الموبايل المطلوب لطريقة الدفع.");
+      return;
+    }
+
+    if (selectedPaymentMethod?.isWallet) {
+      if (walletBalance === null) {
+        setCheckoutMessage(
+          walletBalanceError || "Your wallet balance is unavailable."
+        );
+        return;
+      }
+
+      if (walletBalance < total) {
+        setCheckoutMessage(
+          `Insufficient wallet balance. Available: ${formatPrice(walletBalance)}.`
+        );
+        return;
+      }
+
+      setCheckoutMessage(
+        "Wallet payment is not active yet. No balance was deducted; purchases will be enabled when order fulfillment is connected."
+      );
       return;
     }
 
@@ -1068,23 +1150,27 @@ function GameCards() {
                     SELECT PAYMENT METHOD
                   </div>
 
-                  {paymentsLoading ? (
+                  {paymentsLoading && (
                     <p className="gc-payment-state" role="status">
                       Loading payment methods...
                     </p>
-                  ) : paymentsError ? (
+                  )}
+                  {paymentsError && (
                     <div className="gc-payment-state error" role="alert">
                       <span>{paymentsError}</span>
                       <button type="button" onClick={loadPaymentMethods}>
                         Try again
                       </button>
                     </div>
-                  ) : paymentMethods.length === 0 ? (
+                  )}
+                  {!paymentsLoading &&
+                    !paymentsError &&
+                    paymentMethods.length === 0 && (
                     <p className="gc-payment-state" role="status">
                       No payment methods are configured.
                     </p>
-                  ) : (
-                    <div className="gc-payment-grid">
+                    )}
+                  <div className="gc-payment-grid">
                       {paymentMethods.map((method) => (
                         <button
                           type="button"
@@ -1134,8 +1220,48 @@ function GameCards() {
                           )}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        key={WALLET_PAYMENT_ID}
+                        disabled={!walletPaymentMethod.av}
+                        onClick={() => {
+                          setSelectedPayment(WALLET_PAYMENT_ID);
+                          setCheckoutMessage("");
+                        }}
+                        className={[
+                          "gc-payment-method",
+                          "gc-wallet-payment",
+                          selectedPayment === WALLET_PAYMENT_ID ? "selected" : "",
+                          !walletPaymentMethod.av ? "disabled" : "",
+                        ].join(" ")}
+                        aria-pressed={selectedPayment === WALLET_PAYMENT_ID}
+                        title={
+                          walletBalanceLoading
+                            ? "Loading wallet balance"
+                            : walletBalanceError || "Pay with your GameOnix wallet"
+                        }
+                      >
+                        <span className="gc-payment-instant">
+                          {walletBalanceLoading ? "LOADING" : "WALLET"}
+                        </span>
+                        <span className="gc-wallet-payment-icon">
+                          <FontAwesomeIcon icon={faWallet} />
+                        </span>
+                        <strong>Wallet</strong>
+                        <small className="gc-payment-requirement">
+                          {walletBalanceLoading
+                            ? "Loading balance..."
+                            : walletBalance === null
+                              ? "Balance unavailable"
+                              : `Balance ${formatPrice(walletBalance)}`}
+                        </small>
+                        {selectedPayment === WALLET_PAYMENT_ID && (
+                          <span className="gc-payment-check">
+                            <FontAwesomeIcon icon={faCheck} />
+                          </span>
+                        )}
+                      </button>
                     </div>
-                  )}
 
                   <div className="gc-security-row">
                     <span>
@@ -1167,7 +1293,6 @@ function GameCards() {
                     className="gc-pay-button"
                     disabled={
                       !selectedPack ||
-                      paymentsLoading ||
                       !selectedPaymentMethod?.av
                     }
                   >
@@ -1176,8 +1301,9 @@ function GameCards() {
                   </button>
 
                   <p className="gc-terms">
-                    Continuing does not charge you. Payment processing must be
-                    connected before orders can be completed.
+                    {selectedPaymentMethod?.isWallet
+                      ? "Wallet payment will not deduct funds until product delivery is connected."
+                      : "Continuing does not charge you. Payment processing must be connected before orders can be completed."}
                   </p>
                 </div>
               </div>

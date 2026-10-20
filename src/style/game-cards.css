@@ -1996,6 +1996,23 @@
     color: white;
 }
 
+.gc-wallet-payment .gc-payment-instant {
+    background: #8751d833;
+    color: #d3b8ff;
+}
+
+.gc-wallet-payment-icon {
+    display: grid;
+    width: 39px;
+    height: 39px;
+    place-items: center;
+    border: 1px solid #a88be055;
+    border-radius: 11px;
+    background: linear-gradient(145deg, #8c4cff36, #8c4cff12);
+    color: #d3b8ff;
+    font-size: 18px;
+}
+
 .gc-payment-check {
     position: absolute;
     top: 5px;
