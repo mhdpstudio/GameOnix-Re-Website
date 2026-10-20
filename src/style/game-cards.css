@@ -906,6 +906,35 @@
     animation: gc-overlay-in 0.18s ease-out;
 }
 
+.gc-modal-overlay,
+.gc-checkout-body {
+    scrollbar-color: var(--gc-action-accent) #1b1b1f;
+    scrollbar-width: thin;
+}
+
+.gc-modal-overlay::-webkit-scrollbar,
+.gc-checkout-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.gc-modal-overlay::-webkit-scrollbar-track,
+.gc-checkout-body::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: #1b1b1f;
+}
+
+.gc-modal-overlay::-webkit-scrollbar-thumb,
+.gc-checkout-body::-webkit-scrollbar-thumb {
+    border: 2px solid #1b1b1f;
+    border-radius: 10px;
+    background: var(--gc-action-accent);
+}
+
+.gc-modal-overlay::-webkit-scrollbar-thumb:hover,
+.gc-checkout-body::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--gc-action-accent), white 18%);
+}
+
 @keyframes gc-overlay-in {
     from {
         opacity: 0;
@@ -920,7 +949,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(1200px, 100%);
+    width: min(1320px, 100%);
     max-height: min(92vh, 900px);
     overflow: hidden;
     border: 1px solid #45454a;
@@ -2065,7 +2094,7 @@
 
 @media (min-width: 1450px) {
     .gc-checkout-modal {
-        width: min(1260px, 100%);
+        width: min(1400px, 100%);
     }
 }
 
