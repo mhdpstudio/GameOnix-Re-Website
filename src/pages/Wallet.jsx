@@ -70,10 +70,12 @@ function Wallet() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState("");
+  const [editingRequestId, setEditingRequestId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastWarning, setToastWarning] = useState(false);
   const paymentDropdownRef = useRef(null);
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.name === paymentMethod
@@ -297,7 +299,7 @@ function Wallet() {
       }
 
       const response = await fetch(WALLET_API_URL, {
-        method: "POST",
+        method: editingRequestId ? "PUT" : "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -305,6 +307,7 @@ function Wallet() {
         },
         credentials: "omit",
         body: JSON.stringify({
+          ...(editingRequestId ? { requestId: editingRequestId } : {}),
           amount: requestedAmount,
           paymentMethod: selectedPaymentMethod.name,
           mobileNumber,
@@ -314,33 +317,56 @@ function Wallet() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || "Unable to send your top-up request.");
+        throw new Error(
+          data.error ||
+            (editingRequestId
+              ? "Unable to update your top-up request."
+              : "Unable to send your top-up request.")
+        );
       }
 
       setTopUpOpen(false);
       setPaymentDropdownOpen(false);
+      if (editingRequestId) {
+        setTransactions((current) =>
+          current.map((transaction) =>
+            transaction.id === editingRequestId
+              ? data.request
+              : transaction
+          )
+        );
+        setToastMessage(
+          data.notificationSent
+            ? "Your request was updated and the admin was notified."
+            : "Your request was updated, but the admin notification could not be sent. Please contact support."
+        );
+        setToastWarning(!data.notificationSent);
+      } else {
+        setTransactions((current) => [
+          {
+            id: data.requestId,
+            type: "top_up_request",
+            description: JSON.stringify({
+              currentBalance: balance,
+              paymentMethod: selectedPaymentMethod.name,
+              mobileNumber: selectedPaymentMethod["mobile-number"]
+                ? mobileNumber.trim()
+                : "Not required",
+              whatsappNumber: whatsappNumber.trim(),
+            }),
+            amount: requestedAmount,
+            status: "pending",
+            createdAt: new Date().toISOString(),
+          },
+          ...current,
+        ]);
+        setToastMessage("Your top-up request was sent successfully.");
+        setToastWarning(false);
+      }
+      setEditingRequestId(null);
       setAmount("");
       setMobileNumber("");
       setWhatsappNumber("");
-      setTransactions((current) => [
-        {
-          id: data.requestId,
-          type: "top_up_request",
-          description: JSON.stringify({
-            currentBalance: balance,
-            paymentMethod: selectedPaymentMethod.name,
-            mobileNumber: selectedPaymentMethod["mobile-number"]
-              ? mobileNumber.trim()
-              : "Not required",
-            whatsappNumber: whatsappNumber.trim(),
-          }),
-          amount: requestedAmount,
-          status: "pending",
-          createdAt: new Date().toISOString(),
-        },
-        ...current,
-      ]);
-      setToastMessage("Your top-up request was sent successfully.");
     } catch (submitError) {
       console.error("Wallet top-up request failed:", submitError);
       setRequestError(
@@ -418,6 +444,10 @@ function Wallet() {
               type="button"
               onClick={() => {
                 setRequestError("");
+                setEditingRequestId(null);
+                setAmount("");
+                setMobileNumber("");
+                setWhatsappNumber("");
                 setTopUpOpen(true);
               }}
             >
@@ -469,6 +499,29 @@ function Wallet() {
                       <span className={`wallet-status ${transaction.status}`}>
                         {transaction.status.replaceAll("_", " ")}
                       </span>
+                      {transaction.type === "top_up_request" &&
+                        transaction.status === "pending" && (
+                          <button
+                            className="wallet-edit-request"
+                            type="button"
+                            onClick={() => {
+                              const details = getTopUpDetails(transaction);
+                              setEditingRequestId(transaction.id);
+                              setAmount(String(transaction.amount));
+                              setPaymentMethod(details?.paymentMethod || "");
+                              setMobileNumber(
+                                details?.mobileNumber === "Not required"
+                                  ? ""
+                                  : details?.mobileNumber || ""
+                              );
+                              setWhatsappNumber(details?.whatsappNumber || "");
+                              setRequestError("");
+                              setTopUpOpen(true);
+                            }}
+                          >
+                            Edit request
+                          </button>
+                        )}
                     </div>
                   </article>
                 ))}
@@ -489,7 +542,10 @@ function Wallet() {
             <div
               className="wallet-modal-overlay"
               onMouseDown={(event) => {
-                if (event.target === event.currentTarget) setTopUpOpen(false);
+                if (event.target === event.currentTarget) {
+                  setTopUpOpen(false);
+                  setPaymentDropdownOpen(false);
+                }
               }}
             >
               <section
@@ -501,7 +557,10 @@ function Wallet() {
                 <button
                   className="wallet-modal-close"
                   type="button"
-                  onClick={() => setTopUpOpen(false)}
+                  onClick={() => {
+                    setTopUpOpen(false);
+                    setPaymentDropdownOpen(false);
+                  }}
                   aria-label="Close add funds dialog"
                 >
                   ×
@@ -511,9 +570,13 @@ function Wallet() {
                     <FontAwesomeIcon icon={faArrowDown} />
                   </span>
                   <div className="wallet-funding-copy">
-                    <h2 id="wallet-top-up-title">Request a top-up</h2>
+                    <h2 id="wallet-top-up-title">
+                      {editingRequestId ? "Edit top-up request" : "Request a top-up"}
+                    </h2>
                     <p>
-                      The admin reviews your request before adding funds.
+                      {editingRequestId
+                        ? "You can edit this request while it is pending. The admin will be notified of your changes."
+                        : "The admin reviews your request before adding funds."}
                     </p>
                   </div>
                 </div>
@@ -725,7 +788,13 @@ function Wallet() {
                       paymentMethods.length === 0
                     }
                   >
-                    {requestLoading ? "Sending request..." : "Send top-up request"}
+                    {requestLoading
+                      ? editingRequestId
+                        ? "Saving changes..."
+                        : "Sending request..."
+                      : editingRequestId
+                        ? "Save changes"
+                        : "Send top-up request"}
                   </button>
                 </form>
               </section>
@@ -742,7 +811,11 @@ function Wallet() {
         </div>
       )}
       {toastMessage && (
-        <div className="wallet-toast" role="status" aria-live="polite">
+        <div
+          className={`wallet-toast ${toastWarning ? "warning" : ""}`}
+          role="status"
+          aria-live="polite"
+        >
           {toastMessage}
         </div>
       )}

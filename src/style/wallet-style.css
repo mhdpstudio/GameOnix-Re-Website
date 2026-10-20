@@ -388,6 +388,12 @@
   animation: wallet-modal-in 0.2s ease-out;
 }
 
+.wallet-toast.warning {
+  border-color: #ffca7a66;
+  background: linear-gradient(135deg, #3a2b16, #29231a);
+  color: #ffe0a8;
+}
+
 .wallet-history {
   overflow: hidden;
   border: 1px solid #303034;
@@ -504,6 +510,23 @@
 .wallet-status.rejected,
 .wallet-status.cancelled {
   color: #ff929a;
+}
+
+.wallet-edit-request {
+  padding: 5px 8px;
+  border: 1px solid #8c4cff55;
+  border-radius: 7px;
+  background: #8c4cff16;
+  color: #d3b8ff;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.wallet-edit-request:hover {
+  border-color: #a88be0;
+  background: #8c4cff2b;
 }
 
 .wallet-modal-overlay {
