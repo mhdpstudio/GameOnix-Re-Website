@@ -209,7 +209,7 @@ function GameCards() {
       ...types.map((type) => ({
         id: type,
         label: type,
-        icon: type === "Gift Cards" ? faCreditCard : faGamepad,
+        icon: type.trim().toLowerCase() === "gift card" ? faCreditCard : faGamepad,
       })),
     ];
   }, [catalog]);
@@ -592,6 +592,8 @@ function GameCards() {
               {filteredCatalog.map((product) => {
                 const packs = product.packs || [];
                 const popular = packs.some((pack) => pack.popular);
+                const productType = String(product.type || "").trim();
+                const isGiftCards = productType.toLowerCase() === "gift cards";
 
                 return (
                   <article className="gc-product-card" key={product.id}>
@@ -607,12 +609,13 @@ function GameCards() {
                           alt={product.name}
                         />
 
-                        <span
-                          className={`gc-product-type ${product.type === "Gift Cards" ? "gift" : "recharge"
-                            }`}
-                        >
-                          {product.type === "Gift Cards" ? "GIFT CARD" : "TOP-UP"}
-                        </span>
+                        {productType && (
+                          <span
+                            className={`gc-product-type${isGiftCards ? " gift" : ""}`}
+                          >
+                            {productType}
+                          </span>
+                        )}
 
                         {popular && (
                           <span className="gc-popular-badge">
