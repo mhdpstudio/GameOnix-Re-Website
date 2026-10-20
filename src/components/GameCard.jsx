@@ -1,68 +1,54 @@
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHeart,
-  faGamepad,
-  faArrowUpRightFromSquare,
-} from "@fortawesome/free-solid-svg-icons";
-
-import {
-  getSavedGames,
-  isGameSaved,
-  toggleSavedGame,
-  subscribeSavedGames,
-} from "../utils/savedGames";
+import { faGamepad } from "@fortawesome/free-solid-svg-icons";
 
 import "../style/game-card.css";
 
-function normalizePlatform(value) {
+function getPlatformLabel(value) {
+  if (Array.isArray(value)) {
+    return value.map((platform) => String(platform).trim()).filter(Boolean).join(", ") || "Platform";
+  }
+
   const platform = String(value || "").trim().toLowerCase();
 
   if (["pc", "windows", "computer"].includes(platform)) return "PC";
   if (["ps", "playstation", "ps4", "ps5"].includes(platform)) {
     return "PlayStation";
   }
-
-  return platform ? platform.toUpperCase() : "Platform";
-}
-
-function GameCard({ game, showNewBadge = false }) {
-  const [saved, setSaved] = useState(() => isGameSaved(game.slug));
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setSaved(isGameSaved(game.slug));
-    setImageFailed(false);
-  }, [game.slug, game.poster, game.game_poster]);
-
-  useEffect(() => {
-    return subscribeSavedGames(() => {
-      setSaved(isGameSaved(game.slug));
-    });
-  }, [game.slug]);
-
-  const poster = game.poster || game.game_poster || "";
-  const genre = String(game.gameType || "Other").trim();
-
-  function handleSave(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    toggleSavedGame(game);
-    setSaved(isGameSaved(game.slug));
+  if (["xbox", "xbox one", "xbox series x", "xbox series s"].includes(platform)) {
+    return "Xbox";
+  }
+  if (["switch", "nintendo switch"].includes(platform)) {
+    return "Nintendo Switch";
   }
 
+  return platform
+    ? platform.replace(/\b\w/g, (character) => character.toUpperCase())
+    : "Platform";
+}
+
+function GameCard({ game, showNewBadge = false, className = "" }) {
+  const poster = game?.poster || game?.game_poster || "";
+  const [failedPoster, setFailedPoster] = useState("");
+  const title = game?.title || "Untitled Game";
+  const platformLabel = getPlatformLabel(game?.platform);
+  const categoryLabel = String(game?.gameType || "Other").trim() || "Other";
+  const imageFailed = failedPoster === poster;
+
   return (
-    <article className="game-card">
+    <Link
+      to={`/game/${encodeURIComponent(game.slug)}`}
+      className={`game-card ${className}`.trim()}
+      title={title}
+    >
       <div className="game-card-poster">
         {poster && !imageFailed ? (
           <img
             src={poster}
-            alt={`${game.title} poster`}
+            alt={`${title} poster`}
             loading="lazy"
-            onError={() => setImageFailed(true)}
+            onError={() => setFailedPoster(poster)}
           />
         ) : (
           <div className="game-card-placeholder">
@@ -72,45 +58,36 @@ function GameCard({ game, showNewBadge = false }) {
         )}
 
         {showNewBadge && <span className="game-card-new">NEW</span>}
-
-        <button
-          type="button"
-          className={`game-card-heart ${saved ? "is-saved" : ""}`}
-          onClick={handleSave}
-          aria-label={saved ? `Remove ${game.title} from library` : `Save ${game.title}`}
-          aria-pressed={saved}
-          title={saved ? "Remove from My Library" : "Save to My Library"}
-        >
-          <FontAwesomeIcon icon={faHeart} />
-        </button>
       </div>
 
-      <div className="game-card-content">
+      <div className="game-card-info">
         <div className="game-card-meta">
-          <span className="game-card-platform">
-            {normalizePlatform(game.platform)}
+          <span
+            className="game-card-platform"
+            title={`Supported platform: ${platformLabel}`}
+          >
+            {platformLabel}
           </span>
-          <span className="game-card-genre">{genre.toUpperCase()}</span>
+          <span
+            className="game-card-category"
+            title={`Category: ${categoryLabel}`}
+          >
+            {categoryLabel}
+          </span>
         </div>
 
-        <h3 className="game-card-title" title={game.title}>
-          {game.title}
+        <h3 className="game-card-title" title={title}>
+          {title}
         </h3>
 
-        <p className="game-card-publisher">
-          {game.publisher || "Unknown publisher"}
-        </p>
-
-        <Link
-          to={`/game/${encodeURIComponent(game.slug)}`}
-          className="game-card-open"
-          title={`Open ${game.title}`}
+        <p
+          className="game-card-publisher"
+          title={game?.publisher || ""}
         >
-          <span>Open Game</span>
-          <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-        </Link>
+          {game?.publisher || "Unknown publisher"}
+        </p>
       </div>
-    </article>
+    </Link>
   );
 }
 

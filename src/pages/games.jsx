@@ -7,6 +7,7 @@ import {
   faGamepad,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
+import GameCard from "../components/GameCard";
 
 import "./../style/games-style.css";
 
@@ -42,33 +43,6 @@ function isNewGame(game) {
     Number.isFinite(timestamp) &&
     timestamp <= now &&
     now - timestamp < NEW_BADGE_DURATION
-  );
-}
-
-function GamePoster({ game }) {
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [game?.poster]);
-
-  if (!game?.poster || imageFailed) {
-    return (
-      <div className="games-poster-placeholder">
-        <FontAwesomeIcon icon={faGamepad} />
-        <span>No poster available</span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      className="games-poster-image"
-      src={game.poster}
-      alt={`${game.title} poster`}
-      loading="lazy"
-      onError={() => setImageFailed(true)}
-    />
   );
 }
 
@@ -201,29 +175,11 @@ function Games() {
       ) : (
         <div className="games-grid">
           {filteredGames.map((game) => (
-            <Link
-              to={`/game/${encodeURIComponent(game.slug)}`}
-              className="games-card"
+            <GameCard
               key={game.slug}
-              title={game.title}
-            >
-              <div className="games-card-poster">
-                <GamePoster game={game} />
-
-                {isNewGame(game) && (
-                  <span className="games-new-badge">NEW</span>
-                )}
-              </div>
-
-              <span className="games-card-platform">
-                {normalizePlatform(game.platform).toUpperCase()}
-              </span>
-
-              <div className="games-card-info">
-                <h2>{game.title}</h2>
-                <p>{game.publisher || game.gameType || "Game"}</p>
-              </div>
-            </Link>
+              game={game}
+              showNewBadge={isNewGame(game)}
+            />
           ))}
         </div>
       )}

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCompass,
@@ -7,9 +6,9 @@ import {
   faGamepad,
   faRotate,
   faSliders,
-  faArrowRight,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import GameCard from "../components/GameCard";
 
 import "./../style/discover-style.css";
 
@@ -46,59 +45,6 @@ function getAddedAt(game) {
   const timestamp = Date.parse(value);
 
   return Number.isFinite(timestamp) ? timestamp : null;
-}
-
-function GameCard({ game }) {
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [game?.poster]);
-
-  return (
-    <Link
-      to={`/game/${encodeURIComponent(game.slug)}`}
-      className="discover-game-card"
-      title={game.title}
-    >
-      <div className="discover-game-poster">
-        {game.poster && !imageFailed ? (
-          <img
-            src={game.poster}
-            alt={`${game.title} poster`}
-            loading="lazy"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <div className="discover-game-placeholder">
-            <FontAwesomeIcon icon={faGamepad} />
-            <span>No poster available</span>
-          </div>
-        )}
-
-        <span className="discover-game-platform">
-          {getPlatformLabel(normalizePlatform(game.platform) || "game")}
-        </span>
-
-        <span className="discover-game-overlay">
-          <span>
-            View game
-            <FontAwesomeIcon icon={faArrowRight} />
-          </span>
-        </span>
-      </div>
-
-      <div className="discover-game-info">
-        <span className="discover-game-genre">
-          {game.gameType || "Other"}
-        </span>
-
-        <h3>{game.title}</h3>
-
-        <p>{game.publisher || "Unknown publisher"}</p>
-      </div>
-    </Link>
-  );
 }
 
 function Discover() {

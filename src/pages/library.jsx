@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getFavorites } from "../api/favorites";
+import GameCard from "../components/GameCard";
 import "./../style/library-style.css";
 
 const DATA_URL =
@@ -9,70 +10,6 @@ const DATA_URL =
 function getGameList(data) {
   if (Array.isArray(data)) return data;
   return Array.isArray(data?.games) ? data.games : [];
-}
-
-function getCategory(game) {
-  return String(game?.gameType || "Other").trim();
-}
-
-function getPlatformLabel(platform) {
-  if (Array.isArray(platform)) {
-    return platform.join(", ");
-  }
-
-  const value = String(platform || "").trim();
-
-  if (!value) return "";
-
-  const platformLabels = {
-    pc: "PC",
-    windows: "PC",
-    playstation: "PlayStation",
-    ps5: "PS5",
-    ps4: "PS4",
-    xbox: "Xbox",
-    "xbox series x/s": "Xbox Series X/S",
-    switch: "Nintendo Switch",
-    "nintendo switch": "Nintendo Switch",
-    mobile: "Mobile",
-    android: "Android",
-    ios: "iOS",
-    mac: "Mac",
-    linux: "Linux",
-  };
-
-  return platformLabels[value.toLowerCase()] || value;
-}
-
-function getPoster(game) {
-  return game?.poster || game?.game_poster || "";
-}
-
-function GamePoster({ game }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const poster = getPoster(game);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [poster]);
-
-  return (
-    <div className="library-game-poster">
-      {poster && !imageFailed ? (
-        <img
-          src={poster}
-          alt={`${game.title || "Game"} poster`}
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div className="library-game-placeholder">
-          <span aria-hidden="true">🎮</span>
-          <span>Poster unavailable</span>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function Library() {
@@ -201,39 +138,9 @@ function Library() {
           </div>
         ) : (
           <div className="library-games-grid">
-            {games.map((game) => {
-              const category = getCategory(game);
-              const platform = getPlatformLabel(game.platform);
-              const publisher = game.publisher || "Unknown publisher";
-
-              return (
-                <Link
-                  to={`/game/${game.slug}`}
-                  className="library-game-card"
-                  key={game.slug}
-                >
-                  <GamePoster game={game} />
-
-                  <div className="library-game-info">
-                    <div className="library-game-meta">
-                      {platform && (
-                        <span className="library-game-platform">
-                          {platform}
-                        </span>
-                      )}
-
-                      <span className="library-game-category">
-                        {category}
-                      </span>
-                    </div>
-
-                    <h3>{game.title || "Untitled Game"}</h3>
-
-                    <p>{publisher}</p>
-                  </div>
-                </Link>
-              );
-            })}
+            {games.map((game) => (
+              <GameCard key={game.slug} game={game} />
+            ))}
           </div>
         )}
       </section>

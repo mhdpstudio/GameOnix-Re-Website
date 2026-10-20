@@ -7,6 +7,7 @@ import {
   faGamepad,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
+import GameCard from "../components/GameCard";
 
 import "./../style/home-style.css";
 
@@ -56,30 +57,6 @@ function normalizePlatform(value) {
   return platform;
 }
 
-function getPlatformLabel(value) {
-  const platform = String(value || "").trim().toLowerCase();
-
-  if (["pc", "windows", "computer"].includes(platform)) {
-    return "PC";
-  }
-
-  if (["ps", "playstation", "ps4", "ps5"].includes(platform)) {
-    return "PlayStation";
-  }
-
-  if (["xbox", "xbox one", "xbox series x", "xbox series s"].includes(platform)) {
-    return "Xbox";
-  }
-
-  if (["switch", "nintendo switch"].includes(platform)) {
-    return "Nintendo Switch";
-  }
-
-  return platform
-    ? platform.replace(/\b\w/g, (char) => char.toUpperCase())
-    : "Platform";
-}
-
 function getPlatformInfo(platformId) {
   if (platformId === "pc") {
     return {
@@ -102,81 +79,6 @@ function getPlatformInfo(platformId) {
     description: `Explore games for ${platformId.toUpperCase()}`,
     kicker: `${platformId.toUpperCase()} GAMING`,
   };
-}
-
-function GamePoster({ game, showNewBadge = false }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const poster = game?.poster || game?.game_poster || "";
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [poster]);
-
-  return (
-    <div className="home-game-poster">
-      {poster && !imageFailed ? (
-        <img
-          src={poster}
-          alt={`${game.title} poster`}
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div className="home-game-placeholder">
-          <FontAwesomeIcon icon={faGamepad} />
-          <span>No poster available</span>
-        </div>
-      )}
-
-      {showNewBadge && (
-        <span className="home-new-badge">NEW</span>
-      )}
-    </div>
-  );
-}
-
-function GameCard({ game, showNewBadge = false }) {
-  const platformLabel = getPlatformLabel(game.platform);
-  const categoryLabel = String(game.gameType || "Other").trim();
-
-  return (
-    <Link
-      to={`/game/${encodeURIComponent(game.slug)}`}
-      className="home-game-card"
-      title={game.title}
-    >
-      <div className="home-game-card-image">
-        <GamePoster
-          game={game}
-          showNewBadge={showNewBadge}
-        />
-      </div>
-
-      <div className="home-game-info">
-        <div className="home-game-meta">
-          <span
-            className="home-game-platform"
-            title={`Supported platform: ${platformLabel}`}
-          >
-            {platformLabel}
-          </span>
-
-          <span
-            className="home-game-category"
-            title={`Category: ${categoryLabel}`}
-          >
-            {categoryLabel}
-          </span>
-        </div>
-
-        <h3 title={game.title}>{game.title}</h3>
-
-        <p title={game.publisher || ""}>
-          {game.publisher || "Unknown publisher"}
-        </p>
-      </div>
-    </Link>
-  );
 }
 
 function GamesCarousel({ games, platform, category, now }) {
@@ -271,6 +173,7 @@ function GamesCarousel({ games, platform, category, now }) {
             key={`${category.id}-${game.slug}`}
             game={game}
             showNewBadge={isNewGame(game, now)}
+            className="home-game-card"
           />
         ))}
 

@@ -4,10 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMagnifyingGlass,
   faGamepad,
-  faArrowUpRightFromSquare,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
 
+import GameCard from "../components/GameCard";
 import "./../style/search-results-style.css";
 
 const GAMES_DATA_URL =
@@ -188,47 +188,7 @@ function SearchResults() {
         ) : (
           <div className="search-results-grid">
             {filteredGames.map((game) => (
-              <Link
-                key={game.slug}
-                to={`/game/${encodeURIComponent(game.slug)}`}
-                className="search-game-card"
-                title={game.title}
-              >
-                <div className="search-game-poster">
-                  {game.poster || game.game_poster ? (
-                    <img
-                      src={game.poster || game.game_poster}
-                      alt={`${game.title} poster`}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="search-game-placeholder">
-                      <FontAwesomeIcon icon={faGamepad} />
-                      <span>No poster available</span>
-                    </div>
-                  )}
-
-                  <span className="search-game-open">
-                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
-                  </span>
-                </div>
-
-                <div className="search-game-info">
-                  <h3>{game.title}</h3>
-
-                  <p>
-                    {game.publisher || game.gameType || "Game"}
-                  </p>
-
-                  <div className="search-game-meta">
-                    {game.platform && (
-                      <span>{String(game.platform).toUpperCase()}</span>
-                    )}
-
-                    {game.gameType && <span>{game.gameType}</span>}
-                  </div>
-                </div>
-              </Link>
+              <GameCard key={game.slug} game={game} />
             ))}
           </div>
         )}
