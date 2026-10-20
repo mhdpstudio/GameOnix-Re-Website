@@ -1305,7 +1305,7 @@
 
 .gc-order-price {
     margin-left: auto;
-    color: #ff4853;
+    color: var(--gc-selection-color);
     font-size: 12px;
 }
 
@@ -1662,7 +1662,7 @@
     margin-top: auto;
     padding-top: 3px;
 
-    color: #ff515c;
+    color: var(--gc-selection-color);
     font-size: 12px;
     font-weight: 900;
     line-height: 1.4;
