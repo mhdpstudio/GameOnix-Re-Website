@@ -8,9 +8,9 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
-import { authFetch } from "../api/session";
 import "./../style/wallet-style.css";
 
+const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_API_URL =
   "https://gameonixfav.vercel.app/api/auth/wallet";
 
@@ -29,9 +29,27 @@ function Wallet() {
   const [error, setError] = useState("");
 
   const fetchWallet = useCallback(async () => {
-    const response = await authFetch(WALLET_API_URL, {
+    const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
       method: "GET",
       headers: { Accept: "application/json" },
+      credentials: "include",
+    });
+
+    const tokenData = await tokenResponse.json().catch(() => ({}));
+
+    if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+      throw new Error(
+        tokenData.error || "Your session expired. Sign in again to view your wallet."
+      );
+    }
+
+    const response = await fetch(WALLET_API_URL, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${tokenData.token}`,
+      },
+      credentials: "omit",
     });
     const data = await response.json().catch(() => ({}));
 
