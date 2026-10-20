@@ -920,7 +920,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(1120px, 100%);
+    width: min(1200px, 100%);
     max-height: min(92vh, 900px);
     overflow: hidden;
     border: 1px solid #45454a;
@@ -2065,7 +2065,7 @@
 
 @media (min-width: 1450px) {
     .gc-checkout-modal {
-        width: min(1180px, 100%);
+        width: min(1260px, 100%);
     }
 }
 
