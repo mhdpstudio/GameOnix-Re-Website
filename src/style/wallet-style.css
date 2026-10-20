@@ -576,21 +576,48 @@
   color: #ff929a;
 }
 
-.wallet-edit-request {
+.wallet-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wallet-edit-request,
+.wallet-cancel-request {
   padding: 5px 8px;
-  border: 1px solid #8c4cff55;
+  border: 1px solid;
   border-radius: 7px;
-  background: #8c4cff16;
-  color: #d3b8ff;
   font: inherit;
   font-size: 10px;
   cursor: pointer;
   transition: border-color 0.18s, background 0.18s;
 }
 
+.wallet-edit-request {
+  border-color: #8c4cff55;
+  background: #8c4cff16;
+  color: #d3b8ff;
+}
+
 .wallet-edit-request:hover {
   border-color: #a88be0;
   background: #8c4cff2b;
+}
+
+.wallet-cancel-request {
+  border-color: #a83d465c;
+  background: #a83d4615;
+  color: #ffb7bd;
+}
+
+.wallet-cancel-request:hover:not(:disabled) {
+  border-color: #e36b75;
+  background: #a83d4629;
+}
+
+.wallet-cancel-request:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .wallet-modal-overlay {

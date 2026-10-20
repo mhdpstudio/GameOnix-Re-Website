@@ -71,6 +71,7 @@ function Wallet() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [editingRequestId, setEditingRequestId] = useState(null);
+  const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
@@ -248,6 +249,64 @@ function Wallet() {
     const timeout = window.setTimeout(() => setToastMessage(""), 4000);
     return () => window.clearTimeout(timeout);
   }, [toastMessage]);
+
+  async function cancelTopUpRequest(transaction) {
+    const confirmed = window.confirm(
+      "Cancel this pending top-up request? This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setCancellingRequestId(transaction.id);
+    try {
+      const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const tokenData = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+        throw new Error(
+          tokenData.error ||
+            "Your session expired. Sign in again to cancel this request."
+        );
+      }
+
+      const response = await fetch(WALLET_API_URL, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenData.token}`,
+        },
+        credentials: "omit",
+        body: JSON.stringify({ requestId: transaction.id }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to cancel this request.");
+      }
+
+      setTransactions((current) =>
+        current.map((item) =>
+          item.id === transaction.id ? { ...item, status: "cancelled" } : item
+        )
+      );
+      setToastMessage(
+        data.notificationSent
+          ? "Your request was cancelled and the admin was notified."
+          : "Your request was cancelled, but the admin notification could not be sent. Please contact support."
+      );
+      setToastWarning(!data.notificationSent);
+    } catch (cancelError) {
+      console.error("Wallet top-up request cancellation failed:", cancelError);
+      setToastMessage(
+        cancelError.message || "Unable to cancel this request. Please try again."
+      );
+      setToastWarning(true);
+    } finally {
+      setCancellingRequestId(null);
+    }
+  }
 
   async function submitTopUpRequest(event) {
     event.preventDefault();
@@ -532,26 +591,38 @@ function Wallet() {
                       </span>
                       {transaction.type === "top_up_request" &&
                         transaction.status === "pending" && (
-                          <button
-                            className="wallet-edit-request"
-                            type="button"
-                            onClick={() => {
-                              const details = getTopUpDetails(transaction);
-                              setEditingRequestId(transaction.id);
-                              setAmount(String(transaction.amount));
-                              setPaymentMethod(details?.paymentMethod || "");
-                              setMobileNumber(
-                                details?.mobileNumber === "Not required"
-                                  ? ""
-                                  : details?.mobileNumber || ""
-                              );
-                              setWhatsappNumber(details?.whatsappNumber || "");
-                              setRequestError("");
-                              setTopUpOpen(true);
-                            }}
-                          >
-                            Edit request
-                          </button>
+                          <div className="wallet-request-actions">
+                            <button
+                              className="wallet-edit-request"
+                              type="button"
+                              onClick={() => {
+                                const details = getTopUpDetails(transaction);
+                                setEditingRequestId(transaction.id);
+                                setAmount(String(transaction.amount));
+                                setPaymentMethod(details?.paymentMethod || "");
+                                setMobileNumber(
+                                  details?.mobileNumber === "Not required"
+                                    ? ""
+                                    : details?.mobileNumber || ""
+                                );
+                                setWhatsappNumber(details?.whatsappNumber || "");
+                                setRequestError("");
+                                setTopUpOpen(true);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="wallet-cancel-request"
+                              type="button"
+                              disabled={cancellingRequestId === transaction.id}
+                              onClick={() => cancelTopUpRequest(transaction)}
+                            >
+                              {cancellingRequestId === transaction.id
+                                ? "Cancelling..."
+                                : "Cancel"}
+                            </button>
+                          </div>
                         )}
                     </div>
                   </article>
