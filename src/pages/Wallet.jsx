@@ -455,16 +455,47 @@ function Wallet() {
             </button>
           </article>
 
-          <section className="wallet-history">
+          <section
+            className="wallet-history"
+            aria-busy={loading && transactions.length === 0}
+          >
             <div className="wallet-history-heading">
               <div>
                 <span className="wallet-eyebrow">ACCOUNT ACTIVITY</span>
                 <h2>Wallet statement</h2>
               </div>
-              <span>{transactions.length} transactions</span>
+              <span>
+                {loading && transactions.length === 0
+                  ? "Loading..."
+                  : `${transactions.length} transactions`}
+              </span>
             </div>
 
-            {transactions.length === 0 ? (
+            {loading && transactions.length === 0 ? (
+              <div
+                className="wallet-history-loading"
+                role="status"
+                aria-label="Loading wallet statement"
+              >
+                <span className="wallet-history-loading-message">
+                  Loading your wallet activity...
+                </span>
+                {[0, 1, 2].map((row) => (
+                  <div className="wallet-history-skeleton" key={row}>
+                    <span className="wallet-skeleton-icon" />
+                    <span className="wallet-skeleton-copy">
+                      <span />
+                      <span />
+                    </span>
+                    <span className="wallet-skeleton-amount" />
+                  </div>
+                ))}
+              </div>
+            ) : error && transactions.length === 0 ? (
+              <div className="wallet-empty-history">
+                Unable to load wallet activity. Please try again.
+              </div>
+            ) : transactions.length === 0 ? (
               <div className="wallet-empty-history">
                 No wallet activity yet. Top-up requests will appear here;
                 purchases will show after wallet checkout is connected.

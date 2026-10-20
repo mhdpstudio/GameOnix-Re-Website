@@ -427,6 +427,70 @@
   text-align: center;
 }
 
+.wallet-history-loading {
+  display: grid;
+  padding: 8px 20px;
+}
+
+.wallet-history-loading-message {
+  padding: 10px 0 4px;
+  color: #aaa6b2;
+  font-size: 12px;
+}
+
+.wallet-history-skeleton {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 13px;
+  border-bottom: 1px solid #ffffff0d;
+}
+
+.wallet-skeleton-icon,
+.wallet-skeleton-copy > span,
+.wallet-skeleton-amount {
+  background: linear-gradient(90deg, #ffffff0a 25%, #ffffff16 45%, #ffffff0a 65%);
+  background-size: 220% 100%;
+  animation: wallet-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.wallet-skeleton-icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+}
+
+.wallet-skeleton-copy {
+  display: grid;
+  flex: 1;
+  gap: 7px;
+}
+
+.wallet-skeleton-copy > span {
+  width: min(65%, 220px);
+  height: 8px;
+  border-radius: 5px;
+}
+
+.wallet-skeleton-copy > span:last-child {
+  width: min(40%, 130px);
+  height: 6px;
+}
+
+.wallet-skeleton-amount {
+  width: 64px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 5px;
+}
+
+@keyframes wallet-skeleton-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+
 .wallet-transaction-list {
   display: grid;
 }
