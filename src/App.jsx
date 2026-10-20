@@ -13,6 +13,7 @@ import Games from "./pages/games";
 import GameDetails from "./pages/game-details";
 import SearchResults from "./pages/search-results";
 import GameCards from "./pages/GameCards";
+import Wallet from "./pages/Wallet";
 
 import PageTitle from "./components/PageTitle";
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/library" element={<Library />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/wallet" element={<Wallet />} />
 
           <Route path="/games" element={<Games />} />
           <Route path="/search" element={<SearchResults />} />

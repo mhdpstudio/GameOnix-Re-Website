@@ -1,0 +1,234 @@
+.wallet-page {
+  width: min(100%, 940px);
+  margin: 0 auto;
+  padding: 34px 0 56px;
+  color: var(--text-primary, #f7f7fa);
+}
+
+.wallet-heading {
+  margin-bottom: 26px;
+}
+
+.wallet-eyebrow {
+  color: var(--accent-color, #a88be0);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.wallet-heading h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 5vw, 40px);
+}
+
+.wallet-heading p {
+  margin: 0;
+  color: var(--text-secondary, #92929d);
+  font-size: 14px;
+}
+
+.wallet-content {
+  display: grid;
+  gap: 16px;
+}
+
+.wallet-balance-card {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 26px;
+  border: 1px solid color-mix(in srgb, var(--accent-color, #7c5cff) 45%, #303034);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 88% 15%, #8c4cff32, transparent 42%),
+    linear-gradient(145deg, #211b2d, #171719 72%);
+  box-shadow: 0 20px 55px #0003;
+}
+
+.wallet-balance-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-icon,
+.wallet-funding-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #a88be044;
+  border-radius: 12px;
+  background: #8c4cff20;
+  color: #c9a7ff;
+}
+
+.wallet-balance-label {
+  color: #c6c1d0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+}
+
+.wallet-refresh {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  place-items: center;
+  border: 1px solid #ffffff24;
+  border-radius: 10px;
+  background: #ffffff0a;
+  color: #d7c4ff;
+  cursor: pointer;
+}
+
+.wallet-refresh:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.wallet-balance-amount {
+  margin: 22px 0 8px;
+  font-size: clamp(32px, 7vw, 48px);
+  letter-spacing: -1.5px;
+  overflow-wrap: anywhere;
+}
+
+.wallet-account-name {
+  color: #aaa6b2;
+  font-size: 13px;
+}
+
+.wallet-funding-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid #303034;
+  border-radius: 16px;
+  background: #19191c;
+}
+
+.wallet-funding-icon {
+  color: #d3b8ff;
+}
+
+.wallet-funding-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.wallet-funding-copy h2 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.wallet-funding-copy p {
+  margin: 0;
+  color: #92929d;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.wallet-funding-card > button,
+.wallet-primary-link {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border: 1px solid #8c4cff50;
+  border-radius: 9px;
+  background: #8c4cff1a;
+  color: #d3b8ff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wallet-funding-card > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.wallet-note,
+.wallet-message,
+.wallet-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #303034;
+  border-radius: 12px;
+  background: #19191c;
+  color: #aaaab4;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.wallet-note svg {
+  flex: 0 0 auto;
+  color: #bba0eb;
+}
+
+.wallet-state {
+  min-height: 110px;
+  justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.wallet-state p {
+  margin: 0;
+}
+
+.wallet-message {
+  justify-content: space-between;
+  border-color: #a83d465c;
+  color: #ffb7bd;
+}
+
+.wallet-message button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid #a83d4680;
+  border-radius: 8px;
+  background: #a83d4620;
+  color: inherit;
+  cursor: pointer;
+}
+
+.wallet-spinning {
+  animation: wallet-spin 0.8s linear infinite;
+}
+
+@keyframes wallet-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .wallet-page {
+    padding-top: 22px;
+  }
+
+  .wallet-balance-card {
+    min-height: 190px;
+    padding: 20px;
+  }
+
+  .wallet-funding-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .wallet-funding-card > button {
+    width: 100%;
+  }
+}

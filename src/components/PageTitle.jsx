@@ -11,6 +11,7 @@ const pageTitles = {
   "/login": "Login",
   "/register": "Create Account",
   "/profile": "Your Profile",
+  "/wallet": "Wallet",
   "/search": "Search Games",
   "/shopping/game-cards": "Game Cards",
 };

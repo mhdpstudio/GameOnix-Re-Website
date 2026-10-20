@@ -14,6 +14,7 @@ import {
   faXmark,
   faCreditCard,
   faBagShopping,
+  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -40,6 +41,10 @@ const navigation = [
         badge: "Coming soon",
       },
     ],
+  },
+  {
+    section: "ACCOUNT",
+    items: [{ label: "Wallet", to: "/wallet", icon: faWallet }],
   },
 ];
 
