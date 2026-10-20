@@ -14,7 +14,6 @@ import {
   faLock,
   faGift,
   faCheck,
-  faWallet,
   faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,23 +23,14 @@ import "./../style/game-cards.css";
 const DATA_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/recharge.json";
 
+const PAYMENTS_URL =
+  "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
+
 const RAW_ASSET_BASE =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/";
 
 const DEFAULT_AVATAR =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-All/main/0.png";
-
-const PAYMENT_METHODS = [
-  { id: "vodafone", name: "Vodafone Cash", short: "VF", color: "#f32632" },
-  { id: "efinance", name: "e& money", short: "e&", color: "#ed2028" },
-  { id: "orange", name: "Orange Cash", short: "OR", color: "#ff7900" },
-  { id: "instapay", name: "InstaPay", short: "IP", color: "#b65af0" },
-  { id: "card", name: "Visa / MasterCard", short: "VISA", color: "#4e91ff" },
-  { id: "wallets", name: "Mobile Wallets", short: "MW", color: "#a855f7" },
-  { id: "opay", name: "Pay with OPay", short: "OP", color: "#22cdb4" },
-  { id: "fawry", name: "Fawry", short: "FW", color: "#f6b900", disabled: true },
-  { id: "aman", name: "Aman / Masary", short: "AM", color: "#12c8b2" },
-];
 
 function getImageUrl(path) {
   if (!path) return "";
@@ -150,23 +140,49 @@ function CheckoutUserAvatar({ user }) {
   );
 }
 
+function PaymentMethodLogo({ method }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span className="gc-payment-logo-fallback" aria-hidden="true">
+        {method.name.slice(0, 2).toUpperCase()}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      className="gc-payment-logo-image"
+      src={getImageUrl(method.logo)}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function GameCards() {
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [paymentsError, setPaymentsError] = useState("");
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedPack, setSelectedPack] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedPayment, setSelectedPayment] = useState("vodafone");
+  const [selectedPayment, setSelectedPayment] = useState("");
   const [popularOnly, setPopularOnly] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
   const [playerId, setPlayerId] = useState("");
   const [serverId, setServerId] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isGift, setIsGift] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
@@ -197,9 +213,53 @@ function GameCards() {
     }
   }
 
+  async function loadPaymentMethods() {
+    setPaymentsLoading(true);
+    setPaymentsError("");
+
+    try {
+      const response = await fetch(PAYMENTS_URL, { cache: "no-cache" });
+
+      if (!response.ok) {
+        throw new Error(`Payment methods request failed (${response.status})`);
+      }
+
+      const data = await response.json();
+
+      if (
+        !Array.isArray(data) ||
+        data.some(
+          (method) =>
+            !method ||
+            typeof method.name !== "string" ||
+            !method.name.trim() ||
+            typeof method.logo !== "string" ||
+            !method.logo.trim() ||
+            typeof method.av !== "boolean" ||
+            typeof method["mobile-number"] !== "boolean"
+        )
+      ) {
+        throw new Error("Unexpected payment methods format.");
+      }
+
+      setPaymentMethods(data);
+      setSelectedPayment(data.find((method) => method.av)?.name || "");
+    } catch (err) {
+      console.error("GameOnix payment methods error:", err);
+      setPaymentsError("تعذر تحميل طرق الدفع. حاول تاني.");
+    } finally {
+      setPaymentsLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadCatalog();
+    loadPaymentMethods();
   }, []);
+
+  const selectedPaymentMethod = paymentMethods.find(
+    (method) => method.name === selectedPayment
+  );
 
   const categories = useMemo(() => {
     const types = [...new Set(catalog.map((item) => item.type).filter(Boolean))];
@@ -336,6 +396,19 @@ function GameCards() {
 
     if (!selectedPayment) {
       setCheckoutMessage("اختار وسيلة الدفع.");
+      return;
+    }
+
+    if (!selectedPaymentMethod?.av) {
+      setCheckoutMessage("وسيلة الدفع المختارة غير متاحة حاليًا.");
+      return;
+    }
+
+    if (
+      selectedPaymentMethod["mobile-number"] &&
+      !phoneNumber.trim()
+    ) {
+      setCheckoutMessage("اكتب رقم الموبايل المطلوب لطريقة الدفع.");
       return;
     }
 
@@ -899,6 +972,23 @@ function GameCards() {
                       </label>
                     </>
                   )}
+
+                  {selectedPaymentMethod?.["mobile-number"] && (
+                    <label className="gc-field">
+                      <span>
+                        Mobile phone number ({selectedPaymentMethod.name})
+                      </span>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={phoneNumber}
+                        onChange={(event) => setPhoneNumber(event.target.value)}
+                        placeholder="Enter your mobile number"
+                        required
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -978,51 +1068,74 @@ function GameCards() {
                     SELECT PAYMENT METHOD
                   </div>
 
-                  <div className="gc-payment-grid">
-                    {PAYMENT_METHODS.map((method) => (
-                      <button
-                        type="button"
-                        key={method.id}
-                        disabled={method.disabled}
-                        onClick={() => {
-                          setSelectedPayment(method.id);
-                          setCheckoutMessage("");
-                        }}
-                        className={[
-                          "gc-payment-method",
-                          selectedPayment === method.id ? "selected" : "",
-                          method.disabled ? "disabled" : "",
-                        ].join(" ")}
-                        style={{ "--payment-color": method.color }}
-                      >
-                        <span className="gc-payment-instant">
-                          <FontAwesomeIcon icon={faBolt} />{" "}
-                          {method.disabled ? "UNAVAILABLE" : "PAYMENT"}
-                        </span>
-
-                        <span className={`gc-payment-logo gc-logo-${method.id}`}>
-                          {method.id === "card" ? (
-                            <span className="gc-card-brands">
-                              <b>VISA</b>
-                              <b>●●</b>
-                            </span>
-                          ) : method.id === "wallets" ? (
-                            <FontAwesomeIcon icon={faWallet} />
-                          ) : (
-                            method.short
-                          )}
-                        </span>
-
-                        <strong>{method.name}</strong>
-
-                        {selectedPayment === method.id && (
-                          <span className="gc-payment-check">
-                            <FontAwesomeIcon icon={faCheck} />
-                          </span>
-                        )}
+                  {paymentsLoading ? (
+                    <p className="gc-payment-state" role="status">
+                      Loading payment methods...
+                    </p>
+                  ) : paymentsError ? (
+                    <div className="gc-payment-state error" role="alert">
+                      <span>{paymentsError}</span>
+                      <button type="button" onClick={loadPaymentMethods}>
+                        Try again
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  ) : paymentMethods.length === 0 ? (
+                    <p className="gc-payment-state" role="status">
+                      No payment methods are configured.
+                    </p>
+                  ) : (
+                    <div className="gc-payment-grid">
+                      {paymentMethods.map((method) => (
+                        <button
+                          type="button"
+                          key={`${method.name}-${method.logo}`}
+                          disabled={!method.av}
+                          onClick={() => {
+                            setSelectedPayment(method.name);
+                            setCheckoutMessage("");
+                          }}
+                          className={[
+                            "gc-payment-method",
+                            selectedPayment === method.name ? "selected" : "",
+                            !method.av ? "disabled" : "",
+                          ].join(" ")}
+                          aria-pressed={selectedPayment === method.name}
+                          title={
+                            method.av
+                              ? method["mobile-number"]
+                                ? "Available; mobile number required"
+                                : "Available; no mobile number required"
+                              : "Currently unavailable"
+                          }
+                        >
+                          <span className="gc-payment-instant">
+                            {method.av && <FontAwesomeIcon icon={faBolt} />}{" "}
+                            {method.av ? "AVAILABLE" : "UNAVAILABLE"}
+                          </span>
+
+                          <span className="gc-payment-logo">
+                            <PaymentMethodLogo
+                              key={method.logo}
+                              method={method}
+                            />
+                          </span>
+
+                          <strong>{method.name}</strong>
+                          <small className="gc-payment-requirement">
+                            {method["mobile-number"]
+                              ? "Phone number required"
+                              : "No phone number needed"}
+                          </small>
+
+                          {selectedPayment === method.name && (
+                            <span className="gc-payment-check">
+                              <FontAwesomeIcon icon={faCheck} />
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="gc-security-row">
                     <span>
@@ -1052,7 +1165,11 @@ function GameCards() {
                   <button
                     type="submit"
                     className="gc-pay-button"
-                    disabled={!selectedPack}
+                    disabled={
+                      !selectedPack ||
+                      paymentsLoading ||
+                      !selectedPaymentMethod?.av
+                    }
                   >
                     <FontAwesomeIcon icon={faLock} />
                     Continue · {formatPrice(total)}
