@@ -724,10 +724,10 @@ function Wallet() {
                   <label className="wallet-field">
                     <span>Amount (EGP)</span>
                     <input
-                      type="number"
-                      min="1"
-                      max="100000"
-                      step="0.01"
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]+([.][0-9]{0,2})?"
+                      title="Enter an amount with up to two decimal places."
                       value={amount}
                       onChange={(event) => setAmount(event.target.value)}
                       placeholder="Enter amount"
