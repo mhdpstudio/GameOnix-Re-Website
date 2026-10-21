@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -172,6 +173,7 @@ function Topbar() {
     const [notificationsErrorOwner, setNotificationsErrorOwner] = useState("");
     const [notificationActionLoading, setNotificationActionLoading] =
         useState(false);
+    const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState("");
 
@@ -190,6 +192,20 @@ function Topbar() {
     const unreadCount = visibleNotifications.filter(
         (notification) => !notification.readAt
     ).length;
+
+    useEffect(() => {
+        if (!deleteAllConfirmOpen) return undefined;
+
+        function handleConfirmationKeyDown(event) {
+            if (event.key === "Escape" && !notificationActionLoading) {
+                setDeleteAllConfirmOpen(false);
+            }
+        }
+
+        window.addEventListener("keydown", handleConfirmationKeyDown);
+        return () =>
+            window.removeEventListener("keydown", handleConfirmationKeyDown);
+    }, [deleteAllConfirmOpen, notificationActionLoading]);
 
     const loadNotifications = useCallback(async () => {
         if (!user) return;
@@ -384,9 +400,6 @@ function Topbar() {
 
     async function deleteAllNotifications() {
         if (!visibleNotifications.length) return;
-        if (!window.confirm("Delete all your notifications? This cannot be undone.")) {
-            return;
-        }
 
         setNotificationActionLoading(true);
         setNotificationsError("");
@@ -410,6 +423,7 @@ function Topbar() {
 
             setNotifications([]);
             setSelectedNotificationId(null);
+            setDeleteAllConfirmOpen(false);
         } catch (error) {
             console.error("Wallet notifications deletion failed:", error);
             setNotificationsError(
@@ -872,7 +886,9 @@ function Topbar() {
                                                 <button
                                                     type="button"
                                                     className="topbar-mark-all-read topbar-delete-all"
-                                                    onClick={deleteAllNotifications}
+                                                    onClick={() =>
+                                                        setDeleteAllConfirmOpen(true)
+                                                    }
                                                     disabled={
                                                         notificationActionLoading ||
                                                         visibleNotifications.length === 0
@@ -1196,6 +1212,64 @@ function Topbar() {
                     </div>
                 </div>
             </div>
+            {deleteAllConfirmOpen &&
+                createPortal(
+                    <div
+                        className="topbar-delete-all-overlay"
+                        onMouseDown={(event) => {
+                            if (
+                                event.target === event.currentTarget &&
+                                !notificationActionLoading
+                            ) {
+                                setDeleteAllConfirmOpen(false);
+                            }
+                        }}
+                    >
+                        <section
+                            className="topbar-delete-all-dialog"
+                            role="alertdialog"
+                            aria-modal="true"
+                            aria-labelledby="topbar-delete-all-title"
+                            aria-describedby="topbar-delete-all-description"
+                        >
+                            <span className="topbar-delete-all-dialog-icon">
+                                <FontAwesomeIcon icon={faTrashCan} />
+                            </span>
+                            <h2 id="topbar-delete-all-title">
+                                Delete all notifications?
+                            </h2>
+                            <p id="topbar-delete-all-description">
+                                This will permanently remove all your notifications.
+                                This action cannot be undone.
+                            </p>
+                            <div className="topbar-delete-all-dialog-actions">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setDeleteAllConfirmOpen(false)
+                                    }
+                                    disabled={notificationActionLoading}
+                                >
+                                    Keep notifications
+                                </button>
+                                <button
+                                    type="button"
+                                    className="confirm"
+                                    onClick={deleteAllNotifications}
+                                    disabled={
+                                        notificationActionLoading ||
+                                        visibleNotifications.length === 0
+                                    }
+                                >
+                                    {notificationActionLoading
+                                        ? "Deleting..."
+                                        : "Delete all"}
+                                </button>
+                            </div>
+                        </section>
+                    </div>,
+                    document.body
+                )}
         </header>
     );
 }

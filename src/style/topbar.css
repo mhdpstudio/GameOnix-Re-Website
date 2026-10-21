@@ -536,7 +536,7 @@
 .topbar-popover-heading {
   min-height: 64px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -544,8 +544,9 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.topbar-popover-heading > div {
+.topbar-popover-heading > div:first-child {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
@@ -581,7 +582,7 @@
   flex: 0 0 auto;
   align-items: center;
   margin-left: auto;
-  gap: 6px;
+  gap: 5px;
 }
 
 .topbar-delete-all {
@@ -594,6 +595,105 @@
   color: #ffe1e3;
   background: rgba(255, 80, 90, 0.16);
   border-color: rgba(255, 100, 110, 0.3);
+}
+
+.topbar-delete-all-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 4, 7, 0.82);
+  backdrop-filter: blur(8px);
+  animation: topbar-delete-overlay-in 0.16s ease-out;
+}
+
+.topbar-delete-all-dialog {
+  width: min(100%, 380px);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 26px 24px 22px;
+  color: #f4f1fa;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(255, 80, 90, 0.1), transparent 48%),
+    #19171d;
+  border: 1px solid #49313a;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
+  animation: topbar-delete-dialog-in 0.18s ease-out;
+}
+
+.topbar-delete-all-dialog-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #ff929a;
+  background: rgba(255, 80, 90, 0.12);
+  border: 1px solid rgba(255, 100, 110, 0.2);
+  border-radius: 14px;
+  font-size: 18px;
+}
+
+.topbar-delete-all-dialog h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.topbar-delete-all-dialog p {
+  margin: 0;
+  color: #aaa4b3;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.topbar-delete-all-dialog-actions {
+  width: 100%;
+  display: flex;
+  gap: 9px;
+  margin-top: 6px;
+}
+
+.topbar-delete-all-dialog-actions button {
+  min-height: 40px;
+  flex: 1;
+  padding: 8px 10px;
+  color: #dfd9e8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.topbar-delete-all-dialog-actions button.confirm {
+  color: #fff;
+  background: #c84250;
+  border-color: #d95460;
+}
+
+.topbar-delete-all-dialog-actions button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.topbar-delete-all-dialog-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@keyframes topbar-delete-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes topbar-delete-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .topbar-notification-list {
@@ -1083,7 +1183,7 @@
     position: fixed;
     top: calc(64px + 10px);
     right: 12px;
-    width: min(390px, calc(100vw - 98px));
+    width: min(390px, calc(100vw - 24px));
   }
 
   .topbar-notification-details {
