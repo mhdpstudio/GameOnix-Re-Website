@@ -883,6 +883,37 @@
   line-height: 1.6;
 }
 
+.wallet-feedback-button {
+  width: fit-content;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 11px;
+  padding: 0 11px;
+  color: #e7d9ff;
+  background: linear-gradient(135deg, #7136c8, #4d20a5);
+  border: 1px solid #a77aff55;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
+}
+
+.wallet-feedback-button:hover {
+  transform: translateY(-1px);
+  border-color: #c5a6ff;
+  filter: brightness(1.12);
+}
+
+.wallet-feedback-button svg {
+  font-size: 9px;
+}
+
 .wallet-transaction-amount > strong {
   color: #f4f4f7;
   font-size: 12px;

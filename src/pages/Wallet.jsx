@@ -927,11 +927,19 @@ function Wallet() {
                   <FontAwesomeIcon icon={faHeadset} />
                 </span>
                 <div>
-                  <strong>Need help?</strong>
+                  <strong>Share your feedback</strong>
                   <p>
-                    Top-up requests are reviewed by the GameOnix team. You can
-                    follow each request from your transaction history.
+                    Tell us how we can improve your GameOnix experience.
                   </p>
+                  <a
+                    className="wallet-feedback-button"
+                    href="https://wa.link/2od11q"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Send feedback
+                    <FontAwesomeIcon icon={faArrowTrendUp} />
+                  </a>
                 </div>
               </div>
             </aside>
