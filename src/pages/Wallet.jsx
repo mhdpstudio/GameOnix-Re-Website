@@ -717,6 +717,9 @@ function Wallet() {
                           {formatTransactionDate(transaction.createdAt)}
                         </span>
                       </div>
+                      <span className={`wallet-status ${transaction.status}`}>
+                        {transaction.status.replaceAll("_", " ")}
+                      </span>
                       <div className="wallet-transaction-amount">
                         <strong>
                           {formatBalance(transaction.amount)}
@@ -728,9 +731,6 @@ function Wallet() {
                             {amountPrefix} {formatBalance(transaction.amount)}
                           </span>
                         )}
-                        <span className={`wallet-status ${transaction.status}`}>
-                          {transaction.status.replaceAll("_", " ")}
-                        </span>
                         {transaction.type === "top_up_request" &&
                           transaction.status === "pending" && (
                             <div className="wallet-request-actions">

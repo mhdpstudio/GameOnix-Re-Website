@@ -580,7 +580,8 @@
 }
 
 .wallet-transaction {
-  display: flex;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(90px, 0.45fr) minmax(105px, auto);
   align-items: center;
   gap: 13px;
   padding: 15px 20px;
@@ -621,7 +622,6 @@
 
 .wallet-transaction-details {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
@@ -803,6 +803,7 @@
 
 .wallet-status {
   width: fit-content;
+  justify-self: center;
   padding: 4px 9px;
   color: #92929d;
   background: #ffffff08;
@@ -1120,6 +1121,11 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .wallet-status {
+    grid-column: 2;
+    justify-self: center;
   }
 
   .wallet-request-actions {
