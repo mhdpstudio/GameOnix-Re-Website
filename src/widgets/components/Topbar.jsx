@@ -382,6 +382,45 @@ function Topbar() {
         }
     }
 
+    async function deleteAllNotifications() {
+        if (!visibleNotifications.length) return;
+        if (!window.confirm("Delete all your notifications? This cannot be undone.")) {
+            return;
+        }
+
+        setNotificationActionLoading(true);
+        setNotificationsError("");
+        try {
+            const token = await getWalletApiToken();
+            const response = await fetch(WALLET_NOTIFICATIONS_URL, {
+                method: "DELETE",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                credentials: "omit",
+                body: JSON.stringify({ deleteAll: true }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to delete notifications.");
+            }
+
+            setNotifications([]);
+            setSelectedNotificationId(null);
+        } catch (error) {
+            console.error("Wallet notifications deletion failed:", error);
+            setNotificationsError(
+                error.message || "Unable to delete notifications."
+            );
+            setNotificationsErrorOwner(user?.username || "");
+        } finally {
+            setNotificationActionLoading(false);
+        }
+    }
+
     async function handleLogout() {
         if (loggingOut) return;
 
@@ -818,18 +857,30 @@ function Topbar() {
                                                     Wallet updates · kept for 7 days
                                                 </span>
                                             </div>
-                                            {unreadCount > 0 && (
+                                            <div className="topbar-notification-heading-actions">
                                                 <button
                                                     type="button"
                                                     className="topbar-mark-all-read"
                                                     onClick={markAllNotificationsRead}
                                                     disabled={
-                                                        notificationActionLoading
+                                                        notificationActionLoading ||
+                                                        unreadCount === 0
                                                     }
                                                 >
                                                     Mark all read
                                                 </button>
-                                            )}
+                                                <button
+                                                    type="button"
+                                                    className="topbar-mark-all-read topbar-delete-all"
+                                                    onClick={deleteAllNotifications}
+                                                    disabled={
+                                                        notificationActionLoading ||
+                                                        visibleNotifications.length === 0
+                                                    }
+                                                >
+                                                    Delete all
+                                                </button>
+                                            </div>
                                         </header>
                                         {visibleNotificationsError ? (
                                             <div

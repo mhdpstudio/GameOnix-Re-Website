@@ -536,6 +536,7 @@
 .topbar-popover-heading {
   min-height: 64px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -573,6 +574,26 @@
 .topbar-mark-all-read:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.topbar-notification-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: auto;
+  gap: 6px;
+}
+
+.topbar-delete-all {
+  color: #ffb7bd;
+  background: rgba(255, 80, 90, 0.08);
+  border-color: rgba(255, 100, 110, 0.16);
+}
+
+.topbar-delete-all:hover:not(:disabled) {
+  color: #ffe1e3;
+  background: rgba(255, 80, 90, 0.16);
+  border-color: rgba(255, 100, 110, 0.3);
 }
 
 .topbar-notification-list {
