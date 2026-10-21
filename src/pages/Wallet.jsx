@@ -14,6 +14,7 @@ import {
   faListCheck,
   faRotate,
   faWallet,
+  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import "./../style/wallet-style.css";
@@ -605,7 +606,7 @@ function Wallet() {
               <div className="wallet-history-heading">
                 <div className="wallet-section-title">
                   <span className="wallet-section-icon">
-                    <FontAwesomeIcon icon={faWallet} />
+                    <FontAwesomeIcon icon={faFileLines} />
                   </span>
                   <div>
                     <span className="wallet-eyebrow">ACCOUNT ACTIVITY</span>
