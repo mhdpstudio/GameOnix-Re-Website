@@ -7,7 +7,7 @@ import {
     faChevronDown,
     faCircleUser,
     faGear,
-    faWallet,
+    faCreditCard,
     faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -27,6 +27,8 @@ const GAMES_DATA_URL =
 const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_NOTIFICATIONS_URL =
     "https://gameonixfav.vercel.app/api/auth/wallet-notifications";
+const PAYMENTS_URL =
+    "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
 
 async function getWalletApiToken() {
     const response = await fetch(`${AUTH_API_URL}?token=true`, {
@@ -66,6 +68,8 @@ function Topbar() {
     const [loadingGames, setLoadingGames] = useState(true);
     const [openAccountPanel, setOpenAccountPanel] = useState(null);
     const [notifications, setNotifications] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [selectedNotificationId, setSelectedNotificationId] = useState(null);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [notificationsError, setNotificationsError] = useState("");
     const [notificationsOwner, setNotificationsOwner] = useState("");
@@ -131,11 +135,8 @@ function Topbar() {
     }, [user]);
 
     async function markNotificationRead(notification) {
-        if (notification.readAt) {
-            navigate("/wallet");
-            setOpenAccountPanel(null);
-            return;
-        }
+        setSelectedNotificationId(notification.id);
+        if (notification.readAt) return;
 
         setNotificationActionLoading(true);
         setNotificationsError("");
@@ -164,8 +165,6 @@ function Topbar() {
                         : item
                 )
             );
-            setOpenAccountPanel(null);
-            navigate("/wallet");
         } catch (error) {
             console.error("Wallet notification update failed:", error);
             setNotificationsError(
@@ -267,6 +266,45 @@ function Topbar() {
         loadGames();
 
         return () => controller.abort();
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+
+        async function loadPaymentMethods() {
+            try {
+                const response = await fetch(PAYMENTS_URL, {
+                    cache: "no-cache",
+                });
+                if (!response.ok) {
+                    throw new Error(
+                        `Payment methods request failed (${response.status}).`
+                    );
+                }
+
+                const data = await response.json();
+                if (
+                    !Array.isArray(data) ||
+                    data.some(
+                        (method) =>
+                            !method ||
+                            typeof method.name !== "string" ||
+                            typeof method.logo !== "string"
+                    )
+                ) {
+                    throw new Error("Unexpected payment methods format.");
+                }
+
+                if (active) setPaymentMethods(data);
+            } catch (error) {
+                console.error("Topbar payment methods load failed:", error);
+            }
+        }
+
+        loadPaymentMethods();
+        return () => {
+            active = false;
+        };
     }, []);
 
     useEffect(() => {
@@ -658,56 +696,137 @@ function Topbar() {
                                             </div>
                                         ) : (
                                             <div className="topbar-notification-list">
-                                                {visibleNotifications.map(
-                                                    (notification) => (
-                                                        <button
-                                                            className={`topbar-notification-item${notification.readAt ? "" : " unread"}`}
-                                                            type="button"
+                                                {visibleNotifications.map((notification) => {
+                                                    const isSelected =
+                                                        selectedNotificationId === notification.id;
+                                                    const details = notification.details;
+                                                    const paymentMethod = paymentMethods.find(
+                                                        (method) =>
+                                                            method.name === details?.paymentMethod
+                                                    );
+                                                    const statusLabel = {
+                                                        pending: "Awaiting admin response",
+                                                        approved: "Approved",
+                                                        cancelled: "Cancelled",
+                                                    }[details?.status] || "Status unavailable";
+
+                                                    return (
+                                                        <article
+                                                            className={`topbar-notification-card${notification.readAt ? "" : " unread"}${isSelected ? " expanded" : ""}`}
                                                             key={notification.id}
-                                                            onClick={() =>
-                                                                markNotificationRead(
-                                                                    notification
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                notificationActionLoading
-                                                            }
                                                         >
-                                                            <span className="topbar-notification-item-icon">
-                                                                <FontAwesomeIcon
-                                                                    icon={faWallet}
-                                                                />
-                                                            </span>
-                                                            <span className="topbar-notification-copy">
-                                                                <strong>
-                                                                    {notification.title}
-                                                                </strong>
-                                                                <span>
-                                                                    {notification.message}
-                                                                </span>
-                                                                <small>
-                                                                    {new Date(
-                                                                        notification.createdAt
-                                                                    ).toLocaleString(
-                                                                        "en-EG",
-                                                                        {
-                                                                            dateStyle:
-                                                                                "medium",
-                                                                            timeStyle:
-                                                                                "short",
-                                                                        }
+                                                            <button
+                                                                className="topbar-notification-item"
+                                                                type="button"
+                                                                aria-expanded={isSelected}
+                                                                onClick={() => {
+                                                                    if (isSelected) {
+                                                                        setSelectedNotificationId(null);
+                                                                    } else {
+                                                                        markNotificationRead(notification);
+                                                                    }
+                                                                }}
+                                                                disabled={notificationActionLoading}
+                                                            >
+                                                                <span className="topbar-notification-item-icon">
+                                                                    {paymentMethod?.logo ? (
+                                                                        <img
+                                                                            src={paymentMethod.logo}
+                                                                            alt=""
+                                                                        />
+                                                                    ) : (
+                                                                        <FontAwesomeIcon icon={faCreditCard} />
                                                                     )}
-                                                                </small>
-                                                            </span>
-                                                            {!notification.readAt && (
-                                                                <span
-                                                                    className="topbar-notification-unread-dot"
-                                                                    aria-label="Unread"
+                                                                </span>
+                                                                <span className="topbar-notification-copy">
+                                                                    <strong>{notification.title}</strong>
+                                                                    <span>{notification.message}</span>
+                                                                    <small>
+                                                                        {new Date(
+                                                                            notification.createdAt
+                                                                        ).toLocaleString("en-EG", {
+                                                                            dateStyle: "medium",
+                                                                            timeStyle: "short",
+                                                                        })}
+                                                                    </small>
+                                                                </span>
+                                                                {!notification.readAt && (
+                                                                    <span
+                                                                        className="topbar-notification-unread-dot"
+                                                                        aria-label="Unread"
+                                                                    />
+                                                                )}
+                                                                <FontAwesomeIcon
+                                                                    icon={faChevronDown}
+                                                                    className={`topbar-notification-chevron${isSelected ? " expanded" : ""}`}
                                                                 />
+                                                            </button>
+                                                            {isSelected && (
+                                                                <div className="topbar-notification-details">
+                                                                    {details ? (
+                                                                        <>
+                                                                            <div className="topbar-notification-detail-row amount">
+                                                                                <span>Requested amount</span>
+                                                                                <strong>
+                                                                                    {Number.isFinite(Number(details.amount))
+                                                                                        ? `EGP ${Number(details.amount).toFixed(2)}`
+                                                                                        : "Amount unavailable"}
+                                                                                </strong>
+                                                                            </div>
+                                                                            <div className="topbar-notification-detail-row">
+                                                                                <span>Payment method</span>
+                                                                                <strong>{details.paymentMethod || "Not provided"}</strong>
+                                                                            </div>
+                                                                            <div className="topbar-notification-detail-row">
+                                                                                <span>Email</span>
+                                                                                {details.email &&
+                                                                                details.email !== "Not provided" &&
+                                                                                details.email !== "Not available" ? (
+                                                                                    <a href={`mailto:${details.email}`}>
+                                                                                        {details.email}
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <strong>Not provided</strong>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="topbar-notification-detail-row">
+                                                                                <span>Mobile number</span>
+                                                                                {details.mobileNumber &&
+                                                                                details.mobileNumber !== "Not required" &&
+                                                                                details.mobileNumber !== "Not provided" ? (
+                                                                                    <a href={`tel:${details.mobileNumber}`}>
+                                                                                        {details.mobileNumber}
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <strong>{details.mobileNumber || "Not provided"}</strong>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="topbar-notification-detail-row">
+                                                                                <span>WhatsApp</span>
+                                                                                {details.whatsappNumber &&
+                                                                                details.whatsappNumber !== "Not provided" ? (
+                                                                                    <a href={`https://wa.me/${String(details.whatsappNumber).replace(/[^\d]/g, "")}`}>
+                                                                                        {details.whatsappNumber}
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <strong>Not provided</strong>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className={`topbar-notification-status ${details.status || "unknown"}`}>
+                                                                                <span className="topbar-notification-status-dot" />
+                                                                                {statusLabel}
+                                                                            </div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <p>
+                                                                            Request details are unavailable for this older notification.
+                                                                        </p>
+                                                                    )}
+                                                                </div>
                                                             )}
-                                                        </button>
-                                                    )
-                                                )}
+                                                        </article>
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                             </>

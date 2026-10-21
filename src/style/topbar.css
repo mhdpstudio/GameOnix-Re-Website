@@ -590,27 +590,42 @@
   border-radius: 8px;
 }
 
+.topbar-notification-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+.topbar-notification-card + .topbar-notification-card {
+  margin-top: 5px;
+}
+
+.topbar-notification-card.unread {
+  background: rgba(139, 92, 246, 0.075);
+  border-color: rgba(167, 139, 250, 0.14);
+}
+
+.topbar-notification-card.expanded {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
 .topbar-notification-item {
   width: 100%;
   display: flex;
-  align-items: flex-start;
-  gap: 11px;
+  align-items: center;
+  gap: 10px;
   padding: 11px 10px;
   color: inherit;
   text-align: left;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  border: 0;
   cursor: pointer;
 }
 
 .topbar-notification-item:hover {
   background: rgba(255, 255, 255, 0.045);
-}
-
-.topbar-notification-item.unread {
-  background: rgba(139, 92, 246, 0.075);
-  border-color: rgba(167, 139, 250, 0.14);
 }
 
 .topbar-notification-item:disabled {
@@ -630,6 +645,14 @@
   font-size: 13px;
 }
 
+.topbar-notification-item-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
 .topbar-notification-copy {
   min-width: 0;
   flex: 1;
@@ -638,14 +661,19 @@
 }
 
 .topbar-notification-copy strong {
+  min-width: 0;
   color: #eeeaf7;
   font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .topbar-notification-copy > span {
+  min-width: 0;
   color: #aaa6b5;
   font-size: 10px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .topbar-notification-copy small {
@@ -656,6 +684,115 @@
 .topbar-notification-unread-dot {
   margin-top: 5px;
   border: 0;
+}
+
+.topbar-notification-chevron {
+  flex: 0 0 auto;
+  color: #8a8499;
+  font-size: 10px;
+  transition: transform 0.18s ease;
+}
+
+.topbar-notification-chevron.expanded {
+  color: #c3a8ff;
+  transform: rotate(180deg);
+}
+
+.topbar-notification-details {
+  display: grid;
+  gap: 9px;
+  padding: 2px 12px 12px 53px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.topbar-notification-detail-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(90px, 0.7fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 8px;
+  color: #888396;
+  font-size: 10px;
+}
+
+.topbar-notification-detail-row > strong,
+.topbar-notification-detail-row > a {
+  min-width: 0;
+  color: #e2deeb;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.topbar-notification-detail-row > a {
+  color: #c5adff;
+  text-decoration: none;
+}
+
+.topbar-notification-detail-row > a:hover {
+  text-decoration: underline;
+}
+
+.topbar-notification-detail-row.amount {
+  align-items: center;
+  padding-bottom: 2px;
+}
+
+.topbar-notification-detail-row.amount > strong {
+  color: #d5c4ff;
+  font-size: 13px;
+}
+
+.topbar-notification-status {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+  padding: 6px 9px;
+  color: #e5d7ff;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.topbar-notification-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: #b79aff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.65);
+}
+
+.topbar-notification-status.approved {
+  color: #a5edc4;
+  background: rgba(39, 174, 96, 0.1);
+  border-color: rgba(88, 214, 141, 0.18);
+}
+
+.topbar-notification-status.approved .topbar-notification-status-dot {
+  background: #65d99a;
+}
+
+.topbar-notification-status.cancelled {
+  color: #ffb7bd;
+  background: rgba(255, 80, 90, 0.08);
+  border-color: rgba(255, 100, 110, 0.18);
+}
+
+.topbar-notification-status.cancelled .topbar-notification-status-dot {
+  background: #ff7d86;
+}
+
+.topbar-notification-details > p {
+  margin: 0;
+  color: #9993a7;
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .topbar-notification-state {
@@ -881,6 +1018,17 @@
   .topbar-notifications-trigger {
     width: 34px;
     min-height: 36px;
+  }
+
+  .topbar-notifications-popover {
+    position: fixed;
+    top: calc(64px + 10px);
+    right: 12px;
+    width: min(390px, calc(100vw - 98px));
+  }
+
+  .topbar-notification-details {
+    padding-left: 12px;
   }
 
   .topbar-profile-trigger {
