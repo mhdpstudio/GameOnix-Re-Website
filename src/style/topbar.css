@@ -519,6 +519,7 @@
   z-index: 300;
   overflow: hidden;
   color: #eeeaf7;
+  white-space: normal;
   background:
     radial-gradient(ellipse at 100% 0%, rgba(139, 92, 246, 0.12), transparent 48%),
     #15141b;
@@ -673,6 +674,7 @@
   color: #aaa6b5;
   font-size: 10px;
   line-height: 1.5;
+  white-space: normal;
   overflow-wrap: anywhere;
 }
 
