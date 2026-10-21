@@ -523,6 +523,12 @@
   color: #ffb17f;
 }
 
+.wallet-transaction-payment-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .wallet-transaction-details {
   display: flex;
   flex: 1;

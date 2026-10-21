@@ -32,15 +32,15 @@ function getTransactionDescription(transaction) {
 }
 
 function getTopUpDetails(transaction) {
-  if (
-    transaction.type !== "top_up_request" ||
-    !transaction.description.startsWith("{")
-  ) {
-    return null;
-  }
+  if (transaction.type !== "top_up_request") return null;
+  return getTransactionDetails(transaction);
+}
 
+function getTransactionDetails(transaction) {
+  if (!transaction.description.startsWith("{")) return null;
   try {
-    return JSON.parse(transaction.description);
+    const details = JSON.parse(transaction.description);
+    return details && typeof details === "object" ? details : null;
   } catch {
     return null;
   }
@@ -561,72 +561,104 @@ function Wallet() {
               </div>
             ) : (
               <div className="wallet-transaction-list">
-                {transactions.map((transaction) => (
-                  <article
-                    className="wallet-transaction"
-                    key={transaction.id}
-                  >
-                    <span
-                      className={`wallet-transaction-icon ${transaction.type}`}
+                {transactions.map((transaction) => {
+                  const details = getTransactionDetails(transaction);
+                  const paymentMethod = paymentMethods.find(
+                    (method) => method.name === details?.paymentMethod
+                  );
+
+                  return (
+                    <article
+                      className="wallet-transaction"
+                      key={transaction.id}
                     >
-                      <FontAwesomeIcon icon={faWallet} />
-                    </span>
-                    <div className="wallet-transaction-details">
-                      <strong>
-                        {getTransactionDescription(transaction)}
-                      </strong>
-                      {getTopUpDetails(transaction) && (
+                      <span
+                        className={`wallet-transaction-icon ${transaction.type}`}
+                        title={paymentMethod?.name || "Wallet transaction"}
+                        aria-label={
+                          paymentMethod
+                            ? `${paymentMethod.name} payment`
+                            : "Wallet transaction"
+                        }
+                      >
+                        {paymentMethod?.logo && (
+                          <img
+                            className="wallet-transaction-payment-logo"
+                            src={paymentMethod.logo}
+                            alt=""
+                            aria-hidden="true"
+                            onError={(event) => {
+                              event.currentTarget.hidden = true;
+                              event.currentTarget.nextElementSibling.hidden = false;
+                            }}
+                          />
+                        )}
+                        <FontAwesomeIcon
+                          icon={faWallet}
+                          hidden={Boolean(paymentMethod?.logo)}
+                        />
+                      </span>
+                      <div className="wallet-transaction-details">
+                        <strong>
+                          {getTransactionDescription(transaction)}
+                        </strong>
+                        {transaction.type === "top_up_request" && details && (
                           <span>
                             Request {transaction.id.slice(0, 8)} · WhatsApp{" "}
-                            {getTopUpDetails(transaction).whatsappNumber ||
-                              "not provided"}
+                            {details.whatsappNumber || "not provided"}
                           </span>
                         )}
-                      <span>{formatTransactionDate(transaction.createdAt)}</span>
-                    </div>
-                    <div className="wallet-transaction-amount">
-                      <strong>{formatBalance(transaction.amount)}</strong>
-                      <span className={`wallet-status ${transaction.status}`}>
-                        {transaction.status.replaceAll("_", " ")}
-                      </span>
-                      {transaction.type === "top_up_request" &&
-                        transaction.status === "pending" && (
-                          <div className="wallet-request-actions">
-                            <button
-                              className="wallet-edit-request"
-                              type="button"
-                              onClick={() => {
-                                const details = getTopUpDetails(transaction);
-                                setEditingRequestId(transaction.id);
-                                setAmount(String(transaction.amount));
-                                setPaymentMethod(details?.paymentMethod || "");
-                                setMobileNumber(
-                                  details?.mobileNumber === "Not required"
-                                    ? ""
-                                    : details?.mobileNumber || ""
-                                );
-                                setWhatsappNumber(details?.whatsappNumber || "");
-                                setRequestError("");
-                                setTopUpOpen(true);
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="wallet-cancel-request"
-                              type="button"
-                              disabled={cancellingRequestId === transaction.id}
-                              onClick={() => cancelTopUpRequest(transaction)}
-                            >
-                              {cancellingRequestId === transaction.id
-                                ? "Cancelling..."
-                                : "Cancel"}
-                            </button>
-                          </div>
-                        )}
-                    </div>
-                  </article>
-                ))}
+                        <span>
+                          {formatTransactionDate(transaction.createdAt)}
+                        </span>
+                      </div>
+                      <div className="wallet-transaction-amount">
+                        <strong>{formatBalance(transaction.amount)}</strong>
+                        <span className={`wallet-status ${transaction.status}`}>
+                          {transaction.status.replaceAll("_", " ")}
+                        </span>
+                        {transaction.type === "top_up_request" &&
+                          transaction.status === "pending" && (
+                            <div className="wallet-request-actions">
+                              <button
+                                className="wallet-edit-request"
+                                type="button"
+                                onClick={() => {
+                                  setEditingRequestId(transaction.id);
+                                  setAmount(String(transaction.amount));
+                                  setPaymentMethod(details?.paymentMethod || "");
+                                  setMobileNumber(
+                                    details?.mobileNumber === "Not required"
+                                      ? ""
+                                      : details?.mobileNumber || ""
+                                  );
+                                  setWhatsappNumber(
+                                    details?.whatsappNumber || ""
+                                  );
+                                  setRequestError("");
+                                  setTopUpOpen(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="wallet-cancel-request"
+                                type="button"
+                                disabled={
+                                  cancellingRequestId === transaction.id
+                                }
+                                onClick={() => cancelTopUpRequest(transaction)}
+                              >
+                                {cancellingRequestId === transaction.id
+                                  ? "Cancelling..."
+                                  : "Cancel"}
+                              </button>
+                            </div>
+                          )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>
