@@ -394,8 +394,16 @@
   position: relative;
 }
 
+.topbar-account-divider {
+  width: 1px;
+  height: 24px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .topbar-notifications-trigger,
-.topbar-profile-trigger {
+.topbar-profile-trigger,
+.topbar-signout-trigger {
   min-height: 38px;
   display: inline-flex;
   align-items: center;
@@ -425,6 +433,24 @@
   color: #f5f3ff;
   background: rgba(167, 139, 250, 0.1);
   border-color: rgba(167, 139, 250, 0.2);
+}
+
+.topbar-signout-trigger {
+  width: 38px;
+  flex: 0 0 auto;
+  color: #aaa6b5;
+  font-size: 14px;
+}
+
+.topbar-signout-trigger:hover:not(:disabled) {
+  color: #ff9b9b;
+  background: rgba(255, 90, 90, 0.1);
+  border-color: rgba(255, 110, 110, 0.2);
+}
+
+.topbar-signout-trigger:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .topbar-notification-dot,
@@ -716,6 +742,45 @@
   font-size: 12px;
 }
 
+.topbar-profile-popover > .topbar-auth-link,
+.topbar-notification-state > .topbar-auth-link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  color: #eee8ff;
+  background: rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.topbar-profile-popover > .topbar-auth-link:hover,
+.topbar-notification-state > .topbar-auth-link:hover {
+  color: #fff;
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(190, 165, 255, 0.48);
+}
+
+.topbar-notification-state > .topbar-auth-link {
+  margin-top: 5px;
+}
+
+.topbar-logout-error {
+  margin: 5px 8px 8px;
+  padding: 8px 9px;
+  color: #ffb7bd;
+  background: rgba(255, 80, 90, 0.08);
+  border: 1px solid rgba(255, 100, 110, 0.18);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
 /* Medium screens */
 
 @media (max-width: 1050px) {
@@ -737,6 +802,10 @@
 
   .topbar-account-actions {
     gap: 7px;
+  }
+
+  .topbar-account-divider {
+    margin: 0 1px;
   }
 
   .topbar-profile-trigger {
@@ -804,6 +873,11 @@
     gap: 3px;
   }
 
+  .topbar-account-divider {
+    height: 20px;
+    margin: 0 1px;
+  }
+
   .topbar-notifications-trigger {
     width: 34px;
     min-height: 36px;
@@ -814,13 +888,18 @@
     padding: 2px;
   }
 
+  .topbar-signout-trigger {
+    width: 32px;
+    min-height: 36px;
+  }
+
   .topbar-profile-chevron {
     display: none;
   }
 
   .topbar-search {
     width: auto;
-    margin-right: 76px;
+    margin-right: 126px;
   }
 
   .topbar-search-dropdown {
@@ -830,6 +909,16 @@
     right: 12px;
     max-height: 70vh;
     overflow-y: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar-brand-copy {
+    display: none;
+  }
+
+  .topbar-brand {
+    gap: 0;
   }
 }
 

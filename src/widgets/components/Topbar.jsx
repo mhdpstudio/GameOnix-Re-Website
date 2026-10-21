@@ -8,6 +8,7 @@ import {
     faCircleUser,
     faGear,
     faWallet,
+    faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -71,6 +72,8 @@ function Topbar() {
     const [notificationsErrorOwner, setNotificationsErrorOwner] = useState("");
     const [notificationActionLoading, setNotificationActionLoading] =
         useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
+    const [logoutError, setLogoutError] = useState("");
 
     const searchRef = useRef(null);
     const searchAreaRef = useRef(null);
@@ -78,7 +81,7 @@ function Topbar() {
     const activeUsernameRef = useRef(null);
 
     const navigate = useNavigate();
-    const { user, authLoading } = useAuth();
+    const { user, authLoading, logout } = useAuth();
 
     const visibleNotifications =
         notificationsOwner === user?.username ? notifications : [];
@@ -209,6 +212,23 @@ function Topbar() {
             setNotificationsErrorOwner(user?.username || "");
         } finally {
             setNotificationActionLoading(false);
+        }
+    }
+
+    async function handleLogout() {
+        if (loggingOut) return;
+
+        setLoggingOut(true);
+        setLogoutError("");
+        try {
+            await logout();
+            setOpenAccountPanel(null);
+            navigate("/login", { replace: true });
+        } catch (error) {
+            console.error("Logout failed:", error);
+            setLogoutError("Couldn't sign out. Please try again.");
+        } finally {
+            setLoggingOut(false);
         }
     }
 
@@ -523,11 +543,8 @@ function Topbar() {
                     )}
                 </div>
 
-                <div
-                    className={`topbar-status${user ? " has-account-actions" : ""}`}
-                >
-                    {user ? (
-                        <div className="topbar-account-actions" ref={accountActionsRef}>
+                <div className="topbar-status has-account-actions">
+                    <div className="topbar-account-actions" ref={accountActionsRef}>
                             <div className="topbar-account-action-wrap">
                                 <button
                                     type="button"
@@ -545,7 +562,7 @@ function Topbar() {
                                         setOpenAccountPanel(
                                             opening ? "notifications" : null
                                         );
-                                        if (opening) loadNotifications();
+                                        if (opening && user) loadNotifications();
                                     }}
                                 >
                                     <FontAwesomeIcon icon={faBell} />
@@ -559,6 +576,35 @@ function Topbar() {
                                         role="dialog"
                                         aria-label="Notifications"
                                     >
+                                        {authLoading ? (
+                                            <div className="topbar-notification-state">
+                                                Checking your account...
+                                            </div>
+                                        ) : !user ? (
+                                            <>
+                                                <header className="topbar-popover-heading">
+                                                    <div>
+                                                        <strong>Notifications</strong>
+                                                        <span>Wallet updates and account activity</span>
+                                                    </div>
+                                                </header>
+                                                <div className="topbar-notification-state">
+                                                    <FontAwesomeIcon icon={faBell} />
+                                                    <strong>Sign in to view notifications</strong>
+                                                    <span>
+                                                        Sign in or create an account to keep up with your wallet activity.
+                                                    </span>
+                                                    <Link
+                                                        className="topbar-auth-link"
+                                                        to="/login"
+                                                        onClick={() => setOpenAccountPanel(null)}
+                                                    >
+                                                        Sign in / Create account
+                                                    </Link>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
                                         <header className="topbar-popover-heading">
                                             <div>
                                                 <strong>Notifications</strong>
@@ -664,17 +710,21 @@ function Topbar() {
                                                 )}
                                             </div>
                                         )}
+                                            </>
+                                        )}
                                     </section>
                                 )}
                             </div>
+
+                            <span className="topbar-account-divider" aria-hidden="true" />
 
                             <div className="topbar-account-action-wrap">
                                 <button
                                     type="button"
                                     className={`topbar-profile-trigger${openAccountPanel === "profile" ? " active" : ""}`}
-                                    aria-label="Open profile menu"
+                                    aria-label={user ? "Open profile menu" : "Sign in to your account"}
                                     aria-expanded={openAccountPanel === "profile"}
-                                    aria-haspopup="menu"
+                                    aria-haspopup={user ? "menu" : "dialog"}
                                     onClick={() =>
                                         setOpenAccountPanel((current) =>
                                             current === "profile"
@@ -684,21 +734,27 @@ function Topbar() {
                                     }
                                 >
                                     <span className="topbar-profile-avatar">
-                                        <TopbarAvatar
-                                            key={user.avatar || user.username}
-                                            avatar={user.avatar}
-                                            name={user.name || user.username}
-                                        />
+                                        {user ? (
+                                            <TopbarAvatar
+                                                key={user.avatar || user.username}
+                                                avatar={user.avatar}
+                                                name={user.name || user.username}
+                                            />
+                                        ) : (
+                                            <FontAwesomeIcon icon={faCircleUser} />
+                                        )}
                                     </span>
-                                    <span className="topbar-profile-name">
-                                        {user.name || user.username}
-                                    </span>
+                                    {user && (
+                                        <span className="topbar-profile-name">
+                                            {user.name || user.username}
+                                        </span>
+                                    )}
                                     <FontAwesomeIcon
                                         icon={faChevronDown}
                                         className="topbar-profile-chevron"
                                     />
                                 </button>
-                                {openAccountPanel === "profile" && (
+                                {openAccountPanel === "profile" && user && (
                                     <nav
                                         className="topbar-account-popover topbar-profile-popover"
                                         role="menu"
@@ -722,14 +778,58 @@ function Topbar() {
                                         </Link>
                                     </nav>
                                 )}
+                                {openAccountPanel === "profile" && !user && (
+                                    <section
+                                        className="topbar-account-popover topbar-profile-popover topbar-guest-profile-popover"
+                                        role="dialog"
+                                        aria-label="Profile"
+                                    >
+                                        {logoutError && (
+                                            <p
+                                                className="topbar-logout-error"
+                                                role="alert"
+                                            >
+                                                {logoutError}
+                                            </p>
+                                        )}
+                                        {authLoading ? (
+                                            <div className="topbar-notification-state">
+                                                Checking your account...
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="topbar-profile-menu-user">
+                                                    <strong>Your GameOnix profile</strong>
+                                                    <span>Sign in to manage your account and settings.</span>
+                                                </div>
+                                                <Link
+                                                    to="/login"
+                                                    className="topbar-auth-link"
+                                                    onClick={() => setOpenAccountPanel(null)}
+                                                >
+                                                    Sign in / Create account
+                                                </Link>
+                                            </>
+                                        )}
+                                    </section>
+                                )}
                             </div>
-                        </div>
-                    ) : authLoading ? null : (
-                        <>
-                            <span className="topbar-status-dot" />
-                            <span>Ready to play</span>
-                        </>
-                    )}
+                            {user && (
+                                <>
+                                    <span className="topbar-account-divider" aria-hidden="true" />
+                                    <button
+                                        type="button"
+                                        className="topbar-signout-trigger"
+                                        onClick={handleLogout}
+                                        disabled={loggingOut}
+                                        aria-label={loggingOut ? "Signing out" : "Sign out"}
+                                        title={loggingOut ? "Signing out..." : "Sign out"}
+                                    >
+                                        <FontAwesomeIcon icon={faRightFromBracket} />
+                                    </button>
+                                </>
+                            )}
+                    </div>
                 </div>
             </div>
         </header>
