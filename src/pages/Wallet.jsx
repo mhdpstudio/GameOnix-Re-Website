@@ -6,6 +6,7 @@ import {
   faArrowTrendDown,
   faArrowTrendUp,
   faChartColumn,
+  faChevronDown,
   faCirclePlus,
   faClock,
   faCircleInfo,
@@ -81,11 +82,13 @@ function Wallet() {
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [transactionFilter, setTransactionFilter] = useState("all");
+  const [transactionFilterOpen, setTransactionFilterOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastWarning, setToastWarning] = useState(false);
   const paymentDropdownRef = useRef(null);
+  const transactionFilterRef = useRef(null);
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.name === paymentMethod
   );
@@ -124,6 +127,29 @@ function Wallet() {
           return status === transactionFilter;
         });
   const summaryUnavailable = error && transactions.length === 0;
+
+  useEffect(() => {
+    if (!transactionFilterOpen) return undefined;
+
+    function handleFilterMenuPointerDown(event) {
+      if (!transactionFilterRef.current?.contains(event.target)) {
+        setTransactionFilterOpen(false);
+      }
+    }
+
+    function handleFilterMenuKeyDown(event) {
+      if (event.key === "Escape") {
+        setTransactionFilterOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handleFilterMenuPointerDown);
+    document.addEventListener("keydown", handleFilterMenuKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handleFilterMenuPointerDown);
+      document.removeEventListener("keydown", handleFilterMenuKeyDown);
+    };
+  }, [transactionFilterOpen]);
 
   useEffect(() => {
     let active = true;
@@ -587,20 +613,61 @@ function Wallet() {
                   </div>
                 </div>
                 <div className="wallet-history-controls">
-                  <label className="wallet-transaction-filter">
-                    <select
-                      value={transactionFilter}
-                      onChange={(event) =>
-                        setTransactionFilter(event.target.value)
-                      }
+                  <div
+                    className="wallet-transaction-filter"
+                    ref={transactionFilterRef}
+                  >
+                    <button
+                      type="button"
+                      className={`wallet-transaction-filter-trigger${transactionFilterOpen ? " open" : ""}`}
                       aria-label="Filter transactions"
+                      aria-haspopup="listbox"
+                      aria-expanded={transactionFilterOpen}
+                      onClick={() =>
+                        setTransactionFilterOpen((isOpen) => !isOpen)
+                      }
                     >
-                      <option value="all">All Transactions</option>
-                      <option value="completed">Completed</option>
-                      <option value="pending">Pending</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </label>
+                      <span>
+                        {{
+                          all: "All Transactions",
+                          completed: "Completed",
+                          pending: "Pending",
+                          cancelled: "Cancelled",
+                        }[transactionFilter]}
+                      </span>
+                      <FontAwesomeIcon icon={faChevronDown} />
+                    </button>
+                    {transactionFilterOpen && (
+                      <div
+                        className="wallet-transaction-filter-menu"
+                        role="listbox"
+                        aria-label="Transaction status"
+                      >
+                        {[
+                          ["all", "All Transactions"],
+                          ["completed", "Completed"],
+                          ["pending", "Pending"],
+                          ["cancelled", "Cancelled"],
+                        ].map(([value, label]) => (
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={transactionFilter === value}
+                            className={
+                              transactionFilter === value ? "selected" : ""
+                            }
+                            key={value}
+                            onClick={() => {
+                              setTransactionFilter(value);
+                              setTransactionFilterOpen(false);
+                            }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <span>
                     {loading && transactions.length === 0
                       ? "Loading..."
