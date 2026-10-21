@@ -1006,7 +1006,23 @@ function Topbar() {
                                                                     )}
                                                                 </span>
                                                                 <span className="topbar-notification-copy">
-                                                                    <strong>{notification.title}</strong>
+                                                                    <span className="topbar-notification-title-row">
+                                                                        <strong>{notification.title}</strong>
+                                                                        {notificationStatus !== "unknown" && (
+                                                                            <FontAwesomeIcon
+                                                                                className={`topbar-notification-inline-status ${notificationStatus}`}
+                                                                                icon={
+                                                                                    notificationStatus === "approved"
+                                                                                        ? faCircleCheck
+                                                                                        : notificationStatus === "cancelled"
+                                                                                            ? faCircleXmark
+                                                                                            : faClock
+                                                                                }
+                                                                                title={statusLabel}
+                                                                                aria-label={statusLabel}
+                                                                            />
+                                                                        )}
+                                                                    </span>
                                                                     <span>{notification.message}</span>
                                                                     <small>
                                                                         {new Date(

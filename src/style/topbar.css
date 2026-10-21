@@ -816,12 +816,38 @@
   gap: 4px;
 }
 
-.topbar-notification-copy strong {
+.topbar-notification-title-row {
   min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.topbar-notification-title-row > strong {
+  min-width: 0;
+  flex: 0 1 auto;
   color: #eeeaf7;
   font-size: 11px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+.topbar-notification-inline-status {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 12px;
+}
+
+.topbar-notification-inline-status.approved {
+  color: #65d99a;
+}
+
+.topbar-notification-inline-status.cancelled {
+  color: #ff7d86;
+}
+
+.topbar-notification-inline-status.pending {
+  color: #b79aff;
 }
 
 .topbar-notification-copy > span {
