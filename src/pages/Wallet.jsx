@@ -593,10 +593,15 @@ function Wallet() {
                             }}
                           />
                         )}
-                        <FontAwesomeIcon
-                          icon={faWallet}
+                        <span
+                          className="wallet-transaction-icon-fallback"
                           hidden={Boolean(paymentMethod?.logo)}
-                        />
+                          aria-hidden="true"
+                        >
+                          {(paymentMethod?.name || transaction.type || "?")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
                       </span>
                       <div className="wallet-transaction-details">
                         <strong>

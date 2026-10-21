@@ -529,6 +529,12 @@
   object-fit: contain;
 }
 
+.wallet-transaction-icon-fallback {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .wallet-transaction-details {
   display: flex;
   flex: 1;
