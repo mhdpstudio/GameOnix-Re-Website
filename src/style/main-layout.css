@@ -9,8 +9,8 @@
 
 :root {
   --topbar-height: 63px;
-  --sidebar-width: 248px;
-  --sidebar-collapsed-width: 76px;
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 74px;
 }
 
 .app-layout {
