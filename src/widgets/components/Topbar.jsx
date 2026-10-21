@@ -957,8 +957,14 @@ function Topbar() {
                                                         Number.isFinite(Number(details?.amount))
                                                             ? Number(details.amount)
                                                             : Number(amountFromMessage);
+                                                    const notificationStatusValue =
+                                                        String(details?.status || "").toLowerCase();
                                                     const notificationStatus =
-                                                        details?.status ||
+                                                        ["completed", "success"].includes(
+                                                            notificationStatusValue
+                                                        )
+                                                            ? "approved"
+                                                            : details?.status ||
                                                         (notification.title.toLowerCase().includes("approv")
                                                             ? "approved"
                                                             : notification.title.toLowerCase().includes("cancel")
@@ -969,7 +975,11 @@ function Topbar() {
                                                                     : "unknown");
                                                     const statusLabel = {
                                                         pending: "Awaiting admin response",
-                                                        approved: "Approved",
+                                                        approved: ["completed", "success"].includes(
+                                                            notificationStatusValue
+                                                        )
+                                                            ? "Completed"
+                                                            : "Approved",
                                                         cancelled: "Cancelled",
                                                     }[notificationStatus] || notification.title;
 

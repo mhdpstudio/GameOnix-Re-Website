@@ -104,6 +104,39 @@
   font-size: 13px;
 }
 
+.wallet-number-copy {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  color: #c5b4e3;
+  background: #ffffff08;
+  border: 1px solid #ffffff12;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wallet-number-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet-number-copy svg {
+  flex: 0 0 auto;
+  color: #b69cff;
+}
+
+.wallet-number-copy:hover {
+  color: #eee5ff;
+  border-color: #a88be066;
+}
+
 .wallet-funding-card {
   display: flex;
   min-height: 220px;
@@ -166,6 +199,114 @@
   width: fit-content;
   min-width: 190px;
   cursor: pointer;
+}
+
+.wallet-funding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.wallet-funding-actions .wallet-submit {
+  min-width: 0;
+  flex: 1;
+}
+
+.wallet-transfer-submit {
+  min-height: 38px;
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: #dfceff;
+  background: #ffffff08;
+  border: 1px solid #a88be044;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.wallet-transfer-submit:hover {
+  color: #fff;
+  background: #8c4cff25;
+  border-color: #a88be0;
+}
+
+.wallet-modal-submit {
+  width: 100%;
+}
+
+.wallet-security-note {
+  margin: 0;
+  color: #aaa4b3;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.wallet-recipient-field {
+  display: flex;
+  gap: 8px;
+}
+
+.wallet-recipient-field input {
+  min-width: 0;
+  flex: 1;
+}
+
+.wallet-recipient-field button {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  color: #e0d2fa;
+  background: #8c4cff1a;
+  border: 1px solid #8c4cff50;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wallet-recipient-field button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.wallet-recipient-confirmed {
+  margin: -4px 0 0;
+  padding: 9px 11px;
+  color: #9de5c4;
+  background: #27ae6014;
+  border: 1px solid #58d68d2b;
+  border-radius: 9px;
+  font-size: 11px;
+}
+
+.wallet-recipient-confirmed strong {
+  color: #c4f1db;
+}
+
+.wallet-text-button {
+  width: fit-content;
+  padding: 2px 0;
+  color: #c3a8ff;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.wallet-text-button:hover {
+  color: #eee5ff;
+  text-decoration: underline;
 }
 
 .wallet-submit:disabled {
@@ -1187,6 +1328,17 @@
   .wallet-submit {
     width: 100%;
     min-width: 0;
+  }
+
+  .wallet-funding-actions {
+    width: 100%;
+  }
+
+  .wallet-funding-actions .wallet-submit,
+  .wallet-funding-actions .wallet-transfer-submit {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 120px;
   }
 
   .wallet-transaction {

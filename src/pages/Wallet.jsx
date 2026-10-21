@@ -7,6 +7,8 @@ import {
   faArrowTrendUp,
   faChartColumn,
   faChevronDown,
+  faCopy,
+  faArrowRightArrowLeft,
   faCirclePlus,
   faClock,
   faCircleInfo,
@@ -22,6 +24,10 @@ import "./../style/wallet-style.css";
 const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_API_URL =
   "https://gameonixfav.vercel.app/api/auth/wallet";
+const WALLET_ACCOUNT_URL =
+  "https://gameonixfav.vercel.app/api/auth/wallet-account";
+const WALLET_TRANSFER_URL =
+  "https://gameonixfav.vercel.app/api/auth/wallet-transfer";
 const PAYMENTS_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
 
@@ -65,6 +71,18 @@ function formatTransactionDate(value) {
       });
 }
 
+async function getWalletAccessToken() {
+  const response = await fetch(`${AUTH_API_URL}?token=true`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || typeof data.token !== "string") {
+    throw new Error(data.error || "Your session expired. Sign in again.");
+  }
+  return data.token;
+}
+
 function Wallet() {
   const { user, authLoading } = useAuth();
   const [balance, setBalance] = useState(null);
@@ -82,9 +100,25 @@ function Wallet() {
   const [editingRequestId, setEditingRequestId] = useState(null);
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [walletNumber, setWalletNumber] = useState("");
+  const [pinConfigured, setPinConfigured] = useState(false);
   const [transactionFilter, setTransactionFilter] = useState("all");
   const [transactionFilterOpen, setTransactionFilterOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferWalletNumber, setTransferWalletNumber] = useState("");
+  const [transferRecipient, setTransferRecipient] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferOperationId, setTransferOperationId] = useState("");
+  const [transferPin, setTransferPin] = useState("");
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState("");
+  const [transferSuccess, setTransferSuccess] = useState("");
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirmation, setPinConfirmation] = useState("");
+  const [pinResetMode, setPinResetMode] = useState(false);
+  const [pinResetCodeSent, setPinResetCodeSent] = useState(false);
+  const [pinResetCode, setPinResetCode] = useState("");
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastWarning, setToastWarning] = useState(false);
@@ -241,7 +275,12 @@ function Wallet() {
       throw new Error("The wallet balance returned by the server is invalid.");
     }
 
-    return { balance: data.balance, transactions: data.transactions };
+    return {
+      balance: data.balance,
+      transactions: data.transactions,
+      walletNumber: data.walletNumber,
+      pinConfigured: data.pinConfigured === true,
+    };
   }, []);
 
   useEffect(() => {
@@ -254,6 +293,8 @@ function Wallet() {
         if (active) {
           setBalance(wallet.balance);
           setTransactions(wallet.transactions);
+          setWalletNumber(wallet.walletNumber || "");
+          setPinConfigured(wallet.pinConfigured);
         }
       })
       .catch((loadError) => {
@@ -280,12 +321,196 @@ function Wallet() {
       const wallet = await fetchWallet();
       setBalance(wallet.balance);
       setTransactions(wallet.transactions);
+      setWalletNumber(wallet.walletNumber || "");
+      setPinConfigured(wallet.pinConfigured);
     } catch (loadError) {
       console.error("Wallet load failed:", loadError);
       setError(loadError.message || "Unable to load your wallet.");
       setBalance(null);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function postWalletAccountAction(body) {
+    const token = await getWalletAccessToken();
+    const response = await fetch(WALLET_ACCOUNT_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "omit",
+      body: JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to update wallet security.");
+    }
+    return data;
+  }
+
+  async function lookupTransferRecipient() {
+    setTransferError("");
+    setTransferSuccess("");
+    setTransferRecipient("");
+    if (!/^[A-Za-z0-9]{32}$/.test(transferWalletNumber)) {
+      setTransferError("Enter a valid 32-character GameOnix wallet number.");
+      return;
+    }
+    setTransferLoading(true);
+    try {
+      const result = await postWalletAccountAction({
+        action: "lookup-recipient",
+        walletNumber: transferWalletNumber.toUpperCase(),
+      });
+      setTransferRecipient(result.displayName);
+    } catch (lookupError) {
+      setTransferError(lookupError.message || "Wallet was not found.");
+    } finally {
+      setTransferLoading(false);
+    }
+  }
+
+  async function handleTransferSubmit(event) {
+    event.preventDefault();
+    setTransferError("");
+    setTransferSuccess("");
+    if (!transferRecipient) {
+      setTransferError("Verify the recipient wallet number first.");
+      return;
+    }
+
+    setTransferLoading(true);
+    try {
+      const token = await getWalletAccessToken();
+      const operationId = transferOperationId || crypto.randomUUID();
+      setTransferOperationId(operationId);
+      const response = await fetch(WALLET_TRANSFER_URL, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "omit",
+        body: JSON.stringify({
+          walletNumber: transferWalletNumber.toUpperCase(),
+          amount: transferAmount,
+          pin: transferPin,
+          transferId: operationId,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to complete this transfer.");
+      }
+
+      setBalance(data.balance);
+      setTransferSuccess(
+        `${formatBalance(Number(transferAmount))} sent to ${data.recipient}.`
+      );
+      setTransferPin("");
+      setTransferAmount("");
+      setTransferWalletNumber("");
+      setTransferRecipient("");
+      setTransferOperationId("");
+      await refreshWallet();
+      window.dispatchEvent(new Event("wallet-notifications-updated"));
+      setToastMessage("Transfer completed successfully.");
+      setToastWarning(false);
+      window.setTimeout(() => setTransferOpen(false), 1000);
+    } catch (submitError) {
+      console.error("Wallet transfer failed:", submitError);
+      setTransferError(
+        submitError.message || "Unable to complete this transfer."
+      );
+    } finally {
+      setTransferLoading(false);
+    }
+  }
+
+  async function handlePinSetup(event) {
+    event.preventDefault();
+    setTransferError("");
+    if (!/^\d{6}$/.test(pinValue)) {
+      setTransferError("Your transaction PIN must contain 6 digits.");
+      return;
+    }
+    if (pinValue !== pinConfirmation) {
+      setTransferError("The PIN confirmation does not match.");
+      return;
+    }
+    setTransferLoading(true);
+    try {
+      await postWalletAccountAction({ action: "set-pin", pin: pinValue });
+      setPinConfigured(true);
+      setPinValue("");
+      setPinConfirmation("");
+      setTransferSuccess("Transaction PIN set. You can now transfer funds.");
+    } catch (pinError) {
+      setTransferError(pinError.message || "Unable to set your PIN.");
+    } finally {
+      setTransferLoading(false);
+    }
+  }
+
+  async function requestPinReset() {
+    setTransferError("");
+    setTransferLoading(true);
+    try {
+      await postWalletAccountAction({ action: "request-pin-reset" });
+      setPinResetCodeSent(true);
+      setTransferSuccess("A reset code was sent to your account email.");
+    } catch (resetError) {
+      setTransferError(resetError.message || "Unable to send a reset code.");
+    } finally {
+      setTransferLoading(false);
+    }
+  }
+
+  async function handlePinReset(event) {
+    event.preventDefault();
+    setTransferError("");
+    if (!/^\d{6}$/.test(pinResetCode) || !/^\d{6}$/.test(pinValue)) {
+      setTransferError("Enter the 6-digit email code and a new 6-digit PIN.");
+      return;
+    }
+    if (pinValue !== pinConfirmation) {
+      setTransferError("The PIN confirmation does not match.");
+      return;
+    }
+    setTransferLoading(true);
+    try {
+      await postWalletAccountAction({
+        action: "reset-pin",
+        code: pinResetCode,
+        pin: pinValue,
+      });
+      setPinConfigured(true);
+      setPinResetMode(false);
+      setPinResetCodeSent(false);
+      setPinResetCode("");
+      setPinValue("");
+      setPinConfirmation("");
+      setTransferSuccess("Transaction PIN reset successfully.");
+    } catch (resetError) {
+      setTransferError(resetError.message || "Unable to reset your PIN.");
+    } finally {
+      setTransferLoading(false);
+    }
+  }
+
+  async function copyWalletNumber() {
+    try {
+      await navigator.clipboard.writeText(walletNumber);
+      setToastMessage("Wallet number copied.");
+      setToastWarning(false);
+    } catch (copyError) {
+      console.error("Wallet number copy failed:", copyError);
+      setToastMessage("Unable to copy wallet number.");
+      setToastWarning(true);
     }
   }
 
@@ -299,6 +524,19 @@ function Wallet() {
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [topUpOpen]);
+
+  useEffect(() => {
+    if (!transferOpen) return undefined;
+
+    function closeTransferOnEscape(event) {
+      if (event.key === "Escape" && !transferLoading) {
+        setTransferOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", closeTransferOnEscape);
+    return () => window.removeEventListener("keydown", closeTransferOnEscape);
+  }, [transferOpen, transferLoading]);
 
   useEffect(() => {
     if (!paymentDropdownOpen) return undefined;
@@ -570,6 +808,18 @@ function Wallet() {
             <span className="wallet-account-name">
               {user.name || user.username}
             </span>
+            {walletNumber && (
+              <button
+                className="wallet-number-copy"
+                type="button"
+                onClick={copyWalletNumber}
+                aria-label={`Copy wallet number ${walletNumber}`}
+                title="Copy your GameOnix wallet number"
+              >
+                <span>WALLET ID · {walletNumber}</span>
+                <FontAwesomeIcon icon={faCopy} />
+              </button>
+            )}
           </article>
 
           <article className="wallet-funding-card">
@@ -582,20 +832,34 @@ function Wallet() {
                 <p>Send a top-up request to the admin for review.</p>
               </div>
             </div>
-            <button
-              className="wallet-submit"
-              type="button"
-              onClick={() => {
-                setRequestError("");
-                setEditingRequestId(null);
-                setAmount("");
-                setMobileNumber("");
-                setWhatsappNumber("");
-                setTopUpOpen(true);
-              }}
-            >
-              Add funds
-            </button>
+            <div className="wallet-funding-actions">
+              <button
+                className="wallet-submit"
+                type="button"
+                onClick={() => {
+                  setRequestError("");
+                  setEditingRequestId(null);
+                  setAmount("");
+                  setMobileNumber("");
+                  setWhatsappNumber("");
+                  setTopUpOpen(true);
+                }}
+              >
+                Deposit
+              </button>
+              <button
+                className="wallet-transfer-submit"
+                type="button"
+                onClick={() => {
+                  setTransferError("");
+                  setTransferSuccess("");
+                  setTransferOpen(true);
+                }}
+              >
+                <FontAwesomeIcon icon={faArrowRightArrowLeft} />
+                Transfer funds
+              </button>
+            </div>
           </article>
 
           <div className="wallet-lower-grid">
@@ -725,15 +989,19 @@ function Wallet() {
                       "completed",
                       "success",
                     ].includes(normalizedStatus);
+                    const transactionType = String(
+                      transaction.type || ""
+                    ).toLowerCase();
                     const reversed = [
                       "cancelled",
                       "rejected",
                     ].includes(normalizedStatus);
-                    const amountPrefix = successful
+                    const amountPrefix = transactionType === "transfer_sent" ||
+                      reversed
+                      ? "-"
+                      : successful
                       ? "+"
-                      : reversed
-                        ? "-"
-                        : "";
+                      : "";
 
                     return (
                       <article
@@ -1214,6 +1482,273 @@ function Wallet() {
                         : "Send top-up request"}
                   </button>
                 </form>
+              </section>
+            </div>
+          )}
+
+          {transferOpen && (
+            <div
+              className="wallet-modal-overlay"
+              onMouseDown={(event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  !transferLoading
+                ) {
+                  setTransferOpen(false);
+                }
+              }}
+            >
+              <section
+                className="wallet-modal wallet-transfer-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="wallet-transfer-title"
+              >
+                <button
+                  className="wallet-modal-close"
+                  type="button"
+                  onClick={() => setTransferOpen(false)}
+                  disabled={transferLoading}
+                  aria-label="Close transfer dialog"
+                >
+                  ×
+                </button>
+                <div className="wallet-funding-title">
+                  <span className="wallet-funding-icon">
+                    <FontAwesomeIcon icon={faArrowRightArrowLeft} />
+                  </span>
+                  <div className="wallet-funding-copy">
+                    <h2 id="wallet-transfer-title">Transfer funds</h2>
+                    <p>
+                      Send money to another GameOnix wallet. Transfers are free.
+                    </p>
+                  </div>
+                </div>
+
+                {transferError && (
+                  <p className="wallet-form-message" role="alert">
+                    {transferError}
+                  </p>
+                )}
+                {transferSuccess && (
+                  <p className="wallet-form-message success" role="status">
+                    {transferSuccess}
+                  </p>
+                )}
+
+                {!pinConfigured ? (
+                  <form className="wallet-top-up-form" onSubmit={handlePinSetup}>
+                    <p className="wallet-security-note">
+                      Set a 6-digit transaction PIN to protect transfers.
+                    </p>
+                    <label className="wallet-field">
+                      <span>Create 6-digit PIN</span>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete="new-password"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        value={pinValue}
+                        onChange={(event) => setPinValue(event.target.value)}
+                        required
+                      />
+                    </label>
+                    <label className="wallet-field">
+                      <span>Confirm PIN</span>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete="new-password"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        value={pinConfirmation}
+                        onChange={(event) =>
+                          setPinConfirmation(event.target.value)
+                        }
+                        required
+                      />
+                    </label>
+                    <button
+                      className="wallet-submit wallet-modal-submit"
+                      type="submit"
+                      disabled={transferLoading}
+                    >
+                      {transferLoading ? "Setting PIN..." : "Set transaction PIN"}
+                    </button>
+                  </form>
+                ) : pinResetMode ? (
+                  <div className="wallet-top-up-form">
+                    {pinResetCodeSent ? (
+                      <form
+                        className="wallet-top-up-form"
+                        onSubmit={handlePinReset}
+                      >
+                        <label className="wallet-field">
+                          <span>6-digit code sent to your account email</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            value={pinResetCode}
+                            onChange={(event) =>
+                              setPinResetCode(event.target.value)
+                            }
+                            required
+                          />
+                        </label>
+                        <label className="wallet-field">
+                          <span>New 6-digit PIN</span>
+                          <input
+                            type="password"
+                            inputMode="numeric"
+                            autoComplete="new-password"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            value={pinValue}
+                            onChange={(event) => setPinValue(event.target.value)}
+                            required
+                          />
+                        </label>
+                        <label className="wallet-field">
+                          <span>Confirm new PIN</span>
+                          <input
+                            type="password"
+                            inputMode="numeric"
+                            autoComplete="new-password"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            value={pinConfirmation}
+                            onChange={(event) =>
+                              setPinConfirmation(event.target.value)
+                            }
+                            required
+                          />
+                        </label>
+                        <button
+                          className="wallet-submit wallet-modal-submit"
+                          type="submit"
+                          disabled={transferLoading}
+                        >
+                          {transferLoading ? "Resetting PIN..." : "Reset PIN"}
+                        </button>
+                      </form>
+                    ) : (
+                      <button
+                        className="wallet-submit wallet-modal-submit"
+                        type="button"
+                        onClick={requestPinReset}
+                        disabled={transferLoading}
+                      >
+                        {transferLoading ? "Sending code..." : "Email me a reset code"}
+                      </button>
+                    )}
+                    <button
+                      className="wallet-text-button"
+                      type="button"
+                      onClick={() => {
+                        setPinResetMode(false);
+                        setPinResetCodeSent(false);
+                        setPinResetCode("");
+                        setPinValue("");
+                        setPinConfirmation("");
+                        setTransferError("");
+                      }}
+                    >
+                      Back to transfer
+                    </button>
+                  </div>
+                ) : (
+                  <form
+                    className="wallet-top-up-form"
+                    onSubmit={handleTransferSubmit}
+                  >
+                    <label className="wallet-field">
+                      <span>Recipient GameOnix wallet number</span>
+                      <div className="wallet-recipient-field">
+                        <input
+                          type="text"
+                          autoComplete="off"
+                          maxLength={32}
+                          value={transferWalletNumber}
+                          onChange={(event) => {
+                            setTransferWalletNumber(
+                              event.target.value.toUpperCase()
+                            );
+                            setTransferRecipient("");
+                            setTransferOperationId("");
+                            setTransferError("");
+                          }}
+                          placeholder="32 letters and numbers"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={lookupTransferRecipient}
+                          disabled={transferLoading}
+                        >
+                          Verify
+                        </button>
+                      </div>
+                    </label>
+                    {transferRecipient && (
+                      <p className="wallet-recipient-confirmed" role="status">
+                        Sending to <strong>{transferRecipient}</strong>
+                      </p>
+                    )}
+                    <label className="wallet-field">
+                      <span>Amount (EGP)</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]+([.][0-9]{0,2})?"
+                        value={transferAmount}
+                        onChange={(event) => {
+                          setTransferAmount(event.target.value);
+                          setTransferOperationId("");
+                        }}
+                        placeholder="Enter amount"
+                        required
+                      />
+                    </label>
+                    <label className="wallet-field">
+                      <span>Transaction PIN</span>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete="current-password"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        value={transferPin}
+                        onChange={(event) => setTransferPin(event.target.value)}
+                        required
+                      />
+                    </label>
+                    <button
+                      className="wallet-text-button"
+                      type="button"
+                      onClick={() => {
+                        setPinResetMode(true);
+                        setPinResetCodeSent(false);
+                        setPinValue("");
+                        setPinConfirmation("");
+                        setTransferError("");
+                        setTransferSuccess("");
+                      }}
+                    >
+                      Forgot PIN?
+                    </button>
+                    <button
+                      className="wallet-submit wallet-modal-submit"
+                      type="submit"
+                      disabled={transferLoading || !transferRecipient}
+                    >
+                      {transferLoading ? "Transferring..." : "Confirm transfer"}
+                    </button>
+                  </form>
+                )}
               </section>
             </div>
           )}
