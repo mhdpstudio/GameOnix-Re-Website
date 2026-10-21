@@ -27,8 +27,104 @@ const GAMES_DATA_URL =
 const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_NOTIFICATIONS_URL =
     "https://gameonixfav.vercel.app/api/auth/wallet-notifications";
+const WALLET_API_URL = "https://gameonixfav.vercel.app/api/auth/wallet";
 const PAYMENTS_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
+
+function enrichNotificationsFromTransactions(notifications, transactions) {
+    return notifications.map((notification) => {
+        if (
+            notification.details ||
+            !/top.?up/i.test(notification.title) ||
+            !Array.isArray(transactions)
+        ) {
+            return notification;
+        }
+
+        const amountMatch = notification.message.match(
+            /EGP\s*([\d,]+(?:\.\d{1,2})?)/i
+        );
+        const amount = amountMatch
+            ? Number(amountMatch[1].replace(/,/g, ""))
+            : NaN;
+        const notificationTime = Date.parse(notification.createdAt);
+        if (!Number.isFinite(amount) || !Number.isFinite(notificationTime)) {
+            return notification;
+        }
+
+        const methodMatch = notification.message.match(
+            /\bvia\s+(.+?)(?:\s+was\b|[.!?]|$)/i
+        );
+        const paymentMethod = methodMatch?.[1]?.trim().toLowerCase();
+        const title = notification.title.toLowerCase();
+        const terminalStatus = title.includes("approv")
+            ? "approved"
+            : title.includes("cancel")
+                ? "cancelled"
+                : null;
+
+        const candidates = transactions
+            .filter((transaction) => {
+                if (
+                    transaction.type !== "top_up_request" ||
+                    Math.round(Number(transaction.amount) * 100) !==
+                        Math.round(amount * 100) ||
+                    (terminalStatus &&
+                        String(transaction.status).toLowerCase() !== terminalStatus)
+                ) {
+                    return false;
+                }
+
+                try {
+                    const details = JSON.parse(transaction.description);
+                    return (
+                        details &&
+                        typeof details === "object" &&
+                        (!paymentMethod ||
+                            String(details.paymentMethod || "").toLowerCase() ===
+                                paymentMethod)
+                    );
+                } catch {
+                    return false;
+                }
+            })
+            .map((transaction) => ({
+                transaction,
+                distance: Math.abs(
+                    Date.parse(transaction.createdAt) - notificationTime
+                ),
+            }))
+            .filter(
+                ({ distance }) =>
+                    Number.isFinite(distance) && distance <= 60 * 60 * 1000
+            )
+            .sort((first, second) => first.distance - second.distance);
+
+        if (
+            !candidates.length ||
+            (candidates.length > 1 &&
+                candidates[1].distance - candidates[0].distance < 60 * 1000)
+        ) {
+            return notification;
+        }
+
+        const { transaction } = candidates[0];
+        const details = JSON.parse(transaction.description);
+        return {
+            ...notification,
+            details: {
+                requestId: transaction.id,
+                amount: transaction.amount,
+                email: details.email || "Not provided",
+                paymentMethod: details.paymentMethod || "Not provided",
+                mobileNumber: details.mobileNumber || "Not provided",
+                whatsappNumber: details.whatsappNumber || "Not provided",
+                currentBalance: details.currentBalance,
+                status: String(transaction.status).toLowerCase(),
+            },
+        };
+    });
+}
 
 async function getWalletApiToken() {
     const response = await fetch(`${AUTH_API_URL}?token=true`, {
@@ -118,7 +214,41 @@ function Topbar() {
             }
 
             if (activeUsernameRef.current !== user.username) return;
-            setNotifications(data.notifications);
+            let loadedNotifications = data.notifications;
+            if (
+                loadedNotifications.some(
+                    (notification) =>
+                        !notification.details && /top.?up/i.test(notification.title)
+                )
+            ) {
+                try {
+                    const walletResponse = await fetch(WALLET_API_URL, {
+                        headers: {
+                            Accept: "application/json",
+                            Authorization: `******`,
+                        },
+                        credentials: "omit",
+                    });
+                    const walletData = await walletResponse.json().catch(() => ({}));
+                    if (!walletResponse.ok || !Array.isArray(walletData.transactions)) {
+                        throw new Error(
+                            walletData.error || "Unable to load wallet request details."
+                        );
+                    }
+                    loadedNotifications = enrichNotificationsFromTransactions(
+                        loadedNotifications,
+                        walletData.transactions
+                    );
+                } catch (detailsError) {
+                    console.error(
+                        "Legacy wallet notification details lookup failed:",
+                        detailsError
+                    );
+                }
+            }
+
+            if (activeUsernameRef.current !== user.username) return;
+            setNotifications(loadedNotifications);
             setNotificationsOwner(user.username);
         } catch (error) {
             if (activeUsernameRef.current !== user.username) return;
