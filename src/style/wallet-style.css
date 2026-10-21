@@ -29,7 +29,9 @@
 
 .wallet-content {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 18px;
 }
 
 .wallet-balance-card {
@@ -104,11 +106,13 @@
 
 .wallet-funding-card {
   display: flex;
+  min-height: 220px;
   flex-direction: column;
+  justify-content: space-between;
   gap: 14px;
-  padding: 20px;
+  padding: 26px;
   border: 1px solid #303034;
-  border-radius: 16px;
+  border-radius: 20px;
   background: #19191c;
 }
 
@@ -157,8 +161,7 @@
 }
 
 .wallet-submit {
-  align-self: flex-start;
-  min-width: 190px;
+  width: 100%;
   cursor: pointer;
 }
 
@@ -395,6 +398,7 @@
 }
 
 .wallet-history {
+  grid-column: 1 / -1;
   overflow: hidden;
   border: 1px solid #303034;
   border-radius: 16px;
@@ -757,9 +761,25 @@
     padding-top: 22px;
   }
 
+  .wallet-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
   .wallet-balance-card {
     min-height: 190px;
     padding: 20px;
+  }
+
+  .wallet-funding-card {
+    min-height: 0;
+    gap: 18px;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .wallet-history {
+    grid-column: auto;
   }
 
   .wallet-funding-title {
@@ -780,5 +800,45 @@
 
   .wallet-submit {
     width: 100%;
+  }
+
+  .wallet-transaction {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .wallet-transaction-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .wallet-transaction-payment-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .wallet-transaction-details {
+    gap: 4px;
+  }
+
+  .wallet-transaction-amount {
+    grid-column: 2;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .wallet-request-actions {
+    width: 100%;
+  }
+
+  .wallet-request-actions button {
+    flex: 1;
   }
 }
