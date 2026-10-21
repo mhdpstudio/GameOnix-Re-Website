@@ -292,11 +292,16 @@ function Wallet() {
         )
       );
       setToastMessage(
-        data.notificationSent
-          ? "Your request was cancelled and the admin was notified."
-          : "Your request was cancelled, but the admin notification could not be sent. Please contact support."
+        !data.notificationCreated
+          ? "Your request was cancelled, but its in-app notification could not be saved."
+          : data.notificationSent
+            ? "Your request was cancelled and the admin was notified."
+            : "Your request was cancelled, but the admin notification could not be sent. Please contact support."
       );
-      setToastWarning(!data.notificationSent);
+      setToastWarning(!data.notificationCreated || !data.notificationSent);
+      if (data.notificationCreated) {
+        window.dispatchEvent(new Event("wallet-notifications-updated"));
+      }
     } catch (cancelError) {
       console.error("Wallet top-up request cancellation failed:", cancelError);
       setToastMessage(
@@ -395,11 +400,13 @@ function Wallet() {
           )
         );
         setToastMessage(
-          data.notificationSent
-            ? "Your request was updated and the admin was notified."
-            : "Your request was updated, but the admin notification could not be sent. Please contact support."
+          !data.notificationCreated
+            ? "Your request was updated, but its in-app notification could not be saved."
+            : data.notificationSent
+              ? "Your request was updated and the admin was notified."
+              : "Your request was updated, but the admin notification could not be sent. Please contact support."
         );
-        setToastWarning(!data.notificationSent);
+        setToastWarning(!data.notificationCreated || !data.notificationSent);
       } else {
         setTransactions((current) => [
           {
@@ -419,8 +426,15 @@ function Wallet() {
           },
           ...current,
         ]);
-        setToastMessage("Your top-up request was sent successfully.");
-        setToastWarning(false);
+        setToastMessage(
+          data.notificationCreated
+            ? "Your top-up request was sent successfully."
+            : "Your request was sent, but its in-app notification could not be saved."
+        );
+        setToastWarning(!data.notificationCreated);
+      }
+      if (data.notificationCreated) {
+        window.dispatchEvent(new Event("wallet-notifications-updated"));
       }
       setEditingRequestId(null);
       setAmount("");

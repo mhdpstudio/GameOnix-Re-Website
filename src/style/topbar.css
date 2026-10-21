@@ -377,6 +377,339 @@
   box-shadow: 0 0 12px rgba(167, 139, 250, 0.65);
 }
 
+.topbar-account-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 12px;
+}
+
+.topbar-account-action-wrap {
+  position: relative;
+}
+
+.topbar-notifications-trigger,
+.topbar-profile-trigger {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #b9b5c7;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.topbar-notifications-trigger {
+  position: relative;
+  width: 40px;
+  font-size: 15px;
+}
+
+.topbar-notifications-trigger:hover,
+.topbar-notifications-trigger.active,
+.topbar-profile-trigger:hover,
+.topbar-profile-trigger.active {
+  color: #f5f3ff;
+  background: rgba(167, 139, 250, 0.1);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+.topbar-notification-dot,
+.topbar-notification-unread-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: #a78bfa;
+  border: 1px solid #0b0c10;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.9);
+}
+
+.topbar-notification-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.topbar-profile-trigger {
+  max-width: 190px;
+  padding: 3px 9px 3px 4px;
+  font: inherit;
+  font-size: 11px;
+}
+
+.topbar-profile-avatar {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #e8ddff;
+  background: linear-gradient(145deg, #7450c8, #33245d);
+  border: 1px solid rgba(195, 169, 255, 0.35);
+  border-radius: 50%;
+  font-size: 15px;
+}
+
+.topbar-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.topbar-profile-name {
+  overflow: hidden;
+  color: #eeecf5;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-profile-chevron {
+  flex: 0 0 auto;
+  color: #878397;
+  font-size: 9px;
+}
+
+.topbar-account-popover {
+  position: absolute;
+  top: calc(100% + 11px);
+  right: 0;
+  z-index: 300;
+  overflow: hidden;
+  color: #eeeaf7;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(139, 92, 246, 0.12), transparent 48%),
+    #15141b;
+  border: 1px solid #342d45;
+  border-radius: 15px;
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.56);
+  animation: search-dropdown-in 0.16s ease-out;
+}
+
+.topbar-notifications-popover {
+  width: min(390px, calc(100vw - 28px));
+}
+
+.topbar-popover-heading {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.topbar-popover-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.topbar-popover-heading strong {
+  color: #f5f3ff;
+  font-size: 13px;
+}
+
+.topbar-popover-heading span {
+  color: #858194;
+  font-size: 10px;
+}
+
+.topbar-mark-all-read {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  color: #cbb9ff;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.topbar-mark-all-read:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.topbar-notification-list {
+  max-height: min(420px, 65vh);
+  padding: 5px;
+  overflow-y: auto;
+}
+
+.topbar-notification-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.topbar-notification-list::-webkit-scrollbar-thumb {
+  background: #6446a5;
+  border: 2px solid #15141b;
+  border-radius: 8px;
+}
+
+.topbar-notification-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 10px;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.topbar-notification-item:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.topbar-notification-item.unread {
+  background: rgba(139, 92, 246, 0.075);
+  border-color: rgba(167, 139, 250, 0.14);
+}
+
+.topbar-notification-item:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.topbar-notification-item-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #d3b8ff;
+  background: rgba(139, 92, 246, 0.16);
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.topbar-notification-copy {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.topbar-notification-copy strong {
+  color: #eeeaf7;
+  font-size: 11px;
+}
+
+.topbar-notification-copy > span {
+  color: #aaa6b5;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.topbar-notification-copy small {
+  color: #777383;
+  font-size: 9px;
+}
+
+.topbar-notification-unread-dot {
+  margin-top: 5px;
+  border: 0;
+}
+
+.topbar-notification-state {
+  min-height: 145px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px;
+  color: #9691a3;
+  font-size: 11px;
+  text-align: center;
+}
+
+.topbar-notification-state > svg {
+  color: #a78bfa;
+  font-size: 19px;
+}
+
+.topbar-notification-state strong {
+  color: #e9e5f7;
+  font-size: 12px;
+}
+
+.topbar-notification-state.error {
+  color: #ffb7bd;
+}
+
+.topbar-notification-state button {
+  padding: 6px 10px;
+  color: #d3b8ff;
+  background: #8c4cff1a;
+  border: 1px solid #8c4cff50;
+  border-radius: 7px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.topbar-profile-popover {
+  width: 230px;
+  padding: 7px;
+}
+
+.topbar-profile-menu-user {
+  display: grid;
+  gap: 4px;
+  padding: 11px 10px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.topbar-profile-menu-user strong {
+  overflow: hidden;
+  color: #f3f0fb;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-profile-menu-user span {
+  color: #898497;
+  font-size: 10px;
+}
+
+.topbar-profile-popover > a {
+  min-height: 39px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  color: #d8d3e4;
+  border-radius: 8px;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.topbar-profile-popover > a:hover {
+  color: #fff;
+  background: rgba(167, 139, 250, 0.1);
+}
+
+.topbar-profile-popover > a svg {
+  color: #b69cff;
+  font-size: 12px;
+}
+
 /* Medium screens */
 
 @media (max-width: 1050px) {
@@ -391,8 +724,17 @@
   }
 
   .topbar-brand-copy > span,
-  .topbar-status > span:last-child {
+  .topbar-status > span:last-child,
+  .topbar-profile-name {
     display: none;
+  }
+
+  .topbar-account-actions {
+    gap: 7px;
+  }
+
+  .topbar-profile-trigger {
+    padding-right: 5px;
   }
 }
 
@@ -440,6 +782,37 @@
   .topbar-shortcut,
   .topbar-status {
     display: none;
+  }
+
+  .topbar-status.has-account-actions {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    display: block;
+    transform: translateY(-50%);
+  }
+
+  .topbar-account-actions {
+    gap: 3px;
+  }
+
+  .topbar-notifications-trigger {
+    width: 34px;
+    min-height: 36px;
+  }
+
+  .topbar-profile-trigger {
+    min-height: 36px;
+    padding: 2px;
+  }
+
+  .topbar-profile-chevron {
+    display: none;
+  }
+
+  .topbar-search {
+    width: auto;
+    margin-right: 76px;
   }
 
   .topbar-search-dropdown {
