@@ -9,6 +9,7 @@ import {
     faGear,
     faCreditCard,
     faRightFromBracket,
+    faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -336,6 +337,44 @@ function Topbar() {
             console.error("Wallet notifications update failed:", error);
             setNotificationsError(
                 error.message || "Unable to update notifications."
+            );
+            setNotificationsErrorOwner(user?.username || "");
+        } finally {
+            setNotificationActionLoading(false);
+        }
+    }
+
+    async function deleteNotification(notificationId) {
+        setNotificationActionLoading(true);
+        setNotificationsError("");
+        try {
+            const token = await getWalletApiToken();
+            const response = await fetch(WALLET_NOTIFICATIONS_URL, {
+                method: "DELETE",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                credentials: "omit",
+                body: JSON.stringify({ notificationId }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to delete notification.");
+            }
+
+            setNotifications((current) =>
+                current.filter((item) => item.id !== notificationId)
+            );
+            setSelectedNotificationId((current) =>
+                current === notificationId ? null : current
+            );
+        } catch (error) {
+            console.error("Wallet notification deletion failed:", error);
+            setNotificationsError(
+                error.message || "Unable to delete notification."
             );
             setNotificationsErrorOwner(user?.username || "");
         } finally {
@@ -918,6 +957,18 @@ function Topbar() {
                                                                     icon={faChevronDown}
                                                                     className={`topbar-notification-chevron${isSelected ? " expanded" : ""}`}
                                                                 />
+                                                            </button>
+                                                            <button
+                                                                className="topbar-notification-delete"
+                                                                type="button"
+                                                                aria-label={`Delete notification: ${notification.title}`}
+                                                                title="Delete notification"
+                                                                onClick={() =>
+                                                                    deleteNotification(notification.id)
+                                                                }
+                                                                disabled={notificationActionLoading}
+                                                            >
+                                                                <FontAwesomeIcon icon={faTrashCan} />
                                                             </button>
                                                             {isSelected && (
                                                                 <div className="topbar-notification-details">
