@@ -193,6 +193,17 @@
   font-size: 12px;
 }
 
+.wallet-field input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.wallet-field input[type="number"]::-webkit-inner-spin-button,
+.wallet-field input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
 .wallet-field input:focus,
 .wallet-field select:focus {
   border-color: #9b64e9;
