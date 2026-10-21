@@ -933,6 +933,34 @@ function Topbar() {
                                                                                 : "Not specified"}
                                                                         </strong>
                                                                     </div>
+                                                                    {[
+                                                                        ["Payment method", details?.paymentMethod],
+                                                                        ["Email", details?.email],
+                                                                        ["Mobile", details?.mobileNumber],
+                                                                        ["WhatsApp", details?.whatsappNumber],
+                                                                        [
+                                                                                "Balance at request",
+                                                                                details?.currentBalance !== null &&
+                                                                                details?.currentBalance !== undefined &&
+                                                                                details.currentBalance !== "" &&
+                                                                                Number.isFinite(Number(details.currentBalance))
+                                                                                    ? `EGP ${Number(details.currentBalance).toFixed(2)}`
+                                                                                    : details?.currentBalance,
+                                                                        ],
+                                                                        ["Request ID", details?.requestId],
+                                                                    ]
+                                                                        .filter(([, value]) =>
+                                                                                String(value || "").trim()
+                                                                        )
+                                                                        .map(([label, value]) => (
+                                                                                <div
+                                                                                    className="topbar-notification-detail-row"
+                                                                                    key={label}
+                                                                                >
+                                                                                    <span>{label}</span>
+                                                                                    <strong>{value}</strong>
+                                                                                </div>
+                                                                        ))}
                                                                     <div className={`topbar-notification-status ${notificationStatus}`}>
                                                                         <span className="topbar-notification-status-dot" />
                                                                         {statusLabel}
