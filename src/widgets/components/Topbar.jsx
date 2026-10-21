@@ -7,6 +7,9 @@ import {
     faBell,
     faChevronDown,
     faCircleUser,
+    faCircleCheck,
+    faCircleXmark,
+    faClock,
     faGear,
     faCreditCard,
     faRightFromBracket,
@@ -1080,7 +1083,17 @@ function Topbar() {
                                                                                 </div>
                                                                         ))}
                                                                     <div className={`topbar-notification-status ${notificationStatus}`}>
-                                                                        <span className="topbar-notification-status-dot" />
+                                                                        <FontAwesomeIcon
+                                                                            className="topbar-notification-status-icon"
+                                                                            icon={
+                                                                                notificationStatus === "approved"
+                                                                                    ? faCircleCheck
+                                                                                    : notificationStatus === "cancelled"
+                                                                                        ? faCircleXmark
+                                                                                        : faClock
+                                                                            }
+                                                                            aria-hidden="true"
+                                                                        />
                                                                         {statusLabel}
                                                                     </div>
                                                                 </div>

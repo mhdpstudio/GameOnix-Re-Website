@@ -918,13 +918,9 @@
   font-weight: 700;
 }
 
-.topbar-notification-status-dot {
-  width: 7px;
-  height: 7px;
+.topbar-notification-status-icon {
   flex: 0 0 auto;
-  background: #b79aff;
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(167, 139, 250, 0.65);
+  font-size: 12px;
 }
 
 .topbar-notification-status.approved {
@@ -933,18 +929,22 @@
   border-color: rgba(88, 214, 141, 0.18);
 }
 
-.topbar-notification-status.approved .topbar-notification-status-dot {
-  background: #65d99a;
-}
-
 .topbar-notification-status.cancelled {
   color: #ffb7bd;
   background: rgba(255, 80, 90, 0.08);
   border-color: rgba(255, 100, 110, 0.18);
 }
 
-.topbar-notification-status.cancelled .topbar-notification-status-dot {
-  background: #ff7d86;
+.topbar-notification-status.approved .topbar-notification-status-icon {
+  color: #65d99a;
+}
+
+.topbar-notification-status.cancelled .topbar-notification-status-icon {
+  color: #ff7d86;
+}
+
+.topbar-notification-status.pending .topbar-notification-status-icon {
+  color: #b79aff;
 }
 
 .topbar-notification-details > p {
