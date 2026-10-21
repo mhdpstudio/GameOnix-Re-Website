@@ -840,11 +840,29 @@ function Topbar() {
                                                             method.name.toLowerCase() ===
                                                             String(paymentMethodName || "").toLowerCase()
                                                     );
+                                                    const amountFromMessage =
+                                                        notification.message.match(
+                                                            /EGP\s*([\d,]+(?:\.\d{1,2})?)/i
+                                                        )?.[1]?.replace(/,/g, "");
+                                                    const notificationAmount =
+                                                        Number.isFinite(Number(details?.amount))
+                                                            ? Number(details.amount)
+                                                            : Number(amountFromMessage);
+                                                    const notificationStatus =
+                                                        details?.status ||
+                                                        (notification.title.toLowerCase().includes("approv")
+                                                            ? "approved"
+                                                            : notification.title.toLowerCase().includes("cancel")
+                                                                ? "cancelled"
+                                                                : notification.title.toLowerCase().includes("sent") ||
+                                                                    notification.title.toLowerCase().includes("updated")
+                                                                    ? "pending"
+                                                                    : "unknown");
                                                     const statusLabel = {
                                                         pending: "Awaiting admin response",
                                                         approved: "Approved",
                                                         cancelled: "Cancelled",
-                                                    }[details?.status] || "Status unavailable";
+                                                    }[notificationStatus] || notification.title;
 
                                                     return (
                                                         <article
@@ -903,65 +921,22 @@ function Topbar() {
                                                             </button>
                                                             {isSelected && (
                                                                 <div className="topbar-notification-details">
-                                                                    {details ? (
-                                                                        <>
-                                                                            <div className="topbar-notification-detail-row amount">
-                                                                                <span>Requested amount</span>
-                                                                                <strong>
-                                                                                    {Number.isFinite(Number(details.amount))
-                                                                                        ? `EGP ${Number(details.amount).toFixed(2)}`
-                                                                                        : "Amount unavailable"}
-                                                                                </strong>
-                                                                            </div>
-                                                                            <div className="topbar-notification-detail-row">
-                                                                                <span>Payment method</span>
-                                                                                <strong>{details.paymentMethod || "Not provided"}</strong>
-                                                                            </div>
-                                                                            <div className="topbar-notification-detail-row">
-                                                                                <span>Email</span>
-                                                                                {details.email &&
-                                                                                details.email !== "Not provided" &&
-                                                                                details.email !== "Not available" ? (
-                                                                                    <a href={`mailto:${details.email}`}>
-                                                                                        {details.email}
-                                                                                    </a>
-                                                                                ) : (
-                                                                                    <strong>Not provided</strong>
-                                                                                )}
-                                                                            </div>
-                                                                            <div className="topbar-notification-detail-row">
-                                                                                <span>Mobile number</span>
-                                                                                {details.mobileNumber &&
-                                                                                details.mobileNumber !== "Not required" &&
-                                                                                details.mobileNumber !== "Not provided" ? (
-                                                                                    <a href={`tel:${details.mobileNumber}`}>
-                                                                                        {details.mobileNumber}
-                                                                                    </a>
-                                                                                ) : (
-                                                                                    <strong>{details.mobileNumber || "Not provided"}</strong>
-                                                                                )}
-                                                                            </div>
-                                                                            <div className="topbar-notification-detail-row">
-                                                                                <span>WhatsApp</span>
-                                                                                {details.whatsappNumber &&
-                                                                                details.whatsappNumber !== "Not provided" ? (
-                                                                                    <a href={`https://wa.me/${String(details.whatsappNumber).replace(/[^\d]/g, "")}`}>
-                                                                                        {details.whatsappNumber}
-                                                                                    </a>
-                                                                                ) : (
-                                                                                    <strong>Not provided</strong>
-                                                                                )}
-                                                                            </div>
-                                                                            <div className={`topbar-notification-status ${details.status || "unknown"}`}>
-                                                                                <span className="topbar-notification-status-dot" />
-                                                                                {statusLabel}
-                                                                            </div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <p>
-                                                                            Request details are unavailable for this older notification.
-                                                                        </p>
-                                                                    )}
+                                                                    <div className="topbar-notification-detail-row">
+                                                                        <span>Action</span>
+                                                                        <strong>{notification.title}</strong>
+                                                                    </div>
+                                                                    <div className="topbar-notification-detail-row amount">
+                                                                        <span>Amount</span>
+                                                                        <strong>
+                                                                            {Number.isFinite(notificationAmount)
+                                                                                ? `EGP ${notificationAmount.toFixed(2)}`
+                                                                                : "Not specified"}
+                                                                        </strong>
+                                                                    </div>
+                                                                    <div className={`topbar-notification-status ${notificationStatus}`}>
+                                                                        <span className="topbar-notification-status-dot" />
+                                                                        {statusLabel}
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </article>
