@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
+  faArrowTrendUp,
+  faClock,
   faCircleInfo,
+  faHeadset,
+  faListCheck,
   faRotate,
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
@@ -81,6 +85,20 @@ function Wallet() {
   const selectedPaymentMethod = paymentMethods.find(
     (method) => method.name === paymentMethod
   );
+  const walletSummary = transactions.reduce(
+    (summary, transaction) => {
+      if (transaction.type === "top_up_request") {
+        if (transaction.status === "approved") {
+          summary.totalDeposits += transaction.amount;
+        } else if (transaction.status === "pending") {
+          summary.pendingRequests += 1;
+        }
+      }
+      return summary;
+    },
+    { totalDeposits: 0, pendingRequests: 0 }
+  );
+  const summaryUnavailable = error && transactions.length === 0;
 
   useEffect(() => {
     let active = true;
@@ -453,9 +471,9 @@ function Wallet() {
   return (
     <section className="wallet-page">
       <header className="wallet-heading">
-        <span className="wallet-eyebrow">GAMEONIX ACCOUNT</span>
+        <span className="wallet-eyebrow">ACCOUNT &amp; FINANCE</span>
         <h1>Wallet</h1>
-        <p>View your current GameOnix wallet balance.</p>
+        <p>Manage your balance and view your transaction history.</p>
       </header>
 
       {authLoading ? (
@@ -528,64 +546,70 @@ function Wallet() {
             </button>
           </article>
 
-          <section
-            className="wallet-history"
-            aria-busy={loading && transactions.length === 0}
-          >
-            <div className="wallet-history-heading">
-              <div>
-                <span className="wallet-eyebrow">ACCOUNT ACTIVITY</span>
-                <h2>Wallet statement</h2>
-              </div>
-              <span>
-                {loading && transactions.length === 0
-                  ? "Loading..."
-                  : `${transactions.length} transactions`}
-              </span>
-            </div>
-
-            {loading && transactions.length === 0 ? (
-              <div
-                className="wallet-history-loading"
-                role="status"
-                aria-label="Loading wallet statement"
-              >
-                <span className="wallet-history-loading-message">
-                  Loading your wallet activity...
-                </span>
-                {[0, 1, 2].map((row) => (
-                  <div className="wallet-history-skeleton" key={row}>
-                    <span className="wallet-skeleton-icon" />
-                    <span className="wallet-skeleton-copy">
-                      <span />
-                      <span />
-                    </span>
-                    <span className="wallet-skeleton-amount" />
+          <div className="wallet-lower-grid">
+            <section
+              className="wallet-history"
+              aria-busy={loading && transactions.length === 0}
+            >
+              <div className="wallet-history-heading">
+                <div className="wallet-section-title">
+                  <span className="wallet-section-icon">
+                    <FontAwesomeIcon icon={faWallet} />
+                  </span>
+                  <div>
+                    <span className="wallet-eyebrow">ACCOUNT ACTIVITY</span>
+                    <h2>Transaction history</h2>
                   </div>
-                ))}
+                </div>
+                <span>
+                  {loading && transactions.length === 0
+                    ? "Loading..."
+                    : `${transactions.length} transactions`}
+                </span>
               </div>
-            ) : error && transactions.length === 0 ? (
-              <div className="wallet-empty-history">
-                Unable to load wallet activity. Please try again.
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="wallet-empty-history">
-                No wallet activity yet. Top-up requests will appear here;
-                purchases will show after wallet checkout is connected.
-              </div>
-            ) : (
-              <div className="wallet-transaction-list">
-                {transactions.map((transaction) => {
-                  const details = getTransactionDetails(transaction);
-                  const paymentMethod = paymentMethods.find(
-                    (method) => method.name === details?.paymentMethod
-                  );
 
-                  return (
-                    <article
-                      className="wallet-transaction"
-                      key={transaction.id}
-                    >
+              {loading && transactions.length === 0 ? (
+                <div
+                  className="wallet-history-loading"
+                  role="status"
+                  aria-label="Loading wallet statement"
+                >
+                  <span className="wallet-history-loading-message">
+                    Loading your wallet activity...
+                  </span>
+                  {[0, 1, 2].map((row) => (
+                    <div className="wallet-history-skeleton" key={row}>
+                      <span className="wallet-skeleton-icon" />
+                      <span className="wallet-skeleton-copy">
+                        <span />
+                        <span />
+                      </span>
+                      <span className="wallet-skeleton-amount" />
+                    </div>
+                  ))}
+                </div>
+              ) : error && transactions.length === 0 ? (
+                <div className="wallet-empty-history">
+                  Unable to load wallet activity. Please try again.
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="wallet-empty-history">
+                  No wallet activity yet. Top-up requests will appear here;
+                  purchases will show after wallet checkout is connected.
+                </div>
+              ) : (
+                <div className="wallet-transaction-list">
+                  {transactions.map((transaction) => {
+                    const details = getTransactionDetails(transaction);
+                    const paymentMethod = paymentMethods.find(
+                      (method) => method.name === details?.paymentMethod
+                    );
+
+                    return (
+                      <article
+                        className="wallet-transaction"
+                        key={transaction.id}
+                      >
                       <span
                         className={`wallet-transaction-icon ${transaction.type}`}
                         title={paymentMethod?.name || "Wallet transaction"}
@@ -675,12 +699,89 @@ function Wallet() {
                             </div>
                           )}
                       </div>
-                    </article>
-                  );
-                })}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="wallet-history-footnote">
+                <FontAwesomeIcon icon={faCircleInfo} />
+                <span>
+                  Your balance updates after a top-up request is reviewed.
+                </span>
               </div>
-            )}
-          </section>
+            </section>
+
+            <aside className="wallet-overview">
+              <div className="wallet-overview-heading">
+                <FontAwesomeIcon icon={faListCheck} />
+                <h2>Quick overview</h2>
+              </div>
+
+              <div className="wallet-overview-stats">
+                <article className="wallet-overview-stat">
+                  <span className="wallet-overview-stat-icon deposits">
+                    <FontAwesomeIcon icon={faArrowTrendUp} />
+                  </span>
+                  <span className="wallet-overview-stat-copy">
+                    <span>Total deposits</span>
+                    <strong>
+                      {loading && transactions.length === 0
+                        ? "Loading..."
+                        : summaryUnavailable
+                          ? "—"
+                          : formatBalance(walletSummary.totalDeposits)}
+                    </strong>
+                  </span>
+                </article>
+
+                <article className="wallet-overview-stat">
+                  <span className="wallet-overview-stat-icon pending">
+                    <FontAwesomeIcon icon={faClock} />
+                  </span>
+                  <span className="wallet-overview-stat-copy">
+                    <span>Pending requests</span>
+                    <strong>
+                      {loading && transactions.length === 0
+                        ? "—"
+                        : summaryUnavailable
+                          ? "—"
+                          : walletSummary.pendingRequests}
+                    </strong>
+                  </span>
+                </article>
+
+                <article className="wallet-overview-stat">
+                  <span className="wallet-overview-stat-icon activity">
+                    <FontAwesomeIcon icon={faListCheck} />
+                  </span>
+                  <span className="wallet-overview-stat-copy">
+                    <span>Total transactions</span>
+                    <strong>
+                      {loading && transactions.length === 0
+                        ? "—"
+                        : summaryUnavailable
+                          ? "—"
+                          : transactions.length}
+                    </strong>
+                  </span>
+                </article>
+              </div>
+
+              <div className="wallet-help-card">
+                <span className="wallet-help-icon">
+                  <FontAwesomeIcon icon={faHeadset} />
+                </span>
+                <div>
+                  <strong>Need help?</strong>
+                  <p>
+                    Top-up requests are reviewed by the GameOnix team. You can
+                    follow each request from your transaction history.
+                  </p>
+                </div>
+              </div>
+            </aside>
+          </div>
 
           {error && (
             <div className="wallet-message error" role="alert">
