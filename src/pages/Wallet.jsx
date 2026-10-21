@@ -929,7 +929,7 @@ function Wallet() {
                 <div>
                   <strong>Share your feedback</strong>
                   <p>
-                    Tell us how we can improve your GameOnix experience.
+                    Tell us how we can improve your GameOnix experience or report any issues you encounter. Your input helps us enhance the platform for everyone.
                   </p>
                   <a
                     className="wallet-feedback-button"
