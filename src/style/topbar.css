@@ -573,7 +573,7 @@
 }
 
 .topbar-mark-all-read:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.65;
 }
 
@@ -682,7 +682,7 @@
 }
 
 .topbar-delete-all-dialog-actions button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.65;
 }
 
@@ -776,7 +776,7 @@
 }
 
 .topbar-notification-delete:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.55;
 }
 
@@ -785,7 +785,7 @@
 }
 
 .topbar-notification-item:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.7;
 }
 
