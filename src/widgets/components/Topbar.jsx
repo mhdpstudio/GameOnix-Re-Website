@@ -95,8 +95,7 @@ function enrichNotificationsFromTransactions(notifications, transactions) {
                 ),
             }))
             .filter(
-                ({ distance }) =>
-                    Number.isFinite(distance) && distance <= 60 * 60 * 1000
+                ({ distance }) => Number.isFinite(distance)
             )
             .sort((first, second) => first.distance - second.distance);
 
@@ -830,9 +829,16 @@ function Topbar() {
                                                     const isSelected =
                                                         selectedNotificationId === notification.id;
                                                     const details = notification.details;
+                                                    const methodFromMessage =
+                                                        notification.message.match(
+                                                            /\bvia\s+(.+?)(?:\s+was\b|[.!?]|$)/i
+                                                        )?.[1]?.trim();
+                                                    const paymentMethodName =
+                                                        details?.paymentMethod || methodFromMessage;
                                                     const paymentMethod = paymentMethods.find(
                                                         (method) =>
-                                                            method.name === details?.paymentMethod
+                                                            method.name.toLowerCase() ===
+                                                            String(paymentMethodName || "").toLowerCase()
                                                     );
                                                     const statusLabel = {
                                                         pending: "Awaiting admin response",
@@ -863,9 +869,13 @@ function Topbar() {
                                                                         <img
                                                                             src={paymentMethod.logo}
                                                                             alt=""
+                                                                            title={paymentMethod.name}
                                                                         />
                                                                     ) : (
-                                                                        <FontAwesomeIcon icon={faCreditCard} />
+                                                                        <FontAwesomeIcon
+                                                                            icon={faCreditCard}
+                                                                            title={paymentMethodName || "Payment method unavailable"}
+                                                                        />
                                                                     )}
                                                                 </span>
                                                                 <span className="topbar-notification-copy">
