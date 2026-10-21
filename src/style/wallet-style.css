@@ -509,8 +509,8 @@
 
 .wallet-transaction-icon {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 11px;
@@ -524,8 +524,8 @@
 }
 
 .wallet-transaction-payment-logo {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
 }
 
