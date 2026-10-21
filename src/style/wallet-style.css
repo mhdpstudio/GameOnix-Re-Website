@@ -431,6 +431,37 @@
   border-bottom: 1px solid #303034;
 }
 
+.wallet-history-controls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet-history-controls > span {
+  color: #92929d;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.wallet-transaction-filter select {
+  min-height: 32px;
+  max-width: 150px;
+  padding: 0 26px 0 10px;
+  color: #c8bddc;
+  background: #17151e;
+  border: 1px solid #393044;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.wallet-transaction-filter select:focus-visible {
+  outline: 2px solid #a88be0;
+  outline-offset: 2px;
+}
+
 .wallet-section-title {
   min-width: 0;
   display: flex;
@@ -615,6 +646,19 @@
   gap: 5px;
 }
 
+.wallet-transaction-change {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.wallet-transaction-change.positive {
+  color: #65d9aa;
+}
+
+.wallet-transaction-change.negative {
+  color: #ff929a;
+}
+
 .wallet-history-footnote {
   display: flex;
   align-items: flex-start;
@@ -694,6 +738,11 @@
   background: #ffca7a12;
 }
 
+.wallet-overview-stat-icon.withdrawals {
+  color: #ff929a;
+  background: #ff5a6415;
+}
+
 .wallet-overview-stat-copy {
   min-width: 0;
   display: grid;
@@ -753,7 +802,12 @@
 }
 
 .wallet-status {
+  width: fit-content;
+  padding: 4px 9px;
   color: #92929d;
+  background: #ffffff08;
+  border: 1px solid #ffffff0d;
+  border-radius: 999px;
   font-size: 9px;
   text-transform: capitalize;
 }
@@ -761,16 +815,22 @@
 .wallet-status.pending,
 .wallet-status.notification_failed {
   color: #ffca7a;
+  background: #ffca7a12;
+  border-color: #ffca7a26;
 }
 
 .wallet-status.completed,
 .wallet-status.approved {
   color: #65d9aa;
+  background: #27ae601a;
+  border-color: #58d68d2e;
 }
 
 .wallet-status.rejected,
 .wallet-status.cancelled {
   color: #ff929a;
+  background: #ff5a6415;
+  border-color: #ff646e2e;
 }
 
 .wallet-request-actions {
@@ -1030,6 +1090,26 @@
 
   .wallet-transaction-details {
     gap: 4px;
+  }
+
+  .wallet-history-heading {
+    align-items: flex-start;
+    padding: 15px;
+  }
+
+  .wallet-history-controls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .wallet-history-controls > span {
+    font-size: 9px;
+  }
+
+  .wallet-transaction-filter select {
+    max-width: 138px;
+    font-size: 9px;
   }
 
   .wallet-transaction-amount {

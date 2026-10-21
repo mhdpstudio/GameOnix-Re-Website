@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowDown,
+  faArrowTrendDown,
   faArrowTrendUp,
+  faChartColumn,
+  faCirclePlus,
   faClock,
   faCircleInfo,
   faHeadset,
@@ -77,6 +80,7 @@ function Wallet() {
   const [editingRequestId, setEditingRequestId] = useState(null);
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [transactionFilter, setTransactionFilter] = useState("all");
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [paymentDropdownOpen, setPaymentDropdownOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -87,17 +91,38 @@ function Wallet() {
   );
   const walletSummary = transactions.reduce(
     (summary, transaction) => {
-      if (transaction.type === "top_up_request") {
-        if (transaction.status === "approved") {
-          summary.totalDeposits += transaction.amount;
-        } else if (transaction.status === "pending") {
-          summary.pendingRequests += 1;
-        }
+      const type = String(transaction.type || "").toLowerCase();
+      const status = String(transaction.status || "").toLowerCase();
+      const amount = Number(transaction.amount) || 0;
+      const successful = ["approved", "completed", "success"].includes(status);
+
+      if (type === "top_up_request" && successful) {
+        summary.totalDeposits += amount;
+      } else if (type === "top_up_request" && status === "pending") {
+        summary.pendingRequests += 1;
       }
+
+      if (type.includes("withdraw") && successful) {
+        summary.totalWithdrawals += amount;
+      }
+
       return summary;
     },
-    { totalDeposits: 0, pendingRequests: 0 }
+    { totalDeposits: 0, totalWithdrawals: 0, pendingRequests: 0 }
   );
+  const filteredTransactions =
+    transactionFilter === "all"
+      ? transactions
+      : transactions.filter((transaction) => {
+          const status = String(transaction.status || "").toLowerCase();
+          if (transactionFilter === "completed") {
+            return ["approved", "completed", "success"].includes(status);
+          }
+          if (transactionFilter === "cancelled") {
+            return ["cancelled", "rejected"].includes(status);
+          }
+          return status === transactionFilter;
+        });
   const summaryUnavailable = error && transactions.length === 0;
 
   useEffect(() => {
@@ -523,7 +548,7 @@ function Wallet() {
           <article className="wallet-funding-card">
             <div className="wallet-funding-title">
               <span className="wallet-funding-icon">
-                <FontAwesomeIcon icon={faArrowDown} />
+                <FontAwesomeIcon icon={faCirclePlus} />
               </span>
               <div className="wallet-funding-copy">
                 <h2>Add funds</h2>
@@ -561,11 +586,27 @@ function Wallet() {
                     <h2>Transaction history</h2>
                   </div>
                 </div>
-                <span>
-                  {loading && transactions.length === 0
-                    ? "Loading..."
-                    : `${transactions.length} transactions`}
-                </span>
+                <div className="wallet-history-controls">
+                  <label className="wallet-transaction-filter">
+                    <select
+                      value={transactionFilter}
+                      onChange={(event) =>
+                        setTransactionFilter(event.target.value)
+                      }
+                      aria-label="Filter transactions"
+                    >
+                      <option value="all">All Transactions</option>
+                      <option value="completed">Completed</option>
+                      <option value="pending">Pending</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </label>
+                  <span>
+                    {loading && transactions.length === 0
+                      ? "Loading..."
+                      : `${filteredTransactions.length} transactions`}
+                  </span>
+                </div>
               </div>
 
               {loading && transactions.length === 0 ? (
@@ -599,11 +640,32 @@ function Wallet() {
                 </div>
               ) : (
                 <div className="wallet-transaction-list">
-                  {transactions.map((transaction) => {
+                  {filteredTransactions.length === 0 ? (
+                    <div className="wallet-empty-history">
+                      No {transactionFilter} transactions found.
+                    </div>
+                  ) : filteredTransactions.map((transaction) => {
                     const details = getTransactionDetails(transaction);
                     const paymentMethod = paymentMethods.find(
                       (method) => method.name === details?.paymentMethod
                     );
+                    const normalizedStatus = String(
+                      transaction.status || ""
+                    ).toLowerCase();
+                    const successful = [
+                      "approved",
+                      "completed",
+                      "success",
+                    ].includes(normalizedStatus);
+                    const reversed = [
+                      "cancelled",
+                      "rejected",
+                    ].includes(normalizedStatus);
+                    const amountPrefix = successful
+                      ? "+"
+                      : reversed
+                        ? "-"
+                        : "";
 
                     return (
                       <article
@@ -656,7 +718,16 @@ function Wallet() {
                         </span>
                       </div>
                       <div className="wallet-transaction-amount">
-                        <strong>{formatBalance(transaction.amount)}</strong>
+                        <strong>
+                          {formatBalance(transaction.amount)}
+                        </strong>
+                        {amountPrefix && (
+                          <span
+                            className={`wallet-transaction-change ${successful ? "positive" : "negative"}`}
+                          >
+                            {amountPrefix} {formatBalance(transaction.amount)}
+                          </span>
+                        )}
                         <span className={`wallet-status ${transaction.status}`}>
                           {transaction.status.replaceAll("_", " ")}
                         </span>
@@ -714,7 +785,7 @@ function Wallet() {
 
             <aside className="wallet-overview">
               <div className="wallet-overview-heading">
-                <FontAwesomeIcon icon={faListCheck} />
+                <FontAwesomeIcon icon={faChartColumn} />
                 <h2>Quick overview</h2>
               </div>
 
@@ -731,6 +802,22 @@ function Wallet() {
                         : summaryUnavailable
                           ? "—"
                           : formatBalance(walletSummary.totalDeposits)}
+                    </strong>
+                  </span>
+                </article>
+
+                <article className="wallet-overview-stat">
+                  <span className="wallet-overview-stat-icon withdrawals">
+                    <FontAwesomeIcon icon={faArrowTrendDown} />
+                  </span>
+                  <span className="wallet-overview-stat-copy">
+                    <span>Total withdrawals</span>
+                    <strong>
+                      {loading && transactions.length === 0
+                        ? "Loading..."
+                        : summaryUnavailable
+                          ? "—"
+                          : formatBalance(walletSummary.totalWithdrawals)}
                     </strong>
                   </span>
                 </article>
