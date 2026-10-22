@@ -454,7 +454,7 @@ function GameCards() {
       return;
     }
 
-    if (isGift && !recipient.trim()) {
+    if (!isGiftCardProduct && isGift && !recipient.trim()) {
       setCheckoutMessage("اكتب بيانات المستلم عشان تكمل.");
       return;
     }
@@ -473,7 +473,7 @@ function GameCards() {
       return;
     }
 
-    if (!isGift && !playerId.trim()) {
+    if (!isGiftCardProduct && !isGift && !playerId.trim()) {
       setCheckoutMessage("اكتب Player ID عشان تكمل.");
       return;
     }
@@ -1055,14 +1055,16 @@ function GameCards() {
 
                   {isGift ? (
                     <>
-                      <label className="gc-field">
-                        <span>Recipient Player ID / Account</span>
-                        <input
-                          value={recipient}
-                          onChange={(event) => setRecipient(event.target.value)}
-                          placeholder="Enter recipient details"
-                        />
-                      </label>
+                      {!isGiftCardProduct && (
+                        <label className="gc-field">
+                          <span>Recipient Player ID / Account</span>
+                          <input
+                            value={recipient}
+                            onChange={(event) => setRecipient(event.target.value)}
+                            placeholder="Enter recipient details"
+                          />
+                        </label>
+                      )}
 
                       <label className="gc-field">
                         <span>
@@ -1087,23 +1089,27 @@ function GameCards() {
                     </>
                   ) : (
                     <>
-                      <label className="gc-field">
-                        <span>Player ID / Account ID</span>
-                        <input
-                          value={playerId}
-                          onChange={(event) => setPlayerId(event.target.value)}
-                          placeholder="Enter your Player ID"
-                        />
-                      </label>
+                      {!isGiftCardProduct && (
+                        <label className="gc-field">
+                          <span>Player ID / Account ID</span>
+                          <input
+                            value={playerId}
+                            onChange={(event) => setPlayerId(event.target.value)}
+                            placeholder="Enter your Player ID"
+                          />
+                        </label>
+                      )}
 
-                      <label className="gc-field">
-                        <span>Server / Region (if required)</span>
-                        <input
-                          value={serverId}
-                          onChange={(event) => setServerId(event.target.value)}
-                          placeholder="Enter server or region"
-                        />
-                      </label>
+                      {!isGiftCardProduct && (
+                        <label className="gc-field">
+                          <span>Server / Region (if required)</span>
+                          <input
+                            value={serverId}
+                            onChange={(event) => setServerId(event.target.value)}
+                            placeholder="Enter server or region"
+                          />
+                        </label>
+                      )}
 
                     </>
                   )}
