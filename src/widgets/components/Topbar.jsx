@@ -177,6 +177,7 @@ function Topbar() {
     const [notificationActionLoading, setNotificationActionLoading] =
         useState(false);
     const [deleteAllConfirmOpen, setDeleteAllConfirmOpen] = useState(false);
+    const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState("");
 
@@ -197,18 +198,24 @@ function Topbar() {
     ).length;
 
     useEffect(() => {
-        if (!deleteAllConfirmOpen) return undefined;
+        if (!deleteAllConfirmOpen && !logoutConfirmOpen) return undefined;
 
         function handleConfirmationKeyDown(event) {
-            if (event.key === "Escape" && !notificationActionLoading) {
+            if (event.key === "Escape" && !notificationActionLoading && !loggingOut) {
                 setDeleteAllConfirmOpen(false);
+                setLogoutConfirmOpen(false);
             }
         }
 
         window.addEventListener("keydown", handleConfirmationKeyDown);
         return () =>
             window.removeEventListener("keydown", handleConfirmationKeyDown);
-    }, [deleteAllConfirmOpen, notificationActionLoading]);
+    }, [
+        deleteAllConfirmOpen,
+        logoutConfirmOpen,
+        notificationActionLoading,
+        loggingOut,
+    ]);
 
     const loadNotifications = useCallback(async () => {
         if (!user) return;
@@ -446,6 +453,7 @@ function Topbar() {
         try {
             await logout();
             setOpenAccountPanel(null);
+            setLogoutConfirmOpen(false);
             navigate("/login", { replace: true });
         } catch (error) {
             console.error("Logout failed:", error);
@@ -1263,7 +1271,7 @@ function Topbar() {
                                     <button
                                         type="button"
                                         className="topbar-signout-trigger"
-                                        onClick={handleLogout}
+                                        onClick={() => setLogoutConfirmOpen(true)}
                                         disabled={loggingOut}
                                         aria-label={loggingOut ? "Signing out" : "Sign out"}
                                         title={loggingOut ? "Signing out..." : "Sign out"}
@@ -1327,6 +1335,59 @@ function Topbar() {
                                     {notificationActionLoading
                                         ? "Deleting..."
                                         : "Delete all"}
+                                </button>
+                            </div>
+                        </section>
+                    </div>,
+                    document.body
+                )}
+            {logoutConfirmOpen &&
+                createPortal(
+                    <div
+                        className="topbar-delete-all-overlay"
+                        onMouseDown={(event) => {
+                            if (
+                                event.target === event.currentTarget &&
+                                !loggingOut
+                            ) {
+                                setLogoutConfirmOpen(false);
+                            }
+                        }}
+                    >
+                        <section
+                            className="topbar-delete-all-dialog topbar-logout-dialog"
+                            role="alertdialog"
+                            aria-modal="true"
+                            aria-labelledby="topbar-logout-title"
+                            aria-describedby="topbar-logout-description"
+                        >
+                            <span className="topbar-delete-all-dialog-icon">
+                                <FontAwesomeIcon icon={faRightFromBracket} />
+                            </span>
+                            <h2 id="topbar-logout-title">Sign out?</h2>
+                            <p id="topbar-logout-description">
+                                Are you sure you want to sign out of GameOnix?
+                            </p>
+                            {logoutError && (
+                                <p className="topbar-logout-error" role="alert">
+                                    {logoutError}
+                                </p>
+                            )}
+                            <div className="topbar-delete-all-dialog-actions">
+                                <button
+                                    type="button"
+                                    onClick={() => setLogoutConfirmOpen(false)}
+                                    disabled={loggingOut}
+                                >
+                                    Stay signed in
+                                </button>
+                                <button
+                                    type="button"
+                                    className="confirm"
+                                    onClick={handleLogout}
+                                    disabled={loggingOut}
+                                >
+                                    {loggingOut ? "Signing out..." : "Sign out"}
                                 </button>
                             </div>
                         </section>

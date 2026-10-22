@@ -626,6 +626,19 @@
   animation: topbar-delete-dialog-in 0.18s ease-out;
 }
 
+.topbar-logout-dialog {
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(139, 92, 246, 0.12), transparent 48%),
+    #19171d;
+  border-color: #493a5f;
+}
+
+.topbar-logout-dialog .topbar-delete-all-dialog-icon {
+  color: #d3b8ff;
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
 .topbar-delete-all-dialog-icon {
   width: 48px;
   height: 48px;
@@ -675,6 +688,11 @@
   color: #fff;
   background: #c84250;
   border-color: #d95460;
+}
+
+.topbar-logout-dialog .topbar-delete-all-dialog-actions button.confirm {
+  background: #7650c8;
+  border-color: #8d68db;
 }
 
 .topbar-delete-all-dialog-actions button:hover:not(:disabled) {

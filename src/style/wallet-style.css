@@ -1074,6 +1074,95 @@
   animation: wallet-overlay-in 0.18s ease-out;
 }
 
+.wallet-confirm-overlay {
+  position: fixed;
+  z-index: 11000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #050407d9;
+  backdrop-filter: blur(10px);
+  animation: wallet-overlay-in 0.18s ease-out;
+}
+
+.wallet-confirm-dialog {
+  display: grid;
+  width: min(100%, 420px);
+  justify-items: center;
+  gap: 13px;
+  padding: 26px;
+  color: #f4f1fa;
+  text-align: center;
+  border: 1px solid #49313a;
+  border-radius: 19px;
+  background:
+    radial-gradient(ellipse at 100% 0%, #ff505a1a, transparent 48%),
+    #19171d;
+  box-shadow: 0 30px 100px #000b;
+  animation: wallet-modal-in 0.22s ease-out;
+}
+
+.wallet-confirm-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #ffb17f;
+  background: #ff7a1c1a;
+  border: 1px solid #ff9a4a33;
+  border-radius: 14px;
+  font-size: 18px;
+}
+
+.wallet-confirm-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.wallet-confirm-dialog p {
+  margin: 0;
+  color: #aaa4b3;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.wallet-confirm-dialog p strong {
+  color: #f4f1fa;
+}
+
+.wallet-confirm-actions {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.wallet-confirm-actions button {
+  min-height: 42px;
+  flex: 1;
+  padding: 9px 12px;
+  color: #dfd9e8;
+  background: #ffffff0b;
+  border: 1px solid #ffffff21;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wallet-confirm-actions button.confirm {
+  color: #fff;
+  background: #a83d46;
+  border-color: #bf4d57;
+}
+
+.wallet-confirm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .wallet-modal {
   position: relative;
   display: grid;

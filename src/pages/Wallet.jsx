@@ -91,6 +91,7 @@ function Wallet() {
   const [requestError, setRequestError] = useState("");
   const [editingRequestId, setEditingRequestId] = useState(null);
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
+  const [requestToCancel, setRequestToCancel] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [walletNumber, setWalletNumber] = useState("");
   const [transactionFilter, setTransactionFilter] = useState("all");
@@ -352,12 +353,20 @@ function Wallet() {
     return () => window.clearTimeout(timeout);
   }, [toastMessage]);
 
-  async function cancelTopUpRequest(transaction) {
-    const confirmed = window.confirm(
-      "Cancel this pending top-up request? This cannot be undone."
-    );
-    if (!confirmed) return;
+  useEffect(() => {
+    if (!requestToCancel) return undefined;
 
+    function closeCancelConfirmation(event) {
+      if (event.key === "Escape" && !cancellingRequestId) {
+        setRequestToCancel(null);
+      }
+    }
+
+    window.addEventListener("keydown", closeCancelConfirmation);
+    return () => window.removeEventListener("keydown", closeCancelConfirmation);
+  }, [requestToCancel, cancellingRequestId]);
+
+  async function cancelTopUpRequest(transaction) {
     setCancellingRequestId(transaction.id);
     try {
       const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
@@ -411,6 +420,7 @@ function Wallet() {
       );
       setToastWarning(true);
     } finally {
+      setRequestToCancel(null);
       setCancellingRequestId(null);
     }
   }
@@ -919,7 +929,7 @@ function Wallet() {
                                 disabled={
                                   cancellingRequestId === transaction.id
                                 }
-                                onClick={() => cancelTopUpRequest(transaction)}
+                                onClick={() => setRequestToCancel(transaction)}
                               >
                                 {cancellingRequestId === transaction.id
                                   ? "Cancelling..."
@@ -1325,6 +1335,54 @@ function Wallet() {
           aria-live="polite"
         >
           {toastMessage}
+        </div>
+      )}
+      {requestToCancel && (
+        <div
+          className="wallet-confirm-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              !cancellingRequestId
+            ) {
+              setRequestToCancel(null);
+            }
+          }}
+        >
+          <section
+            className="wallet-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="wallet-cancel-title"
+            aria-describedby="wallet-cancel-description"
+          >
+            <span className="wallet-confirm-icon">
+              <FontAwesomeIcon icon={faCircleInfo} />
+            </span>
+            <h2 id="wallet-cancel-title">Cancel top-up request?</h2>
+            <p id="wallet-cancel-description">
+              Your pending request for{" "}
+              <strong>{formatBalance(requestToCancel.amount)}</strong> will be
+              cancelled. This cannot be undone.
+            </p>
+            <div className="wallet-confirm-actions">
+              <button
+                type="button"
+                onClick={() => setRequestToCancel(null)}
+                disabled={Boolean(cancellingRequestId)}
+              >
+                Keep request
+              </button>
+              <button
+                type="button"
+                className="confirm"
+                onClick={() => cancelTopUpRequest(requestToCancel)}
+                disabled={Boolean(cancellingRequestId)}
+              >
+                {cancellingRequestId ? "Cancelling..." : "Cancel request"}
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </section>
