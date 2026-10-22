@@ -211,6 +211,9 @@ function GameCards() {
     selectedPayment === WALLET_PAYMENT_ID
       ? walletPaymentMethod
       : paymentMethods.find((method) => method.name === selectedPayment);
+  const isGiftCardProduct = ["gift card", "gift cards"].includes(
+    String(selectedProduct?.type || "").trim().toLowerCase()
+  );
 
   async function loadCatalog() {
     setLoading(true);
@@ -453,6 +456,20 @@ function GameCards() {
 
     if (isGift && !recipient.trim()) {
       setCheckoutMessage("اكتب بيانات المستلم عشان تكمل.");
+      return;
+    }
+
+    if (isGiftCardProduct && isGift && !email.trim()) {
+      setCheckoutMessage("Enter the recipient's email to send the gift card codes.");
+      return;
+    }
+
+    if (
+      isGiftCardProduct &&
+      isGift &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    ) {
+      setCheckoutMessage("Enter a valid recipient email for the gift card codes.");
       return;
     }
 
@@ -1048,12 +1065,16 @@ function GameCards() {
                       </label>
 
                       <label className="gc-field">
-                        <span>Recipient email (optional)</span>
+                        <span>
+                          Recipient email
+                          {isGiftCardProduct ? " (required for Gift Cards)" : " (optional)"}
+                        </span>
                         <input
                           type="email"
                           value={email}
                           onChange={(event) => setEmail(event.target.value)}
                           placeholder="recipient@example.com"
+                          required={isGiftCardProduct}
                         />
                         {email.trim() &&
                           email.trim().toLowerCase() ===
