@@ -38,7 +38,7 @@ const navigation = [
         label: "Game Cards",
         to: "/shopping/game-cards",
         icon: faCreditCard,
-        badge: "Coming soon",
+        // badge: "Coming soon",
       },
     ],
   },
