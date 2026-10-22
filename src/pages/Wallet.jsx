@@ -851,6 +851,22 @@ function Wallet() {
                             {details.serverId && ` · ${details.serverId}`}
                           </span>
                         )}
+                        {isPurchase &&
+                          transaction.status === "completed" &&
+                          details?.isGiftCard &&
+                          Array.isArray(details.giftCardCodes) && (
+                            <details className="wallet-gift-card-codes">
+                              <summary>View gift card codes</summary>
+                              <ul>
+                                {details.giftCardCodes.map((code, index) => (
+                                  <li key={`${transaction.id}-code-${index}`}>
+                                    <span>Code {index + 1}</span>
+                                    <code>{code}</code>
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          )}
                         <span>
                           {formatTransactionDate(transaction.createdAt)}
                         </span>

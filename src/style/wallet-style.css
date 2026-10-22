@@ -759,6 +759,37 @@
   font-size: 10px;
 }
 
+.wallet-gift-card-codes {
+  color: #c9a7ff;
+  font-size: 10px;
+}
+
+.wallet-gift-card-codes summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.wallet-gift-card-codes ul {
+  display: grid;
+  gap: 6px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wallet-gift-card-codes li {
+  display: grid;
+  gap: 3px;
+}
+
+.wallet-gift-card-codes code {
+  color: #e7e0f2;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .wallet-transaction-amount {
   display: flex;
   flex: 0 0 auto;
