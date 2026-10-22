@@ -729,9 +729,10 @@
 }
 
 .wallet-transaction-payment-logo {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .wallet-transaction-icon-fallback {
@@ -1236,8 +1237,8 @@
   }
 
   .wallet-transaction-payment-logo {
-    width: 30px;
-    height: 30px;
+    width: 100%;
+    height: 100%;
   }
 
   .wallet-transaction-details {

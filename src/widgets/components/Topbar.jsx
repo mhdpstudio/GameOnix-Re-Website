@@ -1012,13 +1012,7 @@ function Topbar() {
                                                                                 title={details.gameName || "Game"}
                                                                                 onError={(event) => {
                                                                                     event.currentTarget.hidden = true;
-                                                                                    event.currentTarget.nextElementSibling.hidden = false;
                                                                                 }}
-                                                                            />
-                                                                            <FontAwesomeIcon
-                                                                                icon={faGamepad}
-                                                                                title={details.gameName || "Game"}
-                                                                                hidden
                                                                             />
                                                                         </>
                                                                     ) : paymentMethod?.logo ? (
