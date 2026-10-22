@@ -875,7 +875,7 @@ function GameCards() {
 
         <footer className="gc-footer">
           <span className="gc-footer-mark">
-            <FontAwesomeIcon icon={faGamepad} />
+            <img src="/logo.png" alt="GameOnix Logo" className="logo-img"/>
           </span>
           <p>
             <strong>GameOnix</strong>
