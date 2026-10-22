@@ -964,6 +964,8 @@ function Topbar() {
                                                             notificationStatusValue
                                                         )
                                                             ? "approved"
+                                                            : notificationStatusValue === "rejected"
+                                                                ? "cancelled"
                                                             : details?.status ||
                                                         (notification.title.toLowerCase().includes("approv")
                                                             ? "approved"
@@ -1002,7 +1004,24 @@ function Topbar() {
                                                                 disabled={notificationActionLoading}
                                                             >
                                                                 <span className="topbar-notification-item-icon">
-                                                                    {paymentMethod?.logo ? (
+                                                                    {details?.gameIcon ? (
+                                                                        <>
+                                                                            <img
+                                                                                src={details.gameIcon}
+                                                                                alt=""
+                                                                                title={details.gameName || "Game"}
+                                                                                onError={(event) => {
+                                                                                    event.currentTarget.hidden = true;
+                                                                                    event.currentTarget.nextElementSibling.hidden = false;
+                                                                                }}
+                                                                            />
+                                                                            <FontAwesomeIcon
+                                                                                icon={faGamepad}
+                                                                                title={details.gameName || "Game"}
+                                                                                hidden
+                                                                            />
+                                                                        </>
+                                                                    ) : paymentMethod?.logo ? (
                                                                         <img
                                                                             src={paymentMethod.logo}
                                                                             alt=""
@@ -1081,12 +1100,23 @@ function Topbar() {
                                                                         </strong>
                                                                     </div>
                                                                     {[
+                                                                        ["Game", details?.gameName],
+                                                                        ["Package", details?.packageName],
+                                                                        ["Quantity", details?.quantity],
+                                                                        [
+                                                                            details?.isGift ? "Recipient account" : "Player ID",
+                                                                            details?.isGift
+                                                                                ? details?.recipient
+                                                                                : details?.playerId,
+                                                                        ],
+                                                                        ["Server / Region", details?.serverId],
                                                                         ["Payment method", details?.paymentMethod],
-                                                                        ["Email", details?.email],
+                                                                        ["Account email", details?.email],
+                                                                        ["Order contact email", details?.contactEmail],
                                                                         ["Mobile", details?.mobileNumber],
                                                                         ["WhatsApp", details?.whatsappNumber],
                                                                         [
-                                                                                "Balance at request",
+                                                                                "Wallet balance",
                                                                                 details?.currentBalance !== null &&
                                                                                 details?.currentBalance !== undefined &&
                                                                                 details.currentBalance !== "" &&

@@ -35,6 +35,14 @@ function formatBalance(value) {
 }
 
 function getTransactionDescription(transaction) {
+  if (transaction.type === "purchase_request") {
+    const details = getTransactionDetails(transaction);
+    if (details) {
+      return `${details.gameName || "Game purchase"} · ${
+        details.packageName || "Package"
+      }`;
+    }
+  }
   const details = getTopUpDetails(transaction);
   if (details) return `Top-up request · ${details.paymentMethod || "Payment method"}`;
 
@@ -47,6 +55,7 @@ function getTopUpDetails(transaction) {
 }
 
 function getTransactionDetails(transaction) {
+  if (typeof transaction.description !== "string") return null;
   if (!transaction.description.startsWith("{")) return null;
   try {
     const details = JSON.parse(transaction.description);
@@ -104,7 +113,10 @@ function Wallet() {
 
       if (type === "top_up_request" && successful) {
         summary.totalDeposits += amount;
-      } else if (type === "top_up_request" && status === "pending") {
+      } else if (
+        (type === "top_up_request" || type === "purchase_request") &&
+        status === "pending"
+      ) {
         summary.pendingRequests += 1;
       }
 
@@ -735,8 +747,8 @@ function Wallet() {
                 </div>
               ) : transactions.length === 0 ? (
                 <div className="wallet-empty-history">
-                  No wallet activity yet. Top-up requests will appear here;
-                  purchases will show after wallet checkout is connected.
+                  No wallet activity yet. Top-up requests and game purchases will
+                  appear here.
                 </div>
               ) : (
                 <div className="wallet-transaction-list">
@@ -761,11 +773,18 @@ function Wallet() {
                       "cancelled",
                       "rejected",
                     ].includes(normalizedStatus);
-                    const amountPrefix = reversed
-                      ? "-"
-                      : successful
-                      ? "+"
-                      : "";
+                    const isPurchase = transaction.type === "purchase_request";
+                    const amountPrefix = isPurchase
+                      ? normalizedStatus === "completed"
+                        ? "-"
+                        : ""
+                      : reversed
+                        ? "-"
+                        : successful
+                          ? "+"
+                          : "";
+                    const transactionImage =
+                      details?.gameIcon || paymentMethod?.logo;
 
                     return (
                       <article
@@ -774,17 +793,23 @@ function Wallet() {
                       >
                       <span
                         className={`wallet-transaction-icon ${transaction.type}`}
-                        title={paymentMethod?.name || "Wallet transaction"}
+                        title={
+                          details?.gameName ||
+                          paymentMethod?.name ||
+                          "Wallet transaction"
+                        }
                         aria-label={
-                          paymentMethod
-                            ? `${paymentMethod.name} payment`
+                          details?.gameName
+                            ? `${details.gameName} purchase`
+                            : paymentMethod
+                              ? `${paymentMethod.name} payment`
                             : "Wallet transaction"
                         }
                       >
-                        {paymentMethod?.logo && (
+                        {transactionImage && (
                           <img
                             className="wallet-transaction-payment-logo"
-                            src={paymentMethod.logo}
+                            src={transactionImage}
                             alt=""
                             aria-hidden="true"
                             onError={(event) => {
@@ -795,10 +820,13 @@ function Wallet() {
                         )}
                         <span
                           className="wallet-transaction-icon-fallback"
-                          hidden={Boolean(paymentMethod?.logo)}
+                          hidden={Boolean(transactionImage)}
                           aria-hidden="true"
                         >
-                          {(paymentMethod?.name || transaction.type || "?")
+                          {(details?.gameName ||
+                            paymentMethod?.name ||
+                            transaction.type ||
+                            "?")
                             .charAt(0)
                             .toUpperCase()}
                         </span>
@@ -811,6 +839,16 @@ function Wallet() {
                           <span>
                             Request {transaction.id.slice(0, 8)} · WhatsApp{" "}
                             {details.whatsappNumber || "not provided"}
+                          </span>
+                        )}
+                        {isPurchase && details && (
+                          <span>
+                            {details.packageName} · Qty {details.quantity}
+                            {(details.playerId || details.recipient) &&
+                              ` · ${details.isGift ? "Gift to" : "Player"} ${
+                                details.recipient || details.playerId
+                              }`}
+                            {details.serverId && ` · ${details.serverId}`}
                           </span>
                         )}
                         <span>
@@ -826,7 +864,9 @@ function Wallet() {
                         </strong>
                         {amountPrefix && (
                           <span
-                            className={`wallet-transaction-change ${successful ? "positive" : "negative"}`}
+                            className={`wallet-transaction-change ${
+                              successful && !isPurchase ? "positive" : "negative"
+                            }`}
                           >
                             {amountPrefix} {formatBalance(transaction.amount)}
                           </span>
@@ -878,7 +918,8 @@ function Wallet() {
               <div className="wallet-history-footnote">
                 <FontAwesomeIcon icon={faCircleInfo} />
                 <span>
-                  Your balance updates after a top-up request is reviewed.
+                  Your balance updates when a top-up is approved or a game
+                  purchase is approved.
                 </span>
               </div>
             </section>

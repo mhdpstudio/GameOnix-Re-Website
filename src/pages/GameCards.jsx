@@ -30,6 +30,8 @@ const PAYMENTS_URL =
 const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_API_URL =
   "https://gameonixfav.vercel.app/api/auth/wallet";
+const WALLET_PURCHASE_API_URL =
+  "https://gameonixfav.vercel.app/api/auth/wallet-purchase";
 const WALLET_PAYMENT_ID = "__gameonix_wallet__";
 
 const RAW_ASSET_BASE =
@@ -192,6 +194,8 @@ function GameCards() {
   const [isGift, setIsGift] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutOrderSubmitted, setCheckoutOrderSubmitted] = useState(false);
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
   const [walletBalanceError, setWalletBalanceError] = useState("");
@@ -349,6 +353,8 @@ function GameCards() {
     setRecipient("");
     setIsGift(false);
     setCheckoutMessage("");
+    setCheckoutSubmitting(false);
+    setCheckoutOrderSubmitted(false);
     setWalletBalance(null);
     setWalletBalanceError("");
 
@@ -428,9 +434,10 @@ function GameCards() {
     setSelectedPack(pack);
     setQuantity(1);
     setCheckoutMessage("");
+    setCheckoutOrderSubmitted(false);
   }
 
-  function handleCheckout(event) {
+  async function handleCheckout(event) {
     event.preventDefault();
     setCheckoutMessage("");
 
@@ -474,23 +481,55 @@ function GameCards() {
     }
 
     if (selectedPaymentMethod?.isWallet) {
-      if (walletBalance === null) {
-        setCheckoutMessage(
-          walletBalanceError || "Your wallet balance is unavailable."
-        );
-        return;
-      }
+      setCheckoutSubmitting(true);
+      try {
+        const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          credentials: "include",
+        });
+        const tokenData = await tokenResponse.json().catch(() => ({}));
+        if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+          throw new Error(tokenData.error || "Sign in again to place your order.");
+        }
 
-      if (walletBalance < total) {
-        setCheckoutMessage(
-          `Insufficient wallet balance. Available: ${formatPrice(walletBalance)}.`
-        );
-        return;
-      }
+        const response = await fetch(WALLET_PURCHASE_API_URL, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokenData.token}`,
+          },
+          credentials: "omit",
+          body: JSON.stringify({
+            productId: String(selectedProduct.id),
+            packIndex: (selectedProduct.packs || []).indexOf(selectedPack),
+            quantity,
+            playerId: playerId.trim(),
+            serverId: serverId.trim(),
+            contactEmail: email.trim(),
+            isGift,
+            recipient: recipient.trim(),
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success !== true) {
+          throw new Error(data.error || "Unable to submit your purchase request.");
+        }
 
-      setCheckoutMessage(
-        "Wallet payment is not active yet. No balance was deducted; purchases will be enabled when order fulfillment is connected."
-      );
+        setCheckoutOrderSubmitted(true);
+        setCheckoutMessage(
+          `Order request ${data.request.id.slice(0, 8)} for ${formatPrice(data.request.amount)} was sent for review. Your wallet will only be charged after approval.${data.adminEmailSent ? "" : " The request was saved, but admin email delivery failed; please contact support."}`
+        );
+        window.dispatchEvent(new Event("wallet-notifications-updated"));
+      } catch (purchaseError) {
+        console.error("Game wallet purchase request failed:", purchaseError);
+        setCheckoutMessage(
+          purchaseError.message || "Unable to submit your purchase request."
+        );
+      } finally {
+        setCheckoutSubmitting(false);
+      }
       return;
     }
 
@@ -1293,16 +1332,22 @@ function GameCards() {
                     className="gc-pay-button"
                     disabled={
                       !selectedPack ||
+                      checkoutSubmitting ||
+                      checkoutOrderSubmitted ||
                       !selectedPaymentMethod?.av
                     }
                   >
-                    <FontAwesomeIcon icon={faLock} />
-                    Continue · {formatPrice(total)}
+                    <FontAwesomeIcon icon={checkoutSubmitting ? faRotate : faLock} />
+                    {checkoutSubmitting
+                      ? "Sending request..."
+                      : checkoutOrderSubmitted
+                        ? "Request sent"
+                        : `Continue · ${formatPrice(total)}`}
                   </button>
 
                   <p className="gc-terms">
                     {selectedPaymentMethod?.isWallet
-                      ? "Wallet payment will not deduct funds until product delivery is connected."
+                      ? "Your request is reviewed by the admin. Wallet funds are deducted only after approval."
                       : "Continuing does not charge you. Payment processing must be connected before orders can be completed."}
                   </p>
                 </div>
