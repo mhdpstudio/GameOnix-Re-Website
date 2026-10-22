@@ -350,14 +350,18 @@ function GameCards() {
     return products;
   }, [catalog, activeCategory, search, popularOnly, sortBy]);
 
-  const totalPacks = catalog
-    .filter((product) => product?.able !== false)
-    .reduce(
+  const visibleCatalog = catalog.filter((product) => product?.able !== false);
+  const totalPacks = visibleCatalog.reduce(
     (total, product) =>
       total +
       (product.packs || []).filter((pack) => pack?.able !== false).length,
     0
   );
+  const popularProductCount = visibleCatalog.filter((product) =>
+    (product.packs || []).some(
+      (pack) => pack?.able !== false && pack.popular
+    )
+  ).length;
 
   async function openProduct(product) {
     setSelectedProduct(product);
@@ -637,7 +641,7 @@ function GameCards() {
               <FontAwesomeIcon icon={faGamepad} />
             </span>
             <div>
-              <strong>{loading ? "—" : catalog.length}</strong>
+              <strong>{loading ? "—" : visibleCatalog.length}</strong>
               <span>Products</span>
             </div>
           </div>
@@ -658,11 +662,7 @@ function GameCards() {
             </span>
             <div>
               <strong>
-                {loading
-                  ? "—"
-                  : catalog.filter((item) =>
-                    (item.packs || []).some((pack) => pack.popular)
-                  ).length}
+                {loading ? "—" : popularProductCount}
               </strong>
               <span>Popular picks</span>
             </div>
