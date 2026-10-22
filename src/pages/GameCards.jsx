@@ -286,7 +286,14 @@ function GameCards() {
   }, []);
 
   const categories = useMemo(() => {
-    const types = [...new Set(catalog.map((item) => item.type).filter(Boolean))];
+    const types = [
+      ...new Set(
+        catalog
+          .filter((item) => item?.able !== false)
+          .map((item) => item.type)
+          .filter(Boolean)
+      ),
+    ];
 
     return [
       { id: "All", label: "All Products", icon: faLayerGroup },
@@ -299,7 +306,7 @@ function GameCards() {
   }, [catalog]);
 
   const filteredCatalog = useMemo(() => {
-    let products = [...catalog];
+    let products = catalog.filter((item) => item?.able !== false);
 
     if (activeCategory !== "All") {
       products = products.filter((item) => item.type === activeCategory);
@@ -313,6 +320,7 @@ function GameCards() {
         const id = String(item.id || "").toLowerCase();
 
         const packs = (item.packs || [])
+          .filter((pack) => pack?.able !== false)
           .map((pack) => `${pack.title || ""} ${pack.type || ""}`)
           .join(" ")
           .toLowerCase();
@@ -327,7 +335,9 @@ function GameCards() {
 
     if (popularOnly) {
       products = products.filter((item) =>
-        (item.packs || []).some((pack) => pack.popular)
+        (item.packs || []).some(
+          (pack) => pack?.able !== false && pack.popular
+        )
       );
     }
 
@@ -340,8 +350,12 @@ function GameCards() {
     return products;
   }, [catalog, activeCategory, search, popularOnly, sortBy]);
 
-  const totalPacks = catalog.reduce(
-    (total, product) => total + (product.packs?.length || 0),
+  const totalPacks = catalog
+    .filter((product) => product?.able !== false)
+    .reduce(
+    (total, product) =>
+      total +
+      (product.packs || []).filter((pack) => pack?.able !== false).length,
     0
   );
 
@@ -796,7 +810,9 @@ function GameCards() {
           ) : (
             <div className="gc-product-grid">
               {filteredCatalog.map((product) => {
-                const packs = product.packs || [];
+                const packs = (product.packs || []).filter(
+                  (pack) => pack?.able !== false
+                );
                 const popular = packs.some((pack) => pack.popular);
                 const productType = String(product.type || "").trim();
                 const isGiftCards = productType.toLowerCase() === "gift cards";
@@ -1137,7 +1153,12 @@ function GameCards() {
                 <section className="gc-pack-selector">
                   <div className="gc-checkout-label">
                     SELECT YOUR PACK
-                    <span>{(selectedProduct.packs || []).length} options</span>
+                    <span>
+                      {(selectedProduct.packs || []).filter(
+                        (pack) => pack?.able !== false
+                      ).length}{" "}
+                      options
+                    </span>
                   </div>
 
                   <div className="gc-modal-product-heading">
@@ -1153,7 +1174,10 @@ function GameCards() {
                   </div>
 
                   <div className="gc-pack-grid">
-                    {(selectedProduct.packs || []).map((pack, index) => {
+                    {(selectedProduct.packs || [])
+                      .map((pack, index) => ({ pack, index }))
+                      .filter(({ pack }) => pack?.able !== false)
+                      .map(({ pack, index }) => {
                       const isSelected =
                         selectedPack === pack ||
                         (selectedPack &&
