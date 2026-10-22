@@ -852,7 +852,9 @@ function Wallet() {
                           </span>
                         )}
                         {isPurchase &&
-                          transaction.status === "completed" &&
+                          ["completed", "approved"].includes(
+                            transaction.status
+                          ) &&
                           details?.isGiftCard &&
                           Array.isArray(details.giftCardCodes) && (
                             <details className="wallet-gift-card-codes">

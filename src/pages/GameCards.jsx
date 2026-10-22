@@ -349,7 +349,7 @@ function GameCards() {
     setSelectedPayment(paymentMethods.find((method) => method.av)?.name || "");
     setPlayerId("");
     setServerId("");
-    setEmail(user?.email || "");
+    setEmail("");
     setRecipient("");
     setIsGift(false);
     setCheckoutMessage("");
@@ -480,20 +480,19 @@ function GameCards() {
       return;
     }
 
-    if (selectedPaymentMethod?.isWallet) {
-      setCheckoutSubmitting(true);
-      try {
-        const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          credentials: "include",
-        });
-        const tokenData = await tokenResponse.json().catch(() => ({}));
-        if (!tokenResponse.ok || typeof tokenData.token !== "string") {
-          throw new Error(tokenData.error || "Sign in again to place your order.");
-        }
+    setCheckoutSubmitting(true);
+    try {
+      const tokenResponse = await fetch(`${AUTH_API_URL}?token=true`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const tokenData = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok || typeof tokenData.token !== "string") {
+        throw new Error(tokenData.error || "Sign in again to place your order.");
+      }
 
-        const response = await fetch(WALLET_PURCHASE_API_URL, {
+      const response = await fetch(WALLET_PURCHASE_API_URL, {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -505,37 +504,33 @@ function GameCards() {
             productId: String(selectedProduct.id),
             packIndex: (selectedProduct.packs || []).indexOf(selectedPack),
             quantity,
+            paymentMethod: selectedPaymentMethod.name,
+            mobileNumber: phoneNumber.trim(),
             playerId: playerId.trim(),
             serverId: serverId.trim(),
-            contactEmail: email.trim(),
+            contactEmail: isGift ? email.trim() : "",
             isGift,
             recipient: recipient.trim(),
           }),
         });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.success !== true) {
-          throw new Error(data.error || "Unable to submit your purchase request.");
-        }
-
-        setCheckoutOrderSubmitted(true);
-        setCheckoutMessage(
-          `Order request ${data.request.id.slice(0, 8)} for ${formatPrice(data.request.amount)} was sent for review. Your wallet will only be charged after approval.${data.adminEmailSent ? "" : " The request was saved, but admin email delivery failed; please contact support."}`
-        );
-        window.dispatchEvent(new Event("wallet-notifications-updated"));
-      } catch (purchaseError) {
-        console.error("Game wallet purchase request failed:", purchaseError);
-        setCheckoutMessage(
-          purchaseError.message || "Unable to submit your purchase request."
-        );
-      } finally {
-        setCheckoutSubmitting(false);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.success !== true) {
+        throw new Error(data.error || "Unable to submit your purchase request.");
       }
-      return;
-    }
 
-    setCheckoutMessage(
-      "تم التحقق من البيانات على الواجهة فقط. إتمام الطلب يحتاج Backend وبوابة دفع متصلة."
-    );
+      setCheckoutOrderSubmitted(true);
+      setCheckoutMessage(
+        `Order request ${data.request.id.slice(0, 8)} for ${formatPrice(data.request.amount)} using ${selectedPaymentMethod.name} was sent for review. ${selectedPaymentMethod.isWallet ? "Your wallet will only be charged after approval." : "This request will be reviewed without charging your wallet."}${data.adminEmailSent ? "" : " The request was saved, but admin email delivery failed; please contact support."}`
+      );
+      window.dispatchEvent(new Event("wallet-notifications-updated"));
+    } catch (purchaseError) {
+      console.error("Game purchase request failed:", purchaseError);
+      setCheckoutMessage(
+        purchaseError.message || "Unable to submit your purchase request."
+      );
+    } finally {
+      setCheckoutSubmitting(false);
+    }
   }
 
   return (
@@ -1053,13 +1048,20 @@ function GameCards() {
                       </label>
 
                       <label className="gc-field">
-                        <span>Your email (optional)</span>
+                        <span>Recipient email (optional)</span>
                         <input
                           type="email"
                           value={email}
                           onChange={(event) => setEmail(event.target.value)}
-                          placeholder="you@example.com"
+                          placeholder="recipient@example.com"
                         />
+                        {email.trim() &&
+                          email.trim().toLowerCase() ===
+                            String(user?.email || "").trim().toLowerCase() && (
+                            <small role="status">
+                              This is the same as your current account email.
+                            </small>
+                          )}
                       </label>
                     </>
                   ) : (
@@ -1082,15 +1084,6 @@ function GameCards() {
                         />
                       </label>
 
-                      <label className="gc-field">
-                        <span>Email (optional)</span>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(event) => setEmail(event.target.value)}
-                          placeholder="you@example.com"
-                        />
-                      </label>
                     </>
                   )}
 
@@ -1348,7 +1341,7 @@ function GameCards() {
                   <p className="gc-terms">
                     {selectedPaymentMethod?.isWallet
                       ? "Your request is reviewed by the admin. Wallet funds are deducted only after approval."
-                      : "Continuing does not charge you. Payment processing must be connected before orders can be completed."}
+                      : "Your order request is sent for admin approval. This website will not charge your wallet for this payment method."}
                   </p>
                 </div>
               </div>
