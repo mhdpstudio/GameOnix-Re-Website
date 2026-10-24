@@ -4,12 +4,17 @@ import {
   faArrowRight,
   faCheck,
   faChevronDown,
-  faDesktop,
   faEnvelope,
   faGamepad,
   faLock,
-  faMobileScreenButton,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAndroid,
+  faApple,
+  faPlaystation,
+  faWindows,
+  faXbox,
+} from "@fortawesome/free-brands-svg-icons";
 
 import { useAuth } from "../context/AuthContext";
 import "./../style/game-request-style.css";
@@ -17,17 +22,31 @@ import "./../style/game-request-style.css";
 const GAME_REQUEST_API_URL =
   "https://gameonixfav.vercel.app/api/game-request";
 const PLATFORMS = [
-  { label: "PC", icon: faDesktop, description: "Windows, macOS & Linux" },
-  { label: "PlayStation", icon: faGamepad, description: "PS4 & PS5" },
-  { label: "Xbox", icon: faGamepad, description: "Xbox consoles" },
+  { label: "PC", icons: [faWindows], description: "Windows, macOS & Linux" },
+  {
+    label: "PS Family",
+    icons: [faPlaystation],
+    description: "All PlayStation generations",
+  },
+  { label: "Xbox", icons: [faXbox], description: "Xbox consoles" },
   {
     label: "Nintendo Switch",
-    icon: faGamepad,
+    icons: [faGamepad],
     description: "Switch family",
   },
-  { label: "Mobile", icon: faMobileScreenButton, description: "iOS & Android" },
-  { label: "Other", icon: faGamepad, description: "Another platform" },
+  {
+    label: "Mobile",
+    icons: [faApple, faAndroid],
+    description: "iOS & Android",
+  },
+  { label: "Other", icons: [faGamepad], description: "Another platform" },
 ];
+
+function PlatformIcons({ icons }) {
+  return icons.map((icon) => (
+    <FontAwesomeIcon icon={icon} key={icon.iconName} />
+  ));
+}
 
 function GameRequest() {
   const { user } = useAuth();
@@ -251,10 +270,10 @@ function GameRequest() {
               >
                 <span className="game-request-platform-trigger-copy">
                   <span className="game-request-platform-trigger-icon">
-                    <FontAwesomeIcon
-                      icon={
+                    <PlatformIcons
+                      icons={
                         PLATFORMS.find((option) => option.label === platform)
-                          ?.icon || faGamepad
+                          ?.icons || [faGamepad]
                       }
                     />
                   </span>
@@ -318,7 +337,7 @@ function GameRequest() {
                       }}
                     >
                       <span className="game-request-platform-option-icon">
-                        <FontAwesomeIcon icon={option.icon} />
+                        <PlatformIcons icons={option.icons} />
                       </span>
                       <span className="game-request-platform-option-copy">
                         <span className="game-request-platform-option-name">

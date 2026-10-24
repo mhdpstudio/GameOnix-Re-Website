@@ -205,6 +205,19 @@
   border-radius: 9px;
 }
 
+.game-request-platform-trigger-icon > svg,
+.game-request-platform-option-icon > svg {
+  display: inline-block;
+}
+
+.game-request-platform-trigger-icon:has(svg + svg),
+.game-request-platform-option-icon:has(svg + svg) {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  font-size: 12px;
+}
+
 .game-request-platform-trigger.has-value .game-request-platform-trigger-icon {
   color: #fff;
   background: var(--primary);
