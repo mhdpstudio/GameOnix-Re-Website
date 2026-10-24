@@ -5,6 +5,82 @@
   color: var(--text-primary);
 }
 
+.game-request-access-card {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background:
+    radial-gradient(ellipse at 0 0, rgba(105, 92, 254, 0.1), transparent 55%),
+    var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.game-request-access-icon {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--primary-hover);
+  background: var(--primary-subtle);
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+}
+
+.game-request-access-card h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.game-request-access-card p {
+  max-width: 440px;
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.game-request-access-link {
+  min-height: 42px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-on-primary);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.game-request-access-link:hover {
+  background: var(--primary-hover);
+}
+
+.game-request-loader {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 18px;
+  border: 3px solid var(--primary-subtle);
+  border-top-color: var(--primary-hover);
+  border-radius: 50%;
+  animation: game-request-spin 750ms linear infinite;
+}
+
+@keyframes game-request-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .game-request-header {
   margin: 8px 0 32px;
 }
@@ -517,6 +593,7 @@
   .game-request-form input,
   .game-request-form textarea,
   .game-request-submit,
+  .game-request-access-link,
   .game-request-platform-trigger,
   .game-request-platform-chevron,
   .game-request-platform-option {
@@ -524,6 +601,10 @@
   }
 
   .game-request-platform-menu {
+    animation: none;
+  }
+
+  .game-request-loader {
     animation: none;
   }
 }

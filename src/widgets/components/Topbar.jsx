@@ -14,6 +14,7 @@ import {
     faCreditCard,
     faRightFromBracket,
     faTrashCan,
+    faMobileScreenButton,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -24,6 +25,11 @@ import {
     faArrowUpRightFromSquare,
     faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+    faPlaystation,
+    faWindows,
+    faXbox,
+} from "@fortawesome/free-brands-svg-icons";
 
 import "./../../style/topbar.css";
 
@@ -35,6 +41,23 @@ const WALLET_NOTIFICATIONS_URL =
 const WALLET_API_URL = "https://gameonixfav.vercel.app/api/auth/wallet";
 const PAYMENTS_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
+
+function getGameRequestPlatformIcon(platform) {
+    switch (platform) {
+        case "PC":
+            return faWindows;
+        case "PS Family":
+            return faPlaystation;
+        case "Xbox":
+            return faXbox;
+        case "Nintendo Switch":
+            return faGamepad;
+        case "Mobile":
+            return faMobileScreenButton;
+        default:
+            return faGamepad;
+    }
+}
 
 function enrichNotificationsFromTransactions(notifications, transactions) {
     return notifications.map((notification) => {
@@ -937,7 +960,7 @@ function Topbar() {
                                                 <FontAwesomeIcon icon={faBell} />
                                                 <strong>You’re all caught up</strong>
                                                 <span>
-                                                    Wallet activity will appear here.
+                                                    Wallet and game request updates will appear here.
                                                 </span>
                                             </div>
                                         ) : (
@@ -1023,6 +1046,14 @@ function Topbar() {
                                                                                 }}
                                                                             />
                                                                         </>
+                                                                    ) : details?.platform &&
+                                                                        ["game_request", "game_request_reply"].includes(
+                                                                            notification.type
+                                                                        ) ? (
+                                                                        <FontAwesomeIcon
+                                                                            icon={getGameRequestPlatformIcon(details.platform)}
+                                                                            title={details.platform}
+                                                                        />
                                                                     ) : paymentMethod?.logo ? (
                                                                         <img
                                                                             src={paymentMethod.logo}
@@ -1089,19 +1120,44 @@ function Topbar() {
                                                             </button>
                                                             {isSelected && (
                                                                 <div className="topbar-notification-details">
-                                                                    <div className="topbar-notification-detail-row">
-                                                                        <span>Action</span>
-                                                                        <strong>{notification.title}</strong>
-                                                                    </div>
-                                                                    <div className="topbar-notification-detail-row amount">
-                                                                        <span>Amount</span>
-                                                                        <strong>
-                                                                            {Number.isFinite(notificationAmount)
-                                                                                ? `EGP ${notificationAmount.toFixed(2)}`
-                                                                                : "Not specified"}
-                                                                        </strong>
-                                                                    </div>
-                                                                    {[
+                                                                    {["game_request", "game_request_reply"].includes(notification.type) ? (
+                                                                        <>
+                                                                            {[
+                                                                                ["Game", details?.gameTitle],
+                                                                                ["Platform", details?.platform],
+                                                                            ]
+                                                                                .filter(([, value]) => String(value || "").trim())
+                                                                                .map(([label, value]) => (
+                                                                                    <div
+                                                                                        className="topbar-notification-detail-row"
+                                                                                        key={label}
+                                                                                    >
+                                                                                        <span>{label}</span>
+                                                                                        <strong>{value}</strong>
+                                                                                    </div>
+                                                                                ))}
+                                                                            {notification.type === "game_request_reply" && (
+                                                                                <div className="topbar-notification-detail-row">
+                                                                                    <span>Team reply</span>
+                                                                                    <strong>{details?.reply || notification.message}</strong>
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div className="topbar-notification-detail-row">
+                                                                                <span>Action</span>
+                                                                                <strong>{notification.title}</strong>
+                                                                            </div>
+                                                                            <div className="topbar-notification-detail-row amount">
+                                                                                <span>Amount</span>
+                                                                                <strong>
+                                                                                    {Number.isFinite(notificationAmount)
+                                                                                        ? `EGP ${notificationAmount.toFixed(2)}`
+                                                                                        : "Not specified"}
+                                                                                </strong>
+                                                                            </div>
+                                                                            {[
                                                                         ["Game", details?.gameName],
                                                                         ["Package", details?.packageName],
                                                                         ["Quantity", details?.quantity],
@@ -1127,7 +1183,7 @@ function Topbar() {
                                                                                     : details?.currentBalance,
                                                                         ],
                                                                         ["Request ID", details?.requestId],
-                                                                    ]
+                                                                            ]
                                                                         .filter(([, value]) =>
                                                                                 String(value || "").trim()
                                                                         )
@@ -1140,20 +1196,22 @@ function Topbar() {
                                                                                     <strong>{value}</strong>
                                                                                 </div>
                                                                         ))}
-                                                                    <div className={`topbar-notification-status ${notificationStatus}`}>
-                                                                        <FontAwesomeIcon
-                                                                            className="topbar-notification-status-icon"
-                                                                            icon={
-                                                                                notificationStatus === "approved"
-                                                                                    ? faCircleCheck
-                                                                                    : notificationStatus === "cancelled"
-                                                                                        ? faCircleXmark
-                                                                                        : faClock
-                                                                            }
-                                                                            aria-hidden="true"
-                                                                        />
-                                                                        {statusLabel}
-                                                                    </div>
+                                                                            <div className={`topbar-notification-status ${notificationStatus}`}>
+                                                                                <FontAwesomeIcon
+                                                                                className="topbar-notification-status-icon"
+                                                                                icon={
+                                                                                    notificationStatus === "approved"
+                                                                                        ? faCircleCheck
+                                                                                        : notificationStatus === "cancelled"
+                                                                                            ? faCircleXmark
+                                                                                            : faClock
+                                                                                }
+                                                                                aria-hidden="true"
+                                                                                />
+                                                                                {statusLabel}
+                                                                            </div>
+                                                                        </>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </article>

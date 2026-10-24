@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
@@ -17,6 +18,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 
 import { useAuth } from "../context/AuthContext";
+import { authFetch } from "../api/session";
 import "./../style/game-request-style.css";
 
 const GAME_REQUEST_API_URL =
@@ -29,6 +31,11 @@ const PLATFORMS = [
     description: "All PlayStation generations",
   },
   { label: "Xbox", icons: [faXbox], description: "Xbox consoles" },
+  {
+    label: "Nintendo Switch",
+    icons: [faGamepad],
+    description: "Switch family",
+  },
   {
     label: "Mobile",
     icons: [faApple, faAndroid],
@@ -44,10 +51,9 @@ function PlatformIcons({ icons }) {
 }
 
 function GameRequest() {
-  const { user } = useAuth();
+  const { user, authLoading } = useAuth();
   const accountEmail = user?.email?.trim() || "";
   const [gameTitle, setGameTitle] = useState("");
-  const [email, setEmail] = useState("");
   const [platform, setPlatform] = useState("");
   const [details, setDetails] = useState("");
   const [error, setError] = useState("");
@@ -95,7 +101,7 @@ function GameRequest() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(GAME_REQUEST_API_URL, {
+      const response = await authFetch(GAME_REQUEST_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,10 +109,8 @@ function GameRequest() {
         },
         body: JSON.stringify({
           gameTitle,
-          email: accountEmail || email,
           platform,
           details,
-          username: user?.username || "",
           website: formData.get("website"),
         }),
       });
@@ -119,8 +123,8 @@ function GameRequest() {
       }
 
       setSubmitted(true);
+      window.dispatchEvent(new Event("wallet-notifications-updated"));
       setGameTitle("");
-      if (!accountEmail) setEmail("");
       setPlatform("");
       setDetails("");
     } catch (requestError) {
@@ -150,6 +154,32 @@ function GameRequest() {
         </p>
       </header>
 
+      {authLoading ? (
+        <section className="game-request-access-card" aria-live="polite">
+          <span className="game-request-loader" aria-hidden="true" />
+          <h2>Checking your account</h2>
+          <p>Just a moment while we restore your GameOnix session.</p>
+        </section>
+      ) : !user ? (
+        <section className="game-request-access-card">
+          <span className="game-request-access-icon">
+            <FontAwesomeIcon icon={faLock} />
+          </span>
+          <h2>Sign in to request a game</h2>
+          <p>
+            Signing in lets us send your request privately and notify you in
+            the topbar when the team replies.
+          </p>
+          <Link
+            className="game-request-access-link"
+            to="/login"
+            state={{ from: "/request-game" }}
+          >
+            Sign in to continue
+            <FontAwesomeIcon icon={faArrowRight} />
+          </Link>
+        </section>
+      ) : (
       <div className="game-request-layout">
         <section className="game-request-card">
           <div className="game-request-card-heading">
@@ -180,38 +210,14 @@ function GameRequest() {
               required
             />
 
-            {accountEmail ? (
-              <>
-                <label>Contact email</label>
-                <div className="game-request-account-email">
-                  <FontAwesomeIcon icon={faEnvelope} />
-                  <span>{accountEmail}</span>
-                  <span className="game-request-field-hint">
-                    From your account
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <label htmlFor="game-request-email">
-                  Your email <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="game-request-email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  maxLength={254}
-                  autoComplete="email"
-                  required
-                />
-                <span className="game-request-field-hint">
-                  Only used if the team needs to follow up on your request.
-                </span>
-              </>
-            )}
+            <label>Contact email</label>
+            <div className="game-request-account-email">
+              <FontAwesomeIcon icon={faEnvelope} />
+              <span>{accountEmail || "Account email"}</span>
+              <span className="game-request-field-hint">
+                From your account
+              </span>
+            </div>
 
             <label id="game-request-platform-label">
               Platform <span aria-hidden="true">*</span>
@@ -428,6 +434,7 @@ function GameRequest() {
           </div>
         </aside>
       </div>
+      )}
     </main>
   );
 }
