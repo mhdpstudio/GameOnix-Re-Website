@@ -49,6 +49,18 @@ function getGameList(data) {
   return [];
 }
 
+function compareGameIdsDescending(first, second) {
+  const firstId = Number(first?.id);
+  const secondId = Number(second?.id);
+  const firstHasId = Number.isFinite(firstId);
+  const secondHasId = Number.isFinite(secondId);
+
+  if (firstHasId && secondHasId) return secondId - firstId;
+  if (firstHasId) return -1;
+  if (secondHasId) return 1;
+  return 0;
+}
+
 function normalizePlatform(value) {
   const platform = String(value || "").trim().toLowerCase();
 
@@ -197,7 +209,7 @@ function GamesCarousel({ games, platform, category, now }) {
       <div className="home-games-row" ref={rowRef}>
         {visibleGames.map((game) => (
           <GameCard
-            key={`${category.id}-${game.slug}`}
+            key={`${category.id}-${game.id ?? game.slug}`}
             game={game}
             showNewBadge={isNewGame(game, now)}
             className="home-game-card"
@@ -282,7 +294,7 @@ function Home() {
     return games
       .filter((game) => getAddedAt(game) !== null)
       .slice()
-      .sort((a, b) => getAddedAt(b) - getAddedAt(a));
+      .sort(compareGameIdsDescending);
   }, [games]);
 
   const sections = useMemo(() => {
@@ -319,7 +331,7 @@ function Home() {
       ).map(([type, items]) => ({
         id: type,
         type,
-        games: items,
+        games: items.slice().sort(compareGameIdsDescending),
       })),
     }));
   }, [games]);
