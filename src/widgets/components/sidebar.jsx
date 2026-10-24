@@ -15,6 +15,7 @@ import {
   faCreditCard,
   faBagShopping,
   faWallet,
+  faLightbulb,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -29,6 +30,7 @@ const navigation = [
       { label: "Home", to: "/", icon: faHouse, end: true },
       { label: "Discover", to: "/discover", icon: faCompass },
       { label: "My Library", to: "/library", icon: faBookOpen },
+      { label: "Request a Game", to: "/request-game", icon: faLightbulb },
     ],
   },
   {

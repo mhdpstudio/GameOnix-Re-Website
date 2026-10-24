@@ -14,6 +14,7 @@ import GameDetails from "./pages/game-details";
 import SearchResults from "./pages/search-results";
 import GameCards from "./pages/GameCards";
 import Wallet from "./pages/Wallet";
+import GameRequest from "./pages/game-request";
 
 import PageTitle from "./components/PageTitle";
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wallet" element={<Wallet />} />
+          <Route path="/request-game" element={<GameRequest />} />
 
           <Route path="/games" element={<Games />} />
           <Route path="/search" element={<SearchResults />} />
