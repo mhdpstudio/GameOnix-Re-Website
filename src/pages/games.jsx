@@ -10,6 +10,7 @@ import {
 import GameCard from "../components/GameCard";
 
 import "./../style/games-style.css";
+import { gameHasCategory } from "../utils/game-categories";
 
 const GAMES_DATA_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/games-data.json";
@@ -101,8 +102,7 @@ function Games() {
 
       const matchesType =
         !type ||
-        String(game.gameType || "Other").trim().toLowerCase() ===
-          type.trim().toLowerCase();
+        gameHasCategory(game, type.trim());
 
       return matchesPlatform && matchesType;
     });

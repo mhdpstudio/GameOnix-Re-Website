@@ -31,6 +31,7 @@ import {
     faXbox,
 } from "@fortawesome/free-brands-svg-icons";
 import { getCommunityApiToken } from "../../api/session";
+import { getGameCategories } from "../../utils/game-categories";
 
 import "./../../style/topbar.css";
 
@@ -645,7 +646,7 @@ function Topbar() {
 
                 const title = String(game.title || "").toLowerCase();
                 const publisher = String(game.publisher || "").toLowerCase();
-                const type = String(game.gameType || "").toLowerCase();
+                const type = getGameCategories(game).join(" ").toLowerCase();
 
                 return (
                     title.includes(normalizedQuery) ||

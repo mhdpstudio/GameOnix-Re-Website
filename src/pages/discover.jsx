@@ -11,6 +11,7 @@ import {
 import GameCard from "../components/GameCard";
 
 import "./../style/discover-style.css";
+import { getGameCategories, gameHasCategory } from "../utils/game-categories";
 
 const GAMES_DATA_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/games-data.json";
@@ -118,9 +119,7 @@ function Discover() {
     const found = new Set();
 
     games.forEach((game) => {
-      const genre = String(game.gameType || "Other").trim();
-
-      if (genre) found.add(genre);
+      getGameCategories(game).forEach((genre) => found.add(genre));
     });
 
     return Array.from(found);
@@ -134,16 +133,17 @@ function Discover() {
         !query ||
         String(game.title || "").toLowerCase().includes(query) ||
         String(game.publisher || "").toLowerCase().includes(query) ||
-        String(game.gameType || "").toLowerCase().includes(query);
+        getGameCategories(game)
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
 
       const matchesPlatform =
         selectedPlatform === "all" ||
         normalizePlatform(game.platform) === selectedPlatform;
 
-      const genre = String(game.gameType || "Other").trim() || "Other";
-
       const matchesGenre =
-        selectedGenre === "all" || genre === selectedGenre;
+        selectedGenre === "all" || gameHasCategory(game, selectedGenre);
 
       return matchesSearch && matchesPlatform && matchesGenre;
     });

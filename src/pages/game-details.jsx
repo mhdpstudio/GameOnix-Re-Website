@@ -28,6 +28,7 @@ import {
 } from "../api/favorites";
 import { getCommunityApiToken } from "../api/session";
 import { useAuth } from "../context/AuthContext";
+import { getGameCategories } from "../utils/game-categories";
 
 import "./../style/game-details-style.css";
 
@@ -387,7 +388,9 @@ function GameDetails() {
                 <h1>{game.title}</h1>
 
                 <div className="game-heading-meta">
-                    {game.gameType && <span>{game.gameType}</span>}
+                    {getGameCategories(game).length > 0 && (
+                        <span>{getGameCategories(game).join(" · ")}</span>
+                    )}
                     {game.publisher && <span>{game.publisher}</span>}
                     {game.version && (
                         <span>Version {game.version}</span>
@@ -589,7 +592,9 @@ function GameDetails() {
                                 <span>
                                     <FontAwesomeIcon icon={faTag} /> Genre
                                 </span>
-                                <strong>{game.gameType || "N/A"}</strong>
+                                <strong>
+                                    {getGameCategories(game).join(", ") || "N/A"}
+                                </strong>
                             </div>
 
                             <div>
@@ -782,7 +787,11 @@ function GameDetails() {
                                         ["Game", game.title],
                                         ["Version", game.version || "Not listed"],
                                         ["Platform", game.platform || "Not listed"],
-                                        ["Genre", game.gameType || "Not listed"],
+                                        [
+                                            "Categories",
+                                            getGameCategories(game).join(", ") ||
+                                                "Not listed",
+                                        ],
                                         ["Publisher", game.publisher || "Not listed"],
                                         ["Game size", game.size || "Not listed"],
                                         ["Download type", game.fileType || "Not listed"],

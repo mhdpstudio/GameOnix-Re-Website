@@ -9,6 +9,7 @@ import {
 
 import GameCard from "../components/GameCard";
 import "./../style/search-results-style.css";
+import { getGameCategories } from "../utils/game-categories";
 
 const GAMES_DATA_URL =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/games-data.json";
@@ -74,7 +75,7 @@ function SearchResults() {
       const searchableFields = [
         game.title,
         game.publisher,
-        game.gameType,
+        ...getGameCategories(game),
         game.platform,
         game.version,
       ];

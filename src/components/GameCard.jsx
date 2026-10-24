@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGamepad } from "@fortawesome/free-solid-svg-icons";
 
 import "../style/game-card.css";
+import { getGameCategories } from "../utils/game-categories";
 
 function capitalizeFirstLetter(value) {
   const label = String(value || "").trim();
@@ -24,12 +26,17 @@ function getPlatformLabel(value) {
   const platform = String(value || "").trim().toLowerCase();
 
   if (["pc", "windows", "computer"].includes(platform)) return "PC";
+
   if (["ps", "playstation", "ps4", "ps5"].includes(platform)) {
     return "PlayStation";
   }
-  if (["xbox", "xbox one", "xbox series x", "xbox series s"].includes(platform)) {
+
+  if (
+    ["xbox", "xbox one", "xbox series x", "xbox series s"].includes(platform)
+  ) {
     return "Xbox";
   }
+
   if (["switch", "nintendo switch"].includes(platform)) {
     return "Nintendo Switch";
   }
@@ -44,7 +51,10 @@ function GameCard({ game, showNewBadge = false, className = "" }) {
   const [failedPoster, setFailedPoster] = useState("");
   const title = game?.title || "Untitled Game";
   const platformLabel = getPlatformLabel(game?.platform);
-  const categoryLabel = capitalizeFirstLetter(game?.gameType) || "Other";
+
+  // عرض جميع الأنواع الموجودة في gameTypes
+  const gameCategories = getGameCategories(game);
+
   const fileTypeLabel = capitalizeFirstLetter(game?.fileType);
   const imageFailed = failedPoster === poster;
 
@@ -80,12 +90,17 @@ function GameCard({ game, showNewBadge = false, className = "" }) {
           >
             {platformLabel}
           </span>
-          <span
-            className="game-card-category"
-            title={`Category: ${categoryLabel}`}
-          >
-            {categoryLabel}
-          </span>
+
+          {gameCategories.map((category, index) => (
+            <span
+              className="game-card-category"
+              key={`${category}-${index}`}
+              title={`Category: ${category}`}
+            >
+              {capitalizeFirstLetter(category)}
+            </span>
+          ))}
+
           {fileTypeLabel && (
             <span
               className="game-card-file-type"

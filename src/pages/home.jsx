@@ -14,6 +14,7 @@ import {
   faXbox,
 } from "@fortawesome/free-brands-svg-icons";
 import GameCard from "../components/GameCard";
+import { getGameCategories } from "../utils/game-categories";
 
 import "./../style/home-style.css";
 
@@ -314,14 +315,14 @@ function Home() {
       }
 
       const platformSection = platformMap.get(platformId);
-      const type =
-        String(game.gameType || "Other").trim() || "Other";
+      const types = getGameCategories(game);
+      (types.length ? types : ["Other"]).forEach((type) => {
+        if (!platformSection.categories.has(type)) {
+          platformSection.categories.set(type, []);
+        }
 
-      if (!platformSection.categories.has(type)) {
-        platformSection.categories.set(type, []);
-      }
-
-      platformSection.categories.get(type).push(game);
+        platformSection.categories.get(type).push(game);
+      });
     });
 
     return Array.from(platformMap.values()).map((platformSection) => ({
@@ -409,10 +410,10 @@ function Home() {
       )}
 
       {sections.map((platformSection) => {
-        const totalGames = platformSection.categories.reduce(
-          (total, category) => total + category.games.length,
-          0
-        );
+        const totalGames = games.filter(
+          (game) =>
+            normalizePlatform(game.platform) === platformSection.id
+        ).length;
 
         return (
           <section
