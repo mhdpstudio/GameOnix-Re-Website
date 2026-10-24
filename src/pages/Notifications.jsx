@@ -23,6 +23,11 @@ import "./../style/notifications-style.css";
 
 const NOTIFICATIONS_URL =
   "https://gameonixfav.vercel.app/api/auth/wallet-notifications";
+const NOTIFICATIONS_UPDATED_EVENT = "wallet-notifications-updated";
+
+function notifyNotificationCountChanged() {
+  window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
+}
 
 function getNotificationIcon(platform) {
   const normalized = String(platform || "").toLowerCase();
@@ -195,6 +200,7 @@ function Notifications() {
             : item
         )
       );
+      notifyNotificationCountChanged();
     }
   }
 
@@ -206,6 +212,7 @@ function Notifications() {
       setNotifications((current) =>
         current.map((item) => ({ ...item, readAt: item.readAt || readAt }))
       );
+      notifyNotificationCountChanged();
     }
   }
 
@@ -216,6 +223,7 @@ function Notifications() {
         current.filter((item) => item.id !== notificationId)
       );
       setExpandedId((current) => (current === notificationId ? null : current));
+      notifyNotificationCountChanged();
     }
   }
 
@@ -230,6 +238,7 @@ function Notifications() {
     if (result) {
       setNotifications([]);
       setExpandedId(null);
+      notifyNotificationCountChanged();
     }
   }
 

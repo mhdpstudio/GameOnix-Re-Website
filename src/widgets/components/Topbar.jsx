@@ -41,6 +41,11 @@ const WALLET_NOTIFICATIONS_URL =
 const WALLET_API_URL = "https://gameonixfav.vercel.app/api/auth/wallet";
 const PAYMENTS_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
+const NOTIFICATIONS_UPDATED_EVENT = "wallet-notifications-updated";
+
+function notifyNotificationCountChanged() {
+    window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
+}
 
 function getGameRequestPlatformIcon(platform) {
     const normalized = String(platform || "").trim().toLowerCase();
@@ -330,6 +335,7 @@ function Topbar() {
                         : item
                 )
             );
+            notifyNotificationCountChanged();
         } catch (error) {
             console.error("Wallet notification update failed:", error);
             setNotificationsError(
@@ -368,6 +374,7 @@ function Topbar() {
             setNotifications((current) =>
                 current.map((item) => ({ ...item, readAt: item.readAt || readAt }))
             );
+            notifyNotificationCountChanged();
         } catch (error) {
             console.error("Wallet notifications update failed:", error);
             setNotificationsError(
@@ -406,6 +413,7 @@ function Topbar() {
             setSelectedNotificationId((current) =>
                 current === notificationId ? null : current
             );
+            notifyNotificationCountChanged();
         } catch (error) {
             console.error("Wallet notification deletion failed:", error);
             setNotificationsError(
@@ -443,6 +451,7 @@ function Topbar() {
             setNotifications([]);
             setSelectedNotificationId(null);
             setDeleteAllConfirmOpen(false);
+            notifyNotificationCountChanged();
         } catch (error) {
             console.error("Wallet notifications deletion failed:", error);
             setNotificationsError(

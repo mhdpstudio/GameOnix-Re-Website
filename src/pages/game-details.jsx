@@ -343,6 +343,7 @@ function GameDetails() {
                 throw new Error(data.error || "Unable to send your report.");
             }
             setReportSubmitted(true);
+            window.dispatchEvent(new Event("wallet-notifications-updated"));
         } catch (submitError) {
             console.error("Game bug report failed:", submitError);
             setReportError(

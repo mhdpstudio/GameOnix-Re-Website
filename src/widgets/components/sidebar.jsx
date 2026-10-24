@@ -21,9 +21,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
+import { getCommunityApiToken } from "../../api/session";
 
 const DEFAULT_AVATAR =
   "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-All/main/0.png";
+const NOTIFICATIONS_URL =
+  "https://gameonixfav.vercel.app/api/auth/wallet-notifications";
+const NOTIFICATIONS_UPDATED_EVENT = "wallet-notifications-updated";
 
 const navigation = [
   {
@@ -180,6 +184,65 @@ function Sidebar({ collapsed, onToggle }) {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [unreadNotifications, setUnreadNotifications] = useState({
+    username: "",
+    count: 0,
+  });
+
+  useEffect(() => {
+    if (!user || authLoading) return undefined;
+
+    let active = true;
+    async function loadUnreadNotifications() {
+      try {
+        const token = await getCommunityApiToken();
+        const response = await fetch(NOTIFICATIONS_URL, {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "omit",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(data.notifications)) {
+          throw new Error(data.error || "Unable to load unread notifications.");
+        }
+        if (!active) return;
+        setUnreadNotifications({
+          username: user.username,
+          count: data.notifications.filter(
+            (notification) => !notification.readAt
+          ).length,
+        });
+      } catch (error) {
+        if (active) {
+          console.error("Sidebar notification count load failed:", error);
+        }
+      }
+    }
+
+    const initialLoad = window.setTimeout(loadUnreadNotifications, 0);
+    const refreshInterval = window.setInterval(loadUnreadNotifications, 60_000);
+    window.addEventListener(
+      NOTIFICATIONS_UPDATED_EVENT,
+      loadUnreadNotifications
+    );
+    return () => {
+      active = false;
+      window.clearTimeout(initialLoad);
+      window.clearInterval(refreshInterval);
+      window.removeEventListener(
+        NOTIFICATIONS_UPDATED_EVENT,
+        loadUnreadNotifications
+      );
+    };
+  }, [authLoading, user]);
+
+  const unreadCount =
+    unreadNotifications.username === user?.username
+      ? unreadNotifications.count
+      : 0;
+  const unreadBadgeText = unreadCount > 99 ? "+99" : String(unreadCount);
 
   function openLogoutPopup() {
     setLogoutError("");
@@ -252,7 +315,14 @@ function Sidebar({ collapsed, onToggle }) {
                   end={item.end}
                   title={
                     collapsed
-                      ? [item.label, item.badge].filter(Boolean).join(" — ")
+                      ? [
+                          item.label,
+                          item.to === "/notifications" && unreadCount
+                            ? `${unreadCount} unread`
+                            : item.badge,
+                        ]
+                          .filter(Boolean)
+                          .join(" — ")
                       : undefined
                   }
                   className={({ isActive }) =>
@@ -274,11 +344,30 @@ function Sidebar({ collapsed, onToggle }) {
                         <span className="sidebar-link-badge">{item.badge}</span>
                       )}
 
+                      {item.to === "/notifications" && unreadCount > 0 && (
+                        <span
+                          className="sidebar-notification-badge"
+                          aria-label={`${unreadCount} unread notifications`}
+                        >
+                          {unreadBadgeText}
+                        </span>
+                      )}
+
                       <span className="sidebar-link-indicator">
                         <FontAwesomeIcon icon={faChevronRight} />
                       </span>
                     </>
                   )}
+                  {collapsed &&
+                    item.to === "/notifications" &&
+                    unreadCount > 0 && (
+                      <span
+                        className="sidebar-notification-badge"
+                        aria-label={`${unreadCount} unread notifications`}
+                      >
+                        {unreadBadgeText}
+                      </span>
+                    )}
                 </NavLink>
               ))}
             </div>
