@@ -5,8 +5,14 @@ import {
   faChevronLeft,
   faChevronRight,
   faGamepad,
+  faMobileScreenButton,
   faRotate,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlaystation,
+  faWindows,
+  faXbox,
+} from "@fortawesome/free-brands-svg-icons";
 import GameCard from "../components/GameCard";
 
 import "./../style/home-style.css";
@@ -61,6 +67,7 @@ function getPlatformInfo(platformId) {
   if (platformId === "pc") {
     return {
       title: "PC Games",
+      icon: faWindows,
       description: "Discover games for your PC",
       kicker: "PC GAMING",
     };
@@ -69,13 +76,33 @@ function getPlatformInfo(platformId) {
   if (platformId === "ps") {
     return {
       title: "PlayStation Games",
+      icon: faPlaystation,
       description: "Explore games for PlayStation",
       kicker: "CONSOLE GAMING",
     };
   }
 
+  if (platformId === "xbox") {
+    return {
+      title: "Xbox Games",
+      icon: faXbox,
+      description: "Explore games for Xbox",
+      kicker: "CONSOLE GAMING",
+    };
+  }
+
+  if (platformId === "mobile") {
+    return {
+      title: "Mobile Games",
+      icon: faMobileScreenButton,
+      description: "Explore games for mobile",
+      kicker: "MOBILE GAMING",
+    };
+  }
+
   return {
     title: `${platformId.toUpperCase()} Games`,
+    icon: faGamepad,
     description: `Explore games for ${platformId.toUpperCase()}`,
     kicker: `${platformId.toUpperCase()} GAMING`,
   };
@@ -387,7 +414,14 @@ function Home() {
                   {platformSection.kicker}
                 </span>
 
-                <h2>{platformSection.title}</h2>
+                <h2>
+                  <FontAwesomeIcon
+                    className="home-platform-icon"
+                    icon={platformSection.icon}
+                    aria-hidden="true"
+                  />
+                  {platformSection.title}
+                </h2>
                 <p>{platformSection.description}</p>
               </div>
 
