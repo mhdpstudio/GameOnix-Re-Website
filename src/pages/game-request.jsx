@@ -30,11 +30,6 @@ const PLATFORMS = [
   },
   { label: "Xbox", icons: [faXbox], description: "Xbox consoles" },
   {
-    label: "Nintendo Switch",
-    icons: [faGamepad],
-    description: "Switch family",
-  },
-  {
     label: "Mobile",
     icons: [faApple, faAndroid],
     description: "iOS & Android",
