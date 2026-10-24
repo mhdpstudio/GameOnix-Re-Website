@@ -150,6 +150,29 @@
   font-size: 10px;
 }
 
+.game-request-account-email {
+  min-height: 44px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.game-request-account-email > svg {
+  flex: 0 0 auto;
+  color: var(--primary-hover);
+}
+
+.game-request-account-email .game-request-field-hint {
+  margin: 0 0 0 auto;
+  white-space: nowrap;
+}
+
 .game-request-honeypot {
   position: absolute;
   width: 1px;

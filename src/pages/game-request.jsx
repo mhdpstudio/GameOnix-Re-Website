@@ -16,6 +16,7 @@ const GAME_REQUEST_API_URL =
 
 function GameRequest() {
   const { user } = useAuth();
+  const accountEmail = user?.email?.trim() || "";
   const [gameTitle, setGameTitle] = useState("");
   const [email, setEmail] = useState("");
   const [platform, setPlatform] = useState("");
@@ -40,7 +41,7 @@ function GameRequest() {
         },
         body: JSON.stringify({
           gameTitle,
-          email,
+          email: accountEmail || email,
           platform,
           details,
           username: user?.username || "",
@@ -57,7 +58,7 @@ function GameRequest() {
 
       setSubmitted(true);
       setGameTitle("");
-      setEmail("");
+      if (!accountEmail) setEmail("");
       setPlatform("");
       setDetails("");
     } catch (requestError) {
@@ -117,23 +118,38 @@ function GameRequest() {
               required
             />
 
-            <label htmlFor="game-request-email">
-              Your email <span aria-hidden="true">*</span>
-            </label>
-            <input
-              id="game-request-email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              maxLength={254}
-              autoComplete="email"
-              required
-            />
-            <span className="game-request-field-hint">
-              Only used if the team needs to follow up on your request.
-            </span>
+            {accountEmail ? (
+              <>
+                <label>Contact email</label>
+                <div className="game-request-account-email">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                  <span>{accountEmail}</span>
+                  <span className="game-request-field-hint">
+                    From your account
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <label htmlFor="game-request-email">
+                  Your email <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="game-request-email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  maxLength={254}
+                  autoComplete="email"
+                  required
+                />
+                <span className="game-request-field-hint">
+                  Only used if the team needs to follow up on your request.
+                </span>
+              </>
+            )}
 
             <label htmlFor="game-request-platform">Platform</label>
             <select
