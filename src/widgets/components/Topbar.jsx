@@ -30,12 +30,12 @@ import {
     faWindows,
     faXbox,
 } from "@fortawesome/free-brands-svg-icons";
+import { getCommunityApiToken } from "../../api/session";
 
 import "./../../style/topbar.css";
 
 const GAMES_DATA_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/games-data.json";
-const AUTH_API_URL = "https://gameonix-backend.vercel.app/api/auth/me";
 const WALLET_NOTIFICATIONS_URL =
     "https://gameonixfav.vercel.app/api/auth/wallet-notifications";
 const WALLET_API_URL = "https://gameonixfav.vercel.app/api/auth/wallet";
@@ -153,20 +153,6 @@ function enrichNotificationsFromTransactions(notifications, transactions) {
     });
 }
 
-async function getWalletApiToken() {
-    const response = await fetch(`${AUTH_API_URL}?token=true`, {
-        headers: { Accept: "application/json" },
-        credentials: "include",
-    });
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || typeof data.token !== "string") {
-        throw new Error(data.error || "Your session expired. Sign in again.");
-    }
-
-    return data.token;
-}
-
 function TopbarAvatar({ avatar, name }) {
     const [failed, setFailed] = useState(false);
 
@@ -246,7 +232,7 @@ function Topbar() {
         setNotificationsLoading(true);
         setNotificationsError("");
         try {
-            const token = await getWalletApiToken();
+            const token = await getCommunityApiToken();
             const response = await fetch(WALLET_NOTIFICATIONS_URL, {
                 headers: {
                     Accept: "application/json",
@@ -320,7 +306,7 @@ function Topbar() {
         setNotificationActionLoading(true);
         setNotificationsError("");
         try {
-            const token = await getWalletApiToken();
+            const token = await getCommunityApiToken();
             const response = await fetch(WALLET_NOTIFICATIONS_URL, {
                 method: "POST",
                 headers: {
@@ -361,7 +347,7 @@ function Topbar() {
         setNotificationActionLoading(true);
         setNotificationsError("");
         try {
-            const token = await getWalletApiToken();
+            const token = await getCommunityApiToken();
             const response = await fetch(WALLET_NOTIFICATIONS_URL, {
                 method: "POST",
                 headers: {
@@ -397,7 +383,7 @@ function Topbar() {
         setNotificationActionLoading(true);
         setNotificationsError("");
         try {
-            const token = await getWalletApiToken();
+            const token = await getCommunityApiToken();
             const response = await fetch(WALLET_NOTIFICATIONS_URL, {
                 method: "DELETE",
                 headers: {
@@ -437,7 +423,7 @@ function Topbar() {
         setNotificationActionLoading(true);
         setNotificationsError("");
         try {
-            const token = await getWalletApiToken();
+            const token = await getCommunityApiToken();
             const response = await fetch(WALLET_NOTIFICATIONS_URL, {
                 method: "DELETE",
                 headers: {

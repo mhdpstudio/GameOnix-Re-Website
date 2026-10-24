@@ -18,7 +18,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 
 import { useAuth } from "../context/AuthContext";
-import { authFetch } from "../api/session";
+import { getCommunityApiToken } from "../api/session";
 import "./../style/game-request-style.css";
 
 const GAME_REQUEST_API_URL =
@@ -101,12 +101,15 @@ function GameRequest() {
     setSubmitting(true);
 
     try {
-      const response = await authFetch(GAME_REQUEST_API_URL, {
+      const token = await getCommunityApiToken();
+      const response = await fetch(GAME_REQUEST_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`,
         },
+        credentials: "omit",
         body: JSON.stringify({
           gameTitle,
           platform,

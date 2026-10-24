@@ -1,4 +1,20 @@
 const SESSION_TOKEN_KEY = "gameonix_session_token";
+const COMMUNITY_AUTH_ME_URL =
+  "https://gameonix-backend.vercel.app/api/auth/me";
+
+export async function getCommunityApiToken() {
+  const response = await fetch(`${COMMUNITY_AUTH_ME_URL}?token=true`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || typeof data.token !== "string") {
+    throw new Error(data.error || "Your session expired. Sign in again.");
+  }
+
+  return data.token;
+}
 
 export function getSessionToken() {
   return (
