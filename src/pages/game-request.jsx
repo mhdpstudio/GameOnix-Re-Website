@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
   faCheck,
+  faChevronDown,
+  faDesktop,
   faEnvelope,
   faGamepad,
   faLock,
+  faMobileScreenButton,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../context/AuthContext";
@@ -13,6 +16,18 @@ import "./../style/game-request-style.css";
 
 const GAME_REQUEST_API_URL =
   "https://gameonixfav.vercel.app/api/game-request";
+const PLATFORMS = [
+  { label: "PC", icon: faDesktop, description: "Windows, macOS & Linux" },
+  { label: "PlayStation", icon: faGamepad, description: "PS4 & PS5" },
+  { label: "Xbox", icon: faGamepad, description: "Xbox consoles" },
+  {
+    label: "Nintendo Switch",
+    icon: faGamepad,
+    description: "Switch family",
+  },
+  { label: "Mobile", icon: faMobileScreenButton, description: "iOS & Android" },
+  { label: "Other", icon: faGamepad, description: "Another platform" },
+];
 
 function GameRequest() {
   const { user } = useAuth();
@@ -22,13 +37,46 @@ function GameRequest() {
   const [platform, setPlatform] = useState("");
   const [details, setDetails] = useState("");
   const [error, setError] = useState("");
+  const [platformError, setPlatformError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [activePlatformIndex, setActivePlatformIndex] = useState(0);
+  const platformPickerRef = useRef(null);
+  const platformOptionRefs = useRef([]);
+
+  useEffect(() => {
+    if (!platformOpen) return undefined;
+
+    function handleOutsidePointerDown(event) {
+      if (!platformPickerRef.current?.contains(event.target)) {
+        setPlatformOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown);
+    return () =>
+      document.removeEventListener("pointerdown", handleOutsidePointerDown);
+  }, [platformOpen]);
+
+  useEffect(() => {
+    if (platformOpen) {
+      platformOptionRefs.current[activePlatformIndex]?.focus();
+    }
+  }, [activePlatformIndex, platformOpen]);
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (!platform) {
+      setPlatformError(true);
+      setPlatformOpen(true);
+      setError("");
+      return;
+    }
+
     const formData = new FormData(event.currentTarget);
     setError("");
+    setPlatformError(false);
     setSubmitted(false);
     setSubmitting(true);
 
@@ -151,26 +199,155 @@ function GameRequest() {
               </>
             )}
 
-            <label htmlFor="game-request-platform">
+            <label id="game-request-platform-label">
               Platform <span aria-hidden="true">*</span>
             </label>
-            <select
-              id="game-request-platform"
-              name="platform"
-              value={platform}
-              onChange={(event) => setPlatform(event.target.value)}
-              required
+            <div
+              className={`game-request-platform-picker${platformOpen ? " is-open" : ""}${platformError ? " has-error" : ""}`}
+              ref={platformPickerRef}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setPlatformOpen(false);
+                }
+              }}
             >
-              <option value="" disabled>
-                Choose a platform
-              </option>
-              <option value="PC">PC</option>
-              <option value="PlayStation">PlayStation</option>
-              <option value="Xbox">Xbox</option>
-              <option value="Nintendo Switch">Nintendo Switch</option>
-              <option value="Mobile">Mobile</option>
-              <option value="Other">Other</option>
-            </select>
+              <button
+                aria-haspopup="listbox"
+                aria-expanded={platformOpen}
+                aria-labelledby="game-request-platform-label"
+                aria-describedby={
+                  platformError ? "game-request-platform-error" : undefined
+                }
+                aria-invalid={platformError}
+                aria-required="true"
+                className={`game-request-platform-trigger${platform ? " has-value" : ""}`}
+                type="button"
+                onClick={() => {
+                  setActivePlatformIndex(
+                    Math.max(
+                      0,
+                      PLATFORMS.findIndex((option) => option.label === platform)
+                    )
+                  );
+                  setPlatformOpen((isOpen) => !isOpen);
+                }}
+                onKeyDown={(event) => {
+                  if (
+                    !platformOpen &&
+                    ["ArrowDown", "ArrowUp", "Enter", " "].includes(event.key)
+                  ) {
+                    event.preventDefault();
+                    setActivePlatformIndex(
+                      Math.max(
+                        0,
+                        PLATFORMS.findIndex(
+                          (option) => option.label === platform
+                        )
+                      )
+                    );
+                    setPlatformOpen(true);
+                  }
+                }}
+              >
+                <span className="game-request-platform-trigger-copy">
+                  <span className="game-request-platform-trigger-icon">
+                    <FontAwesomeIcon
+                      icon={
+                        PLATFORMS.find((option) => option.label === platform)
+                          ?.icon || faGamepad
+                      }
+                    />
+                  </span>
+                  <span className="game-request-platform-trigger-text">
+                    <span className="game-request-platform-value">
+                      {platform || "Choose a platform"}
+                    </span>
+                    <span className="game-request-platform-caption">
+                      {platform
+                        ? "Selected platform"
+                        : "Select where you want to play"}
+                    </span>
+                  </span>
+                </span>
+                <FontAwesomeIcon
+                  className="game-request-platform-chevron"
+                  icon={faChevronDown}
+                />
+              </button>
+
+              {platformOpen && (
+                <div
+                  aria-labelledby="game-request-platform-label"
+                  className="game-request-platform-menu"
+                  role="listbox"
+                >
+                  <span className="game-request-platform-menu-heading">
+                    SELECT A PLATFORM
+                  </span>
+                  {PLATFORMS.map((option, index) => (
+                    <button
+                      aria-selected={platform === option.label}
+                      className={`game-request-platform-option${platform === option.label ? " is-selected" : ""}`}
+                      key={option.label}
+                      ref={(element) => {
+                        platformOptionRefs.current[index] = element;
+                      }}
+                      role="option"
+                      tabIndex={index === activePlatformIndex ? 0 : -1}
+                      type="button"
+                      onClick={() => {
+                        setPlatform(option.label);
+                        setPlatformError(false);
+                        setPlatformOpen(false);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                          event.preventDefault();
+                          const direction = event.key === "ArrowDown" ? 1 : -1;
+                          setActivePlatformIndex(
+                            (index + direction + PLATFORMS.length) %
+                              PLATFORMS.length
+                          );
+                        } else if (event.key === "Escape") {
+                          event.preventDefault();
+                          setPlatformOpen(false);
+                          platformPickerRef.current
+                            ?.querySelector(".game-request-platform-trigger")
+                            ?.focus();
+                        }
+                      }}
+                    >
+                      <span className="game-request-platform-option-icon">
+                        <FontAwesomeIcon icon={option.icon} />
+                      </span>
+                      <span className="game-request-platform-option-copy">
+                        <span className="game-request-platform-option-name">
+                          {option.label}
+                        </span>
+                        <span className="game-request-platform-option-description">
+                          {option.description}
+                        </span>
+                      </span>
+                      {platform === option.label && (
+                        <FontAwesomeIcon
+                          className="game-request-platform-option-check"
+                          icon={faCheck}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {platformError && (
+              <span
+                className="game-request-platform-error"
+                id="game-request-platform-error"
+                role="alert"
+              >
+                Choose a platform to continue.
+              </span>
+            )}
 
             <label htmlFor="game-request-details">Anything else?</label>
             <textarea
