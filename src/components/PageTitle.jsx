@@ -13,6 +13,7 @@ const pageTitles = {
   "/register": "Create Account",
   "/profile": "Your Profile",
   "/wallet": "Wallet",
+  "/notifications": "Notifications",
   "/request-game": "Request a Game",
   "/search": "Search Games",
   "/shopping/game-cards": "Game Cards",
@@ -38,6 +39,7 @@ const PRIVATE_ROUTES = [
   "/library",
   "/search",
   "/request-game",
+  "/notifications",
   "/shopping/game-cards",
 ];
 const SITE_URL = "https://www.gameonix.shop";

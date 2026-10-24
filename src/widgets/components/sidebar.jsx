@@ -17,6 +17,7 @@ import {
   faWallet,
   faLightbulb,
   faHandPointUp,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -47,7 +48,15 @@ const navigation = [
   },
   {
     section: "ACCOUNT",
-    items: [{ label: "Wallet", to: "/wallet", icon: faWallet }],
+    items: [
+      { label: "Wallet", to: "/wallet", icon: faWallet },
+      {
+        label: "Notifications",
+        to: "/notifications",
+        icon: faBell,
+        requiresAuth: true,
+      },
+    ],
   },
 ];
 
@@ -234,7 +243,9 @@ function Sidebar({ collapsed, onToggle }) {
                 <p className="sidebar-section-label">{group.section}</p>
               )}
 
-              {group.items.map((item) => (
+              {group.items
+                .filter((item) => !item.requiresAuth || user)
+                .map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}

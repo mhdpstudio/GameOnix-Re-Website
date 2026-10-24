@@ -43,20 +43,20 @@ const PAYMENTS_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/payments.json";
 
 function getGameRequestPlatformIcon(platform) {
-    switch (platform) {
-        case "PC":
-            return faWindows;
-        case "PS Family":
-            return faPlaystation;
-        case "Xbox":
-            return faXbox;
-        case "Nintendo Switch":
-            return faGamepad;
-        case "Mobile":
-            return faMobileScreenButton;
-        default:
-            return faGamepad;
+    const normalized = String(platform || "").trim().toLowerCase();
+    if (["pc", "windows", "computer"].includes(normalized)) return faWindows;
+    if (
+        normalized === "ps" ||
+        normalized.includes("playstation") ||
+        /^ps(?:\s|[0-9])/.test(normalized)
+    ) {
+        return faPlaystation;
     }
+    if (normalized.includes("xbox")) return faXbox;
+    if (normalized.includes("mobile") || normalized.includes("android")) {
+        return faMobileScreenButton;
+    }
+    return faGamepad;
 }
 
 function enrichNotificationsFromTransactions(notifications, transactions) {
@@ -888,10 +888,19 @@ function Topbar() {
                                             <div>
                                                 <strong>Notifications</strong>
                                                 <span>
-                                                    Wallet updates · kept for 7 days
+                                                    Game and account updates · kept for 7 days
                                                 </span>
                                             </div>
                                             <div className="topbar-notification-heading-actions">
+                                                <Link
+                                                    to="/notifications"
+                                                    className="topbar-mark-all-read topbar-view-all-notifications"
+                                                    onClick={() =>
+                                                        setOpenAccountPanel(null)
+                                                    }
+                                                >
+                                                    View all
+                                                </Link>
                                                 <button
                                                     type="button"
                                                     className="topbar-mark-all-read"
@@ -1032,8 +1041,7 @@ function Topbar() {
                                                                                 }}
                                                                             />
                                                                         </>
-                                                                    ) : details?.platform &&
-                                                                        ["game_request", "game_request_reply"].includes(
+                                                                    ) : ["game_request", "game_request_reply", "bug_report", "bug_report_reply"].includes(
                                                                             notification.type
                                                                         ) ? (
                                                                         <FontAwesomeIcon
@@ -1123,6 +1131,33 @@ function Topbar() {
                                                                                     </div>
                                                                                 ))}
                                                                             {notification.type === "game_request_reply" && (
+                                                                                <div className="topbar-notification-detail-row">
+                                                                                    <span>Team reply</span>
+                                                                                    <strong>{details?.reply || notification.message}</strong>
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    ) : ["bug_report", "bug_report_reply"].includes(notification.type) ? (
+                                                                        <>
+                                                                            {[
+                                                                                ["Game", details?.gameTitle || details?.gameName],
+                                                                                ["Version", details?.version],
+                                                                                ["Platform", details?.platform],
+                                                                                ["Genre", details?.gameType],
+                                                                                ["Download type", details?.fileType],
+                                                                                ["Reported issue", details?.description],
+                                                                            ]
+                                                                                .filter(([, value]) => String(value || "").trim())
+                                                                                .map(([label, value]) => (
+                                                                                    <div
+                                                                                        className="topbar-notification-detail-row"
+                                                                                        key={label}
+                                                                                    >
+                                                                                        <span>{label}</span>
+                                                                                        <strong>{value}</strong>
+                                                                                    </div>
+                                                                                ))}
+                                                                            {notification.type === "bug_report_reply" && (
                                                                                 <div className="topbar-notification-detail-row">
                                                                                     <span>Team reply</span>
                                                                                     <strong>{details?.reply || notification.message}</strong>

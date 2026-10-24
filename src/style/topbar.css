@@ -572,6 +572,12 @@
   cursor: pointer;
 }
 
+.topbar-view-all-notifications {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .topbar-mark-all-read:disabled {
   cursor: not-allowed;
   opacity: 0.65;

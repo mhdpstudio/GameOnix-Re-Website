@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,6 +14,7 @@ import {
     faCodeBranch,
     faHdd,
     faBuilding,
+    faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import {
     faWindows,
@@ -24,6 +26,8 @@ import {
     addFavorite,
     removeFavorite,
 } from "../api/favorites";
+import { getCommunityApiToken } from "../api/session";
+import { useAuth } from "../context/AuthContext";
 
 import "./../style/game-details-style.css";
 
@@ -32,6 +36,8 @@ const DATA_URL =
 
 const BANNERS_BASE_URL =
     "https://raw.githubusercontent.com/mhdpstudio/GameOnix-Data-Content/main/images/games/banners/";
+const GAME_REPORT_API_URL =
+    "https://gameonixfav.vercel.app/api/game-report";
 
 function getGameList(data) {
     if (Array.isArray(data)) return data;
@@ -52,8 +58,10 @@ function isLoginError(err) {
 
 function GameDetails() {
     const { slug } = useParams();
+    const { user } = useAuth();
 
     const thumbnailsRef = useRef(null);
+    const reportDescriptionRef = useRef(null);
 
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -68,6 +76,25 @@ function GameDetails() {
     const [selectedImage, setSelectedImage] = useState(0);
     const [failedImages, setFailedImages] = useState([]);
     const [activeTab, setActiveTab] = useState("overview");
+    const [reportOpen, setReportOpen] = useState(false);
+    const [reportDescription, setReportDescription] = useState("");
+    const [reportError, setReportError] = useState("");
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportSubmitted, setReportSubmitted] = useState(false);
+
+    useEffect(() => {
+        if (!reportOpen) return undefined;
+
+        function handleReportKeyDown(event) {
+            if (event.key === "Escape" && !reportSubmitting) {
+                setReportOpen(false);
+            }
+        }
+
+        window.addEventListener("keydown", handleReportKeyDown);
+        reportDescriptionRef.current?.focus();
+        return () => window.removeEventListener("keydown", handleReportKeyDown);
+    }, [reportOpen, reportSubmitting]);
 
     // Load game details.
     useEffect(() => {
@@ -269,19 +296,61 @@ function GameDetails() {
 
     function reportBug() {
         if (!game) return;
+        setReportError("");
+        setReportSubmitted(false);
+        setReportDescription("");
+        setReportOpen(true);
+    }
 
-        const subject = encodeURIComponent(
-            `GameOnix bug report: ${game.title}`
-        );
+    async function submitBugReport(event) {
+        event.preventDefault();
+        if (!user || !game || reportSubmitting) return;
 
-        const body = encodeURIComponent(
-            `Game: ${game.title}\n` +
-                `Slug: ${game.slug}\n\n` +
-                "Bug description:\n"
-        );
+        const description = reportDescription.trim();
+        if (description.length < 10) {
+            setReportError("Please describe the issue in at least 10 characters.");
+            return;
+        }
 
-        window.location.href =
-            `mailto:?subject=${subject}&body=${body}`;
+        setReportSubmitting(true);
+        setReportError("");
+        try {
+            const token = await getCommunityApiToken();
+            const response = await fetch(GAME_REPORT_API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                credentials: "omit",
+                body: JSON.stringify({
+                    description,
+                    game: {
+                        slug: game.slug,
+                        title: game.title,
+                        version: game.version,
+                        platform: game.platform,
+                        gameType: game.gameType,
+                        publisher: game.publisher,
+                        size: game.size,
+                        fileType: game.fileType,
+                    },
+                }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to send your report.");
+            }
+            setReportSubmitted(true);
+        } catch (submitError) {
+            console.error("Game bug report failed:", submitError);
+            setReportError(
+                submitError.message || "Unable to send your report. Please try again."
+            );
+        } finally {
+            setReportSubmitting(false);
+        }
     }
 
     if (loading) {
@@ -306,6 +375,7 @@ function GameDetails() {
     const isFavorite = favorites.includes(game.slug);
 
     return (
+        <>
         <main className="game-page">
             <Link to="/" className="game-back">
                 <FontAwesomeIcon icon={faArrowLeft} />
@@ -640,6 +710,157 @@ function GameDetails() {
                 </section>
             )}
         </main>
+        {reportOpen &&
+            createPortal(
+                <div
+                    className="game-report-overlay"
+                    onMouseDown={(event) => {
+                        if (
+                            event.target === event.currentTarget &&
+                            !reportSubmitting
+                        ) {
+                            setReportOpen(false);
+                        }
+                    }}
+                >
+                    <section
+                        className="game-report-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="game-report-title"
+                    >
+                        <button
+                            type="button"
+                            className="game-report-close"
+                            onClick={() => setReportOpen(false)}
+                            disabled={reportSubmitting}
+                            aria-label="Close report form"
+                        >
+                            <FontAwesomeIcon icon={faXmark} />
+                        </button>
+
+                        {reportSubmitted ? (
+                            <div className="game-report-success">
+                                <span className="game-report-dialog-icon">
+                                    <FontAwesomeIcon icon={faBug} />
+                                </span>
+                                <h2 id="game-report-title">Report received</h2>
+                                <p>
+                                    Thanks for letting us know. We’ll review your
+                                    report and notify you here and by email when
+                                    we reply.
+                                </p>
+                                <button
+                                    type="button"
+                                    className="game-report-submit"
+                                    onClick={() => setReportOpen(false)}
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="game-report-dialog-heading">
+                                    <span className="game-report-dialog-icon">
+                                        <FontAwesomeIcon icon={faBug} />
+                                    </span>
+                                    <div>
+                                        <span>GAMEONIX SUPPORT</span>
+                                        <h2 id="game-report-title">
+                                            Report a problem
+                                        </h2>
+                                        <p>
+                                            Game and account details are attached
+                                            automatically.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="game-report-context">
+                                    {[
+                                        ["Game", game.title],
+                                        ["Version", game.version || "Not listed"],
+                                        ["Platform", game.platform || "Not listed"],
+                                        ["Genre", game.gameType || "Not listed"],
+                                        ["Publisher", game.publisher || "Not listed"],
+                                        ["Game size", game.size || "Not listed"],
+                                        ["Download type", game.fileType || "Not listed"],
+                                        ["Username", user ? `@${user.username}` : "Sign in required"],
+                                        ["Account email", user?.email || "Email not available on account"],
+                                    ]
+                                        .map(([label, value]) => (
+                                            <div
+                                                className="game-report-context-row"
+                                                key={label}
+                                            >
+                                                <span>{label}</span>
+                                                <strong>{value}</strong>
+                                            </div>
+                                        ))}
+                                </div>
+
+                                {!user ? (
+                                    <div className="game-report-login">
+                                        <p>
+                                            Sign in first so we can attach your
+                                            account and send you a reply.
+                                        </p>
+                                        <Link
+                                            to="/login"
+                                            onClick={() => setReportOpen(false)}
+                                        >
+                                            Sign in to continue
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <form
+                                        className="game-report-form"
+                                        onSubmit={submitBugReport}
+                                    >
+                                        <label htmlFor="game-report-description">
+                                            What went wrong?
+                                        </label>
+                                        <textarea
+                                            ref={reportDescriptionRef}
+                                            id="game-report-description"
+                                            value={reportDescription}
+                                            onChange={(event) =>
+                                                setReportDescription(
+                                                    event.target.value
+                                                )
+                                            }
+                                            maxLength={1500}
+                                            minLength={10}
+                                            placeholder="Describe what happened and how we can reproduce it..."
+                                            required
+                                        />
+                                        <div className="game-report-form-footer">
+                                            {reportError && (
+                                                <p role="alert">{reportError}</p>
+                                            )}
+                                            <span>
+                                                {reportDescription.length}/1500
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="game-report-submit"
+                                            disabled={reportSubmitting}
+                                        >
+                                            <FontAwesomeIcon icon={faBug} />
+                                            {reportSubmitting
+                                                ? "Sending report..."
+                                                : "Send private report"}
+                                        </button>
+                                    </form>
+                                )}
+                            </>
+                        )}
+                    </section>
+                </div>,
+                document.body
+            )}
+        </>
     );
 }
 
