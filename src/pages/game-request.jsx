@@ -151,14 +151,19 @@ function GameRequest() {
               </>
             )}
 
-            <label htmlFor="game-request-platform">Platform</label>
+            <label htmlFor="game-request-platform">
+              Platform <span aria-hidden="true">*</span>
+            </label>
             <select
               id="game-request-platform"
               name="platform"
               value={platform}
               onChange={(event) => setPlatform(event.target.value)}
+              required
             >
-              <option value="">Choose a platform (optional)</option>
+              <option value="" disabled>
+                Choose a platform
+              </option>
               <option value="PC">PC</option>
               <option value="PlayStation">PlayStation</option>
               <option value="Xbox">Xbox</option>
