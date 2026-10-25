@@ -26,7 +26,7 @@ const GAME_REQUEST_API_URL =
 const PLATFORMS = [
   { label: "PC", icons: [faWindows], description: "Windows, macOS & Linux" },
   {
-    label: "PS Family",
+    label: "PS",
     icons: [faPlaystation],
     description: "All PlayStation generations",
   },
