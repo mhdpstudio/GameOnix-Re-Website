@@ -19,8 +19,11 @@ import {
   faKey,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+import EmailSuggestion from "../components/EmailSuggestion";
 import { useAuth } from "../context/AuthContext";
 import { authFetch } from "../api/session";
+import { useEmailTypoGuard } from "../hooks/useEmailTypoGuard";
+import { isValidEmail } from "../utils/email";
 import "./../style/profile-style.css";
 
 const API_URL = "https://gameonix-backend.vercel.app/api/auth";
@@ -50,6 +53,8 @@ function maskEmail(email) {
 
 function Profile() {
   const { user, refreshUser, setUser } = useAuth();
+  const { getSuggestion, getLiveSuggestion, keepTypedEmail } =
+    useEmailTypoGuard();
 
   const fileInputRef = useRef(null);
   const previewUrlRef = useRef("");
@@ -92,6 +97,15 @@ function Profile() {
   });
 
   const [resetCodeSent, setResetCodeSent] = useState(false);
+
+  const newEmailSuggestion = getLiveSuggestion(
+    "profile-email",
+    emailData.email
+  );
+  const resetEmailSuggestion = getLiveSuggestion(
+    "reset-email",
+    resetData.email
+  );
 
   useEffect(() => {
     setProfileData({
@@ -311,8 +325,19 @@ function Profile() {
     clearFeedback();
 
     const email = emailData.email.trim().toLowerCase();
+    const suggestion = getSuggestion("profile-email", email);
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (suggestion) {
+      setEmailData((previous) => ({ ...previous, email: suggestion }));
+
+      showFeedback(
+        `Did you mean ${suggestion}? We corrected the address. Check it and send the code again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.", "error");
       return;
     }
@@ -430,8 +455,19 @@ function Profile() {
     clearFeedback();
 
     const email = resetData.email.trim().toLowerCase();
+    const suggestion = getSuggestion("reset-email", email);
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (suggestion) {
+      setResetData((previous) => ({ ...previous, email: suggestion }));
+
+      showFeedback(
+        `Did you mean ${suggestion}? We corrected the address. Check it and send the code again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.", "error");
       return;
     }
@@ -477,8 +513,19 @@ function Profile() {
     const code = resetData.code.trim();
     const password = resetData.password;
     const confirmPassword = resetData.confirmPassword;
+    const suggestion = getSuggestion("reset-email", email);
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (suggestion) {
+      setResetData((previous) => ({ ...previous, email: suggestion }));
+
+      showFeedback(
+        `Did you mean ${suggestion}? We corrected the address. Check it and reset the password again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.", "error");
       return;
     }
@@ -543,8 +590,19 @@ function Profile() {
     clearFeedback();
 
     const email = resetData.email.trim().toLowerCase();
+    const suggestion = getSuggestion("reset-email", email);
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (suggestion) {
+      setResetData((previous) => ({ ...previous, email: suggestion }));
+
+      showFeedback(
+        `Did you mean ${suggestion}? We corrected the address. Check it and request a new code.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.", "error");
       return;
     }
@@ -929,6 +987,20 @@ function Profile() {
                           required
                         />
                       </div>
+
+                      <EmailSuggestion
+                        suggestion={newEmailSuggestion}
+                        onAccept={(next) => {
+                          setEmailData((previous) => ({
+                            ...previous,
+                            email: next,
+                          }));
+                          clearFeedback();
+                        }}
+                        onDismiss={() =>
+                          keepTypedEmail("profile-email", emailData.email)
+                        }
+                      />
                     </div>
 
                     <div className="profile-field">
@@ -1092,6 +1164,20 @@ function Profile() {
                           required
                         />
                       </div>
+
+                      <EmailSuggestion
+                        suggestion={resetEmailSuggestion}
+                        onAccept={(next) => {
+                          setResetData((previous) => ({
+                            ...previous,
+                            email: next,
+                          }));
+                          clearFeedback();
+                        }}
+                        onDismiss={() =>
+                          keepTypedEmail("reset-email", resetData.email)
+                        }
+                      />
                     </div>
 
                     <div className="profile-form-footer">

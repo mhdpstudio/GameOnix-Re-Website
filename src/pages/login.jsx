@@ -17,7 +17,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Loader from "../widgets/components/Loader";
+import EmailSuggestion from "../components/EmailSuggestion";
 import { useAuth } from "../context/AuthContext";
+import { useEmailTypoGuard } from "../hooks/useEmailTypoGuard";
+import { isValidEmail } from "../utils/email";
 import "./../style/login-style.css";
 
 const API_URL = "https://gameonix-backend.vercel.app/api/auth";
@@ -26,6 +29,8 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { getSuggestion, getLiveSuggestion, keepTypedEmail } =
+    useEmailTypoGuard();
   const redirectTo =
     typeof location.state?.from === "string" &&
     location.state.from.startsWith("/") &&
@@ -73,6 +78,23 @@ function Login() {
   const isVerify = mode === "verify";
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
+
+  const identitySuggestion = getLiveSuggestion(
+    "login-email",
+    loginData.identity
+  );
+  const registerEmailSuggestion = getLiveSuggestion(
+    "register-email",
+    registerData.email
+  );
+  const verificationEmailSuggestion = getLiveSuggestion(
+    "verify-email",
+    verification.email
+  );
+  const resetEmailSuggestion = getLiveSuggestion(
+    "reset-email",
+    resetData.email
+  );
 
   function showFeedback(text, type = "error") {
     setMessage(text);
@@ -175,9 +197,29 @@ function Login() {
   async function handleLoginSubmit(event) {
     event.preventDefault();
 
-    if (!loginData.identity.trim() || !loginData.password) {
+    const identity = loginData.identity.trim();
+
+    if (!identity || !loginData.password) {
       showFeedback("Enter your email or username and password.");
       return;
+    }
+
+    if (identity.includes("@")) {
+      const suggestion = getSuggestion("login-email", identity);
+
+      if (suggestion) {
+        setLoginData((previous) => ({ ...previous, identity: suggestion }));
+        showFeedback(
+          `Did you mean ${suggestion}? We corrected the address. Check it and press Sign In again.`,
+          "info"
+        );
+        return;
+      }
+
+      if (!isValidEmail(identity)) {
+        showFeedback("Please enter a valid email address.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -185,7 +227,7 @@ function Login() {
 
     try {
       const data = await postJson("login", {
-        identity: loginData.identity.trim(),
+        identity,
         password: loginData.password,
         rememberMe,
       });
@@ -201,9 +243,7 @@ function Login() {
     } catch (error) {
       if (error.data?.verificationRequired) {
         setVerification({
-          email: loginData.identity.includes("@")
-            ? loginData.identity.trim()
-            : "",
+          email: identity.includes("@") ? identity : "",
           code: "",
         });
 
@@ -240,7 +280,22 @@ function Login() {
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const emailSuggestion = getSuggestion("register-email", email);
+
+    if (emailSuggestion) {
+      setRegisterData((previous) => ({
+        ...previous,
+        email: emailSuggestion,
+      }));
+
+      showFeedback(
+        `Did you mean ${emailSuggestion}? We corrected the address. Review it and press Create Account again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.");
       return;
     }
@@ -315,6 +370,26 @@ function Login() {
       return;
     }
 
+    const emailSuggestion = getSuggestion("verify-email", email);
+
+    if (emailSuggestion) {
+      setVerification((previous) => ({
+        ...previous,
+        email: emailSuggestion,
+      }));
+
+      showFeedback(
+        `Did you mean ${emailSuggestion}? We corrected the address. Check it and verify again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showFeedback("Please enter a valid email address.");
+      return;
+    }
+
     if (!/^\d{6}$/.test(code)) {
       showFeedback("Enter the 6-digit verification code.");
       return;
@@ -384,7 +459,24 @@ function Login() {
 
     const email = resetData.email.trim().toLowerCase();
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email) {
+      showFeedback("Please enter a valid email address.");
+      return;
+    }
+
+    const emailSuggestion = getSuggestion("reset-email", email);
+
+    if (emailSuggestion) {
+      setResetData((previous) => ({ ...previous, email: emailSuggestion }));
+
+      showFeedback(
+        `Did you mean ${emailSuggestion}? We corrected the address. Check it and request the code again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.");
       return;
     }
@@ -424,7 +516,24 @@ function Login() {
     const password = resetData.password;
     const confirmPassword = resetData.confirmPassword;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email) {
+      showFeedback("Please enter a valid email address.");
+      return;
+    }
+
+    const emailSuggestion = getSuggestion("reset-email", email);
+
+    if (emailSuggestion) {
+      setResetData((previous) => ({ ...previous, email: emailSuggestion }));
+
+      showFeedback(
+        `Did you mean ${emailSuggestion}? We corrected the address. Check it and reset the password again.`,
+        "info"
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       showFeedback("Please enter a valid email address.");
       return;
     }
@@ -703,6 +812,20 @@ function Login() {
                       required
                     />
                   </div>
+
+                  <EmailSuggestion
+                    suggestion={identitySuggestion}
+                    onAccept={(next) => {
+                      setLoginData((previous) => ({
+                        ...previous,
+                        identity: next,
+                      }));
+                      setMessage("");
+                    }}
+                    onDismiss={() =>
+                      keepTypedEmail("login-email", loginData.identity)
+                    }
+                  />
                 </div>
 
                 <div className="auth-field">
@@ -850,6 +973,20 @@ function Login() {
                       required
                     />
                   </div>
+
+                  <EmailSuggestion
+                    suggestion={registerEmailSuggestion}
+                    onAccept={(next) => {
+                      setRegisterData((previous) => ({
+                        ...previous,
+                        email: next,
+                      }));
+                      setMessage("");
+                    }}
+                    onDismiss={() =>
+                      keepTypedEmail("register-email", registerData.email)
+                    }
+                  />
                 </div>
 
                 <div className="auth-field">
@@ -989,6 +1126,20 @@ function Login() {
                       required
                     />
                   </div>
+
+                  <EmailSuggestion
+                    suggestion={verificationEmailSuggestion}
+                    onAccept={(next) => {
+                      setVerification((previous) => ({
+                        ...previous,
+                        email: next,
+                      }));
+                      setMessage("");
+                    }}
+                    onDismiss={() =>
+                      keepTypedEmail("verify-email", verification.email)
+                    }
+                  />
                 </div>
 
                 <div className="auth-field">
@@ -1071,6 +1222,20 @@ function Login() {
                       required
                     />
                   </div>
+
+                  <EmailSuggestion
+                    suggestion={resetEmailSuggestion}
+                    onAccept={(next) => {
+                      setResetData((previous) => ({
+                        ...previous,
+                        email: next,
+                      }));
+                      setMessage("");
+                    }}
+                    onDismiss={() =>
+                      keepTypedEmail("reset-email", resetData.email)
+                    }
+                  />
                 </div>
 
                 <button
@@ -1123,6 +1288,20 @@ function Login() {
                       required
                     />
                   </div>
+
+                  <EmailSuggestion
+                    suggestion={resetEmailSuggestion}
+                    onAccept={(next) => {
+                      setResetData((previous) => ({
+                        ...previous,
+                        email: next,
+                      }));
+                      setMessage("");
+                    }}
+                    onDismiss={() =>
+                      keepTypedEmail("reset-email", resetData.email)
+                    }
+                  />
                 </div>
 
                 <div className="auth-field">

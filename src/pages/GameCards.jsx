@@ -18,7 +18,10 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import EmailSuggestion from "../components/EmailSuggestion";
 import { useAuth } from "../context/AuthContext";
+import { useEmailTypoGuard } from "../hooks/useEmailTypoGuard";
+import { isValidEmail } from "../utils/email";
 import "./../style/game-cards.css";
 
 const DATA_URL =
@@ -173,6 +176,8 @@ function PaymentMethodLogo({ method }) {
 function GameCards() {
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
+  const { getSuggestion, getLiveSuggestion, keepTypedEmail } =
+    useEmailTypoGuard();
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -214,6 +219,9 @@ function GameCards() {
   const isGiftCardProduct = ["gift card", "gift cards"].includes(
     String(selectedProduct?.type || "").trim().toLowerCase()
   );
+  const giftEmailSuggestion = isGift
+    ? getLiveSuggestion("gift-email", email)
+    : null;
 
   async function loadCatalog() {
     setLoading(true);
@@ -482,13 +490,23 @@ function GameCards() {
       return;
     }
 
-    if (
-      isGiftCardProduct &&
-      isGift &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-    ) {
-      setCheckoutMessage("Enter a valid recipient email for the gift card codes.");
-      return;
+    if (isGift && email.trim()) {
+      const suggestion = getSuggestion("gift-email", email);
+
+      if (suggestion) {
+        setEmail(suggestion);
+        setCheckoutMessage(
+          `Did you mean ${suggestion}? We corrected the recipient email. Check it and continue again.`
+        );
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        setCheckoutMessage(
+          "Enter a valid recipient email for the gift card codes."
+        );
+        return;
+      }
     }
 
     if (!isGiftCardProduct && !isGift && !playerId.trim()) {
@@ -1102,6 +1120,15 @@ function GameCards() {
                             </small>
                           )}
                       </label>
+
+                      <EmailSuggestion
+                        suggestion={giftEmailSuggestion}
+                        onAccept={(next) => {
+                          setEmail(next);
+                          setCheckoutMessage("");
+                        }}
+                        onDismiss={() => keepTypedEmail("gift-email", email)}
+                      />
                     </>
                   ) : (
                     <>
