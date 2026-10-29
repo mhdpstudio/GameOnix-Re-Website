@@ -1124,7 +1124,30 @@ function Topbar() {
                                                             </button>
                                                             {isSelected && (
                                                                 <div className="topbar-notification-details">
-                                                                    {["game_request", "game_request_reply"].includes(notification.type) ? (
+                                                                    {["support_request", "support_reply"].includes(notification.type) ? (
+                                                                        <>
+                                                                            {[
+                                                                                ["Topic", details?.topicLabel || details?.topic],
+                                                                                ["Order ID", details?.orderId],
+                                                                            ]
+                                                                                .filter(([, value]) => String(value || "").trim())
+                                                                                .map(([label, value]) => (
+                                                                                    <div
+                                                                                        className="topbar-notification-detail-row"
+                                                                                        key={label}
+                                                                                    >
+                                                                                        <span>{label}</span>
+                                                                                        <strong>{value}</strong>
+                                                                                    </div>
+                                                                                ))}
+                                                                            {notification.type === "support_reply" && (
+                                                                                <div className="topbar-notification-detail-row">
+                                                                                    <span>Team reply</span>
+                                                                                    <strong>{details?.reply || notification.message}</strong>
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    ) : ["game_request", "game_request_reply"].includes(notification.type) ? (
                                                                         <>
                                                                             {[
                                                                                 ["Game", details?.gameTitle],

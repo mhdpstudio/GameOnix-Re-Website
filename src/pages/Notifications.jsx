@@ -70,6 +70,8 @@ function getDetails(notification) {
     amount: "Amount",
     status: "Status",
     requestId: "Request ID",
+    topicLabel: "Topic",
+    orderId: "Order ID",
   };
 
   return Object.entries(details)
@@ -78,6 +80,7 @@ function getDetails(notification) {
         key !== "gameIcon" &&
         key !== "gameLink" &&
         !(key === "gameName" && details.gameTitle) &&
+        !(key === "topic" && details.topicLabel) &&
         value !== null &&
         value !== undefined &&
         String(value).trim() !== ""
