@@ -16,6 +16,8 @@ import GameCards from "./pages/GameCards";
 import Wallet from "./pages/Wallet";
 import GameRequest from "./pages/game-request";
 import Notifications from "./pages/Notifications";
+import Orders from "./pages/Orders";
+import Support from "./pages/Support";
 
 import PageTitle from "./components/PageTitle";
 
@@ -34,6 +36,8 @@ function App() {
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/request-game" element={<GameRequest />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/support" element={<Support />} />
 
           <Route path="/games" element={<Games />} />
           <Route path="/search" element={<SearchResults />} />

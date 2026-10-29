@@ -18,6 +18,8 @@ import {
   faLightbulb,
   faHandPointUp,
   faBell,
+  faReceipt,
+  faHeadset,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -48,6 +50,7 @@ const navigation = [
         icon: faCreditCard,
         // badge: "Coming soon",
       },
+      { label: "My Orders", to: "/orders", icon: faReceipt },
     ],
   },
   {
@@ -60,6 +63,7 @@ const navigation = [
         icon: faBell,
         requiresAuth: true,
       },
+      { label: "Support", to: "/support", icon: faHeadset },
     ],
   },
 ];

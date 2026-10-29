@@ -16,6 +16,8 @@ const pageTitles = {
   "/wallet": "Wallet",
   "/notifications": "Notifications",
   "/request-game": "Request a Game",
+  "/orders": "My Orders",
+  "/support": "Support",
   "/search": "Search Games",
   "/shopping/game-cards": "Game Cards",
 };
@@ -43,6 +45,7 @@ const PRIVATE_ROUTES = [
   "/search",
   "/request-game",
   "/notifications",
+  "/orders",
   "/shopping/game-cards",
 ];
 

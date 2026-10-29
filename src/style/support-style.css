@@ -1,0 +1,543 @@
+/* Support - WhatsApp channel and private message form */
+
+.support-page {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  padding: 8px 0 48px;
+  color: var(--text-primary);
+}
+
+.support-header {
+  margin-bottom: 22px;
+}
+
+.support-header h1 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.support-header p {
+  max-width: 62ch;
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.support-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Form card */
+
+.support-card {
+  padding: 26px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.support-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.support-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.support-field label {
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.support-field label > span {
+  margin-left: 2px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.support-field input,
+.support-field select,
+.support-field textarea {
+  width: 100%;
+  padding: 11px 13px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: 0;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.support-field input,
+.support-field select {
+  height: 44px;
+  padding-block: 0;
+}
+
+.support-field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      var(--text-muted) 50%
+    ),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) center,
+    calc(100% - 13px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.support-field textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.support-field input:focus,
+.support-field select:focus,
+.support-field textarea:focus {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+.support-field input[readonly] {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.support-field input::placeholder,
+.support-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.support-char-count {
+  align-self: flex-end;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.support-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.support-message {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.support-message.is-error {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+
+.support-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 20px;
+  color: var(--text-on-primary);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.support-submit:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.support-submit:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.support-submit svg {
+  font-size: 12px;
+}
+
+.support-secondary-button {
+  align-self: flex-start;
+  height: 38px;
+  padding: 0 14px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.support-secondary-button:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* Sent, loading and access states inside the card */
+
+.support-state {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+.support-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.support-sent-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: 13px;
+  font-size: 18px;
+}
+
+.support-sent h2 {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.support-sent-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.support-sent-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.support-sent-meta dt {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.support-sent-meta dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.support-sent-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.support-access {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.support-access-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: var(--primary-hover);
+  background: var(--primary-subtle);
+  border: 1px solid var(--primary-border);
+  border-radius: 13px;
+  font-size: 17px;
+}
+
+.support-access h2 {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.support-access p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.support-access-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  margin-top: 4px;
+  padding: 0 16px;
+  color: var(--text-on-primary);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.support-access-link:hover {
+  background: var(--primary-hover);
+}
+
+.support-access-link svg {
+  font-size: 11px;
+}
+
+/* Channels column */
+
+.support-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.support-whatsapp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 22px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.support-whatsapp-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: 12px;
+  font-size: 19px;
+}
+
+.support-whatsapp h2 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.support-whatsapp p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.support-whatsapp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  margin-top: 4px;
+  padding: 0 14px;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.support-whatsapp-link:hover {
+  background: var(--bg-hover);
+  border-color: var(--success);
+}
+
+.support-whatsapp-link svg {
+  font-size: 11px;
+}
+
+.support-note {
+  padding: 20px 22px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.support-note h2 {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.support-note ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.support-note li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.support-note li svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--success);
+  font-size: 10px;
+}
+
+/* Focus */
+
+.support-form input:focus-visible,
+.support-form select:focus-visible,
+.support-form textarea:focus-visible,
+.support-submit:focus-visible,
+.support-secondary-button:focus-visible,
+.support-whatsapp-link:focus-visible,
+.support-access-link:focus-visible {
+  outline: 2px solid var(--primary-hover);
+  outline-offset: 2px;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .support-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .support-channels {
+    order: -1;
+  }
+
+  .support-whatsapp {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  .support-whatsapp h2 {
+    margin: 0;
+    flex: 1;
+  }
+
+  .support-whatsapp p {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .support-whatsapp-link {
+    margin-top: 0;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .support-page {
+    padding-bottom: 32px;
+  }
+
+  .support-card {
+    padding: 18px;
+  }
+
+  .support-submit {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .support-whatsapp-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-submit:hover:not(:disabled) {
+    transform: none;
+  }
+}
