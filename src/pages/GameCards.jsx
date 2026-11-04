@@ -196,6 +196,7 @@ function GameCards() {
   const [serverId, setServerId] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isGift, setIsGift] = useState(false);
   const [recipient, setRecipient] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
@@ -379,6 +380,8 @@ function GameCards() {
     setPlayerId("");
     setServerId("");
     setEmail("");
+    setPhoneNumber("");
+    setWhatsappNumber("");
     setRecipient("");
     setIsGift(false);
     setCheckoutMessage("");
@@ -524,6 +527,11 @@ function GameCards() {
       return;
     }
 
+    if (!/^[+\d][\d\s()-]{5,28}$/.test(whatsappNumber.trim())) {
+      setCheckoutMessage("اكتب رقم واتساب صحيحًا عشان نقدر نتواصل معاك.");
+      return;
+    }
+
     if (
       !selectedPaymentMethod?.isWallet &&
       selectedPaymentMethod?.["mobile-number"] &&
@@ -559,6 +567,7 @@ function GameCards() {
             quantity,
             paymentMethod: selectedPaymentMethod.name,
             mobileNumber: phoneNumber.trim(),
+            whatsappNumber: whatsappNumber.trim(),
             playerId: playerId.trim(),
             serverId: serverId.trim(),
             contactEmail: isGift ? email.trim() : "",
@@ -1173,6 +1182,20 @@ function GameCards() {
                       />
                     </label>
                   )}
+                  <label className="gc-field">
+                    <span>WhatsApp number (for order communication)</span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={whatsappNumber}
+                      onChange={(event) =>
+                        setWhatsappNumber(event.target.value)
+                      }
+                      placeholder="Enter a number we can reach you on"
+                      required
+                    />
+                  </label>
                 </div>
               </div>
 
