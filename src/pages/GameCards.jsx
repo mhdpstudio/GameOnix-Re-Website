@@ -488,7 +488,7 @@ function GameCards() {
         setPopularCarouselPaused(false);
       }
       popularResumeTimerRef.current = null;
-    }, 5000);
+    }, 1200);
   }
 
   const visibleCatalog = catalog.filter((product) => product?.able !== false);
@@ -1059,6 +1059,14 @@ function GameCards() {
                           <article
                             className={`gc-product-card gc-popular-card${isOutOfStock ? " out-of-stock" : ""}`}
                             key={product.id}
+                            onPointerEnter={() => {
+                              popularInteractionRef.current.pointer = true;
+                              pausePopularCarousel();
+                            }}
+                            onPointerLeave={() => {
+                              popularInteractionRef.current.pointer = false;
+                              schedulePopularCarouselResume();
+                            }}
                           >
                             <button
                               type="button"
