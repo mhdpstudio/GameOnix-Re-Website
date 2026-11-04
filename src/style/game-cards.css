@@ -618,54 +618,79 @@
     font-weight: 750;
 }
 
-.gc-shortcut-list {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 9px;
-}
-
-.gc-shortcut-button {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
+.gc-carousel-controls {
+    display: flex;
     align-items: center;
-    column-gap: 8px;
-    min-width: 0;
-    padding: 11px;
-    border: 1px solid #36333b;
-    border-radius: 11px;
-    background: #171619;
-    color: #ffb878;
-    text-align: left;
+    gap: 8px;
+}
+
+.gc-carousel-arrow {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 1px solid #46414d;
+    border-radius: 9px;
+    background: #211f24;
+    color: #e4d7f5;
     cursor: pointer;
-    transition: border-color 0.18s, background 0.18s, transform 0.18s;
+    transition: border-color 0.18s, background 0.18s, color 0.18s;
 }
 
-.gc-shortcut-button:hover {
-    transform: translateY(-2px);
-    border-color: #9b653b;
-    background: #211d1a;
+.gc-carousel-arrow:hover {
+    border-color: #9b6bd3;
+    background: #30243c;
+    color: #fff;
 }
 
-.gc-shortcut-button > svg {
-    grid-row: span 2;
-    font-size: 13px;
+.gc-popular-carousel {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    direction: ltr;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
 }
 
-.gc-shortcut-button > span {
-    overflow: hidden;
-    color: #f5f2f8;
-    font-size: 11px;
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.gc-popular-carousel::-webkit-scrollbar {
+    display: none;
 }
 
-.gc-shortcut-button > small {
-    overflow: hidden;
-    color: #9d98a3;
-    font-size: 9px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.gc-popular-track {
+    display: flex;
+    gap: 14px;
+    padding: 6px 2px 10px;
+}
+
+.gc-popular-card {
+    flex: 0 0 calc((100% - 42px) / 4);
+    scroll-snap-align: start;
+}
+
+.gc-popular-card .gc-product-image {
+    height: 145px;
+}
+
+.gc-popular-card .gc-product-info {
+    padding: 13px;
+}
+
+.gc-popular-card .gc-product-info h3 {
+    min-height: 24px;
+    margin-bottom: 12px;
+}
+
+.gc-popular-card .gc-product-open {
+    opacity: 1;
+    transform: none;
+}
+
+.gc-popular-stock-badge {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 3;
 }
 
 .gc-product-grid {
@@ -2352,8 +2377,8 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .gc-shortcut-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .gc-popular-card {
+        flex-basis: calc((100% - 14px) / 2);
     }
 
     .gc-hero {
@@ -2399,14 +2424,16 @@
         padding: 14px;
     }
 
-    .gc-shortcut-list {
-        gap: 7px;
+    .gc-popular-track {
+        gap: 10px;
     }
 
-    .gc-shortcut-button {
-        grid-template-columns: 15px minmax(0, 1fr);
-        column-gap: 6px;
-        padding: 9px;
+    .gc-popular-card {
+        flex-basis: 78%;
+    }
+
+    .gc-popular-card .gc-product-image {
+        height: 130px;
     }
 
     .gc-topbar {

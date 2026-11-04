@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   faBolt,
   faFire,
   faMagnifyingGlass,
   faArrowRight,
+  faChevronLeft,
+  faChevronRight,
   faXmark,
   faGamepad,
   faCreditCard,
@@ -218,6 +220,7 @@ function GameCards() {
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
   const [walletBalanceError, setWalletBalanceError] = useState("");
+  const popularCarouselRef = useRef(null);
 
   const walletPaymentMethod = {
     id: WALLET_PAYMENT_ID,
@@ -398,6 +401,16 @@ function GameCards() {
   const giftCardProducts = filteredCatalog.filter(
     (product) => getProductKind(product) === "gift-card"
   );
+
+  function scrollPopularCarousel(direction) {
+    const carousel = popularCarouselRef.current;
+    if (!carousel) return;
+
+    carousel.scrollBy({
+      left: direction * carousel.clientWidth * 0.8,
+      behavior: "smooth",
+    });
+  }
 
   const visibleCatalog = catalog.filter((product) => product?.able !== false);
   const totalPacks = visibleCatalog.reduce(
@@ -895,29 +908,88 @@ function GameCards() {
                       <span className="gc-section-kicker">TRENDING NOW</span>
                       <h3 id="gc-popular-shortcuts-title">Popular picks</h3>
                     </div>
-                    <span className="gc-shortcut-limit">Top {popularShortcuts.length}</span>
-                  </div>
-
-                  <div className="gc-shortcut-list">
-                    {popularShortcuts.map(({ product, popularPackCount }) => (
+                    <div className="gc-carousel-controls">
+                      <span className="gc-shortcut-limit">
+                        Top {popularShortcuts.length}
+                      </span>
                       <button
                         type="button"
-                        className="gc-shortcut-button"
-                        key={product.id}
-                        onClick={() =>
-                          document
-                            .getElementById(`gc-product-${product.id}`)
-                            ?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "center",
-                            })
-                        }
+                        className="gc-carousel-arrow"
+                        onClick={() => scrollPopularCarousel(-1)}
+                        aria-label="Scroll popular picks left"
                       >
-                        <FontAwesomeIcon icon={faFire} />
-                        <span>{product.name}</span>
-                        <small>{popularPackCount} popular packs</small>
+                        <FontAwesomeIcon icon={faChevronLeft} />
                       </button>
-                    ))}
+                      <button
+                        type="button"
+                        className="gc-carousel-arrow"
+                        onClick={() => scrollPopularCarousel(1)}
+                        aria-label="Scroll popular picks right"
+                      >
+                        <FontAwesomeIcon icon={faChevronRight} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="gc-popular-carousel" ref={popularCarouselRef}>
+                    <div className="gc-popular-track">
+                      {popularShortcuts.map(({ product, popularPackCount }) => {
+                        const packs = (product.packs || []).filter(
+                          (pack) => pack?.able !== false
+                        );
+                        const inStockPacks = packs.filter(isPackInStock);
+                        const isOutOfStock =
+                          packs.length > 0 && inStockPacks.length === 0;
+
+                        return (
+                          <article
+                            className={`gc-product-card gc-popular-card${isOutOfStock ? " out-of-stock" : ""}`}
+                            key={product.id}
+                          >
+                            <button
+                              type="button"
+                              className="gc-product-click"
+                              onClick={() => openProduct(product)}
+                              disabled={isOutOfStock}
+                              aria-label={
+                                isOutOfStock
+                                  ? `${product.name} - Out of stock`
+                                  : `Choose ${product.name}`
+                              }
+                            >
+                              <div className="gc-product-image">
+                                <ProductImage
+                                  src={getImageUrl(product.image)}
+                                  alt={product.name}
+                                />
+                                <span className="gc-popular-badge">
+                                  <FontAwesomeIcon icon={faFire} /> Popular
+                                </span>
+                                {isOutOfStock && (
+                                  <span className="gc-stock-badge gc-stock-badge-out gc-popular-stock-badge">
+                                    Out of stock
+                                  </span>
+                                )}
+                              </div>
+                              <div className="gc-product-info">
+                                <span className="gc-pack-count">
+                                  {popularPackCount} popular packs
+                                </span>
+                                <div className="gc-product-title">
+                                  <h3>{product.name}</h3>
+                                </div>
+                                <div className="gc-product-footer">
+                                  <span className="gc-view-link">
+                                    Choose pack{" "}
+                                    <FontAwesomeIcon icon={faArrowRight} />
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
                   </div>
                 </section>
               )}
