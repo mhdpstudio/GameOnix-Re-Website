@@ -1990,26 +1990,25 @@
 }
 
 .gc-payment-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 9px;
 }
 
 .gc-payment-method {
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24px;
     align-items: center;
-    justify-content: flex-start;
     min-width: 0;
-    min-height: 166px;
-    gap: 8px;
-    padding: 28px 8px 12px;
+    min-height: 112px;
+    padding: 24px 14px 12px;
     overflow: hidden;
     border: 1px solid #36363b;
     border-radius: 13px;
     background: linear-gradient(145deg, #1b1b1e, #151517);
     color: white;
+    text-align: left;
     cursor: pointer;
     transition:
         border-color 0.18s,
@@ -2056,7 +2055,6 @@
     display: grid;
     width: 72px;
     height: 56px;
-    flex: 0 0 56px;
     place-items: center;
     line-height: 1;
 }
@@ -2074,13 +2072,11 @@
 .gc-payment-method[data-method="vodafone-cash"] .gc-payment-logo {
     width: 62px;
     height: 64px;
-    flex-basis: 64px;
 }
 
 .gc-payment-method[data-method="wepay"] .gc-payment-logo {
     width: 60px;
     height: 56px;
-    flex-basis: 56px;
 }
 
 .gc-payment-logo-fallback {
@@ -2167,37 +2163,43 @@
 
 .gc-payment-copy {
     display: flex;
-    flex: 1 1 auto;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     gap: 4px;
-    width: 100%;
+    width: auto;
     min-width: 0;
-    text-align: center;
+    text-align: left;
 }
 
 .gc-payment-copy>strong {
     display: block;
-    width: 100%;
     max-width: 100%;
     color: #c8c8d0;
     font-size: 10px;
     font-weight: 800;
     line-height: 1.35;
     overflow-wrap: anywhere;
-    text-align: center;
+    text-align: left;
 }
 
 .gc-payment-requirement {
     display: block;
-    width: 100%;
     max-width: 100%;
     color: #9696a1;
     font-size: 8px;
     line-height: 1.35;
     overflow-wrap: anywhere;
-    text-align: center;
+    text-align: left;
+}
+
+.gc-payment-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-self: start;
+    gap: 5px;
+    min-width: 0;
 }
 
 .gc-payment-state {
@@ -2251,17 +2253,25 @@
 }
 
 .gc-payment-check {
-    position: absolute;
-    top: 5px;
-    right: 5px;
     display: grid;
     width: 18px;
     height: 18px;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
     place-items: center;
+    border: 1px solid #ffffff3d;
     border-radius: 50%;
+    background: #242328;
+    color: transparent;
+    font-size: 9px;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.gc-payment-method.selected .gc-payment-check {
+    border-color: var(--gc-selection-color);
     background: var(--gc-selection-color);
     color: #17131f;
-    font-size: 9px;
 }
 
 .gc-payment-method.disabled {
@@ -2624,10 +2634,6 @@
 
     /* Payment methods */
 
-    .gc-payment-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
     .gc-payment-logo {
         transform: scale(0.9);
     }
@@ -2776,8 +2782,8 @@
     }
 
     .gc-payment-method {
-        padding-right: 3px;
-        padding-left: 3px;
+        padding-right: 12px;
+        padding-left: 12px;
     }
 
     .gc-payment-instant {
@@ -2936,9 +2942,12 @@
         height: 30px;
     }
 
-    .gc-pack-grid,
-    .gc-payment-grid {
+    .gc-pack-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .gc-payment-grid {
         gap: 6px;
     }
 
@@ -2976,8 +2985,7 @@
         flex-direction: row;
     }
 
-    .gc-pack-grid,
-    .gc-payment-grid {
+    .gc-pack-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 

@@ -1684,20 +1684,22 @@ function GameCards() {
                             {method.av ? "AVAILABLE" : "UNAVAILABLE"}
                           </span>
 
-                          <span className="gc-payment-logo">
-                            <PaymentMethodLogo
-                              key={method.logo}
-                              method={method}
-                            />
-                          </span>
+                          <span className="gc-payment-main">
+                            <span className="gc-payment-logo">
+                              <PaymentMethodLogo
+                                key={method.logo}
+                                method={method}
+                              />
+                            </span>
 
-                          <span className="gc-payment-copy">
-                            <strong>{method.name}</strong>
-                            <small className="gc-payment-requirement">
-                              {method["mobile-number"]
-                                ? "Phone number required"
-                                : "No phone number needed"}
-                            </small>
+                            <span className="gc-payment-copy">
+                              <strong>{method.name}</strong>
+                              <small className="gc-payment-requirement">
+                                {method["mobile-number"]
+                                  ? "Phone number required"
+                                  : "No phone number needed"}
+                              </small>
+                            </span>
                           </span>
 
                           {selectedPayment === method.name && (
@@ -1731,17 +1733,21 @@ function GameCards() {
                         <span className="gc-payment-instant">
                           {walletBalanceLoading ? "LOADING" : "WALLET"}
                         </span>
-                        <span className="gc-wallet-payment-icon">
-                          <FontAwesomeIcon icon={faWallet} />
+                        <span className="gc-payment-main">
+                          <span className="gc-wallet-payment-icon">
+                            <FontAwesomeIcon icon={faWallet} />
+                          </span>
+                          <span className="gc-payment-copy">
+                            <strong>Wallet</strong>
+                            <small className="gc-payment-requirement">
+                              {walletBalanceLoading
+                                ? "Loading balance..."
+                                : walletBalance === null
+                                  ? "Balance unavailable"
+                                  : `Balance ${formatPrice(walletBalance)}`}
+                            </small>
+                          </span>
                         </span>
-                        <strong>Wallet</strong>
-                        <small className="gc-payment-requirement">
-                          {walletBalanceLoading
-                            ? "Loading balance..."
-                            : walletBalance === null
-                              ? "Balance unavailable"
-                              : `Balance ${formatPrice(walletBalance)}`}
-                        </small>
                         {selectedPayment === WALLET_PAYMENT_ID && (
                           <span className="gc-payment-check">
                             <FontAwesomeIcon icon={faCheck} />
