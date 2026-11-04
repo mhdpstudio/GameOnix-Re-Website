@@ -220,7 +220,13 @@ function GameCards() {
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
   const [walletBalanceError, setWalletBalanceError] = useState("");
+  const [popularCarouselInView, setPopularCarouselInView] = useState(false);
+  const [popularCarouselPaused, setPopularCarouselPaused] = useState(false);
+  const popularSectionRef = useRef(null);
   const popularCarouselRef = useRef(null);
+  const popularDirectionRef = useRef(1);
+  const popularResumeTimerRef = useRef(null);
+  const popularInteractionRef = useRef({ pointer: false, focus: false });
 
   const walletPaymentMethod = {
     id: WALLET_PAYMENT_ID,
@@ -402,6 +408,78 @@ function GameCards() {
     (product) => getProductKind(product) === "gift-card"
   );
 
+  useEffect(() => {
+    const section = popularSectionRef.current;
+    if (!section || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setPopularCarouselInView(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const carousel = popularCarouselRef.current;
+    if (
+      !carousel ||
+      !popularCarouselInView ||
+      popularCarouselPaused ||
+      popularShortcuts.length < 2 ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    const stepTimer = window.setTimeout(() => {
+      const interval = window.setInterval(() => {
+        const track = carousel.firstElementChild;
+        const firstCard = track?.firstElementChild;
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        if (!firstCard || maxScroll <= 1) return;
+
+        const trackStyle = window.getComputedStyle(track);
+        const gap = Number.parseFloat(trackStyle.columnGap) || 0;
+        const step = firstCard.getBoundingClientRect().width + gap;
+        const currentScroll = carousel.scrollLeft;
+        const nextScroll = currentScroll + popularDirectionRef.current * step;
+
+        if (nextScroll >= maxScroll - 1) {
+          popularDirectionRef.current = -1;
+        } else if (nextScroll <= 1) {
+          popularDirectionRef.current = 1;
+        }
+
+        carousel.scrollTo({
+          left: Math.max(0, Math.min(maxScroll, nextScroll)),
+          behavior: "smooth",
+        });
+      }, 4500);
+
+      popularResumeTimerRef.current = interval;
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(stepTimer);
+      if (popularResumeTimerRef.current !== null) {
+        window.clearInterval(popularResumeTimerRef.current);
+        popularResumeTimerRef.current = null;
+      }
+    };
+  }, [popularCarouselInView, popularCarouselPaused, popularShortcuts.length]);
+
+  useEffect(
+    () => () => {
+      if (popularResumeTimerRef.current !== null) {
+        window.clearTimeout(popularResumeTimerRef.current);
+        window.clearInterval(popularResumeTimerRef.current);
+      }
+    },
+    []
+  );
+
   function scrollPopularCarousel(direction) {
     const carousel = popularCarouselRef.current;
     if (!carousel) return;
@@ -410,6 +488,31 @@ function GameCards() {
       left: direction * carousel.clientWidth * 0.8,
       behavior: "smooth",
     });
+  }
+
+  function pausePopularCarousel() {
+    setPopularCarouselPaused(true);
+    if (popularResumeTimerRef.current !== null) {
+      window.clearTimeout(popularResumeTimerRef.current);
+      window.clearInterval(popularResumeTimerRef.current);
+      popularResumeTimerRef.current = null;
+    }
+  }
+
+  function schedulePopularCarouselResume() {
+    if (popularResumeTimerRef.current !== null) {
+      window.clearTimeout(popularResumeTimerRef.current);
+    }
+
+    popularResumeTimerRef.current = window.setTimeout(() => {
+      if (
+        !popularInteractionRef.current.pointer &&
+        !popularInteractionRef.current.focus
+      ) {
+        setPopularCarouselPaused(false);
+      }
+      popularResumeTimerRef.current = null;
+    }, 5000);
   }
 
   const visibleCatalog = catalog.filter((product) => product?.able !== false);
@@ -901,7 +1004,26 @@ function GameCards() {
               {popularShortcuts.length > 0 && (
                 <section
                   className="gc-popular-shortcuts"
+                  ref={popularSectionRef}
                   aria-labelledby="gc-popular-shortcuts-title"
+                  onPointerEnter={() => {
+                    popularInteractionRef.current.pointer = true;
+                    pausePopularCarousel();
+                  }}
+                  onPointerLeave={() => {
+                    popularInteractionRef.current.pointer = false;
+                    schedulePopularCarouselResume();
+                  }}
+                  onFocusCapture={() => {
+                    popularInteractionRef.current.focus = true;
+                    pausePopularCarousel();
+                  }}
+                  onBlurCapture={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      popularInteractionRef.current.focus = false;
+                      schedulePopularCarouselResume();
+                    }
+                  }}
                 >
                   <div className="gc-catalog-section-heading">
                     <div>
@@ -915,7 +1037,10 @@ function GameCards() {
                       <button
                         type="button"
                         className="gc-carousel-arrow"
-                        onClick={() => scrollPopularCarousel(-1)}
+                        onClick={() => {
+                          pausePopularCarousel();
+                          scrollPopularCarousel(-1);
+                        }}
                         aria-label="Scroll popular picks left"
                       >
                         <FontAwesomeIcon icon={faChevronLeft} />
@@ -923,7 +1048,10 @@ function GameCards() {
                       <button
                         type="button"
                         className="gc-carousel-arrow"
-                        onClick={() => scrollPopularCarousel(1)}
+                        onClick={() => {
+                          pausePopularCarousel();
+                          scrollPopularCarousel(1);
+                        }}
                         aria-label="Scroll popular picks right"
                       >
                         <FontAwesomeIcon icon={faChevronRight} />
