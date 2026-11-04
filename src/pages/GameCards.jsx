@@ -1372,9 +1372,9 @@ function GameCards() {
                           <button
                             type="button"
                             onClick={() =>
-                              setQuantity((q) => Math.min(99, q + 1))
+                              setQuantity((q) => Math.min(5, q + 1))
                             }
-                            disabled={quantity >= 99}
+                            disabled={quantity >= 5}
                             aria-label="Increase quantity"
                           >
                             +
