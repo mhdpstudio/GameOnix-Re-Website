@@ -606,6 +606,16 @@
     box-shadow: 0 16px 35px #0003;
 }
 
+.gc-product-card.out-of-stock:hover {
+    transform: none;
+    border-color: #303034;
+    box-shadow: none;
+}
+
+.gc-product-card.out-of-stock .gc-product-open {
+    display: none;
+}
+
 .gc-product-click {
     display: block;
     width: 100%;
@@ -616,6 +626,10 @@
     color: inherit;
     text-align: left;
     cursor: pointer;
+}
+
+.gc-product-click:disabled {
+    cursor: not-allowed;
 }
 
 .gc-product-image {
@@ -738,6 +752,54 @@
     color: #a17be0;
     font-size: 10px;
     font-weight: 700;
+}
+
+.gc-product-stock-badge {
+    margin-top: 8px;
+}
+
+.gc-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: fit-content;
+    padding: 4px 7px;
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 900;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.gc-stock-badge::before {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 50%;
+    content: "";
+}
+
+.gc-stock-badge-in {
+    border-color: #4ade804d;
+    background: #123020;
+    color: #86efac;
+}
+
+.gc-stock-badge-in::before {
+    background: #4ade80;
+    box-shadow: 0 0 7px #4ade8080;
+}
+
+.gc-stock-badge-out {
+    border-color: #f871714d;
+    background: #351d1d;
+    color: #fca5a5;
+}
+
+.gc-stock-badge-out::before {
+    background: #f87171;
 }
 
 .gc-product-info h3 {
@@ -1625,6 +1687,20 @@
     transform: translateY(-2px);
 }
 
+.gc-pack-card:disabled {
+    border-color: #343438;
+    background: linear-gradient(155deg, #1d1d20, #171719);
+    color: #92929b;
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.gc-pack-card:disabled:hover {
+    border-color: #343438;
+    background: linear-gradient(155deg, #1d1d20, #171719);
+    transform: none;
+}
+
 .gc-pack-card.selected {
     border: 1px solid var(--gc-selection-color);
 
@@ -1692,6 +1768,10 @@
     line-height: 1.45;
 
     overflow-wrap: anywhere;
+}
+
+.gc-pack-card .gc-stock-badge {
+    margin: 0 0 5px;
 }
 
 .gc-pack-price {

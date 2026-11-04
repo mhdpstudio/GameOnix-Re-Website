@@ -78,6 +78,10 @@ function formatPrice(value) {
   })}`;
 }
 
+function isPackInStock(pack) {
+  return pack?.stock !== false;
+}
+
 function ProductImage({ src, alt, className = "" }) {
   const [failed, setFailed] = useState(false);
 
@@ -373,6 +377,13 @@ function GameCards() {
   ).length;
 
   async function openProduct(product) {
+    const packs = (product.packs || []).filter(
+      (pack) => pack?.able !== false
+    );
+    if (packs.length > 0 && packs.every((pack) => !isPackInStock(pack))) {
+      return;
+    }
+
     setSelectedProduct(product);
     setSelectedPack(null);
     setQuantity(1);
@@ -463,6 +474,8 @@ function GameCards() {
   const total = subtotal;
 
   function choosePack(pack) {
+    if (!isPackInStock(pack)) return;
+
     setSelectedPack(pack);
     setQuantity(1);
     setCheckoutMessage("");
@@ -840,17 +853,28 @@ function GameCards() {
                 const packs = (product.packs || []).filter(
                   (pack) => pack?.able !== false
                 );
+                const inStockPacks = packs.filter(isPackInStock);
+                const isOutOfStock =
+                  packs.length > 0 && inStockPacks.length === 0;
                 const popular = packs.some((pack) => pack.popular);
                 const productType = String(product.type || "").trim();
                 const isGiftCards = productType.toLowerCase() === "gift cards";
 
                 return (
-                  <article className="gc-product-card" key={product.id}>
+                  <article
+                    className={`gc-product-card${isOutOfStock ? " out-of-stock" : ""}`}
+                    key={product.id}
+                  >
                     <button
                       type="button"
                       className="gc-product-click"
                       onClick={() => openProduct(product)}
-                      aria-label={`Choose ${product.name}`}
+                      disabled={isOutOfStock}
+                      aria-label={
+                        isOutOfStock
+                          ? `${product.name} - Out of stock`
+                          : `Choose ${product.name}`
+                      }
                     >
                       <div className="gc-product-image">
                         <ProductImage
@@ -879,8 +903,13 @@ function GameCards() {
 
                       <div className="gc-product-info">
                         <span className="gc-pack-count">
-                          {packs.length} available packs
+                          {inStockPacks.length} available packs
                         </span>
+                        {isOutOfStock && (
+                          <span className="gc-stock-badge gc-stock-badge-out gc-product-stock-badge">
+                            Out of stock
+                          </span>
+                        )}
 
                         <div className="gc-product-title">
                           <h3>{product.name}</h3>
@@ -1228,6 +1257,7 @@ function GameCards() {
                       .map((pack, index) => ({ pack, index }))
                       .filter(({ pack }) => pack?.able !== false)
                       .map(({ pack, index }) => {
+                      const inStock = isPackInStock(pack);
                       const isSelected =
                         selectedPack === pack ||
                         (selectedPack &&
@@ -1239,9 +1269,13 @@ function GameCards() {
                         <button
                           type="button"
                           key={`${selectedProduct.id}-${pack.title}-${index}`}
-                          className={`gc-pack-card${isSelected ? " selected" : ""
+                          className={`gc-pack-card${isSelected ? " selected" : ""}${inStock ? "" : " out-of-stock"
                             }`}
                           onClick={() => choosePack(pack)}
+                          disabled={!inStock}
+                          aria-label={`${pack.title} ${pack.type || ""} - ${
+                            inStock ? "In Stock" : "Out of stock"
+                          }`}
                         >
                           {pack.popular && (
                             <span className="gc-pack-popular">
@@ -1258,6 +1292,14 @@ function GameCards() {
                           <strong className="gc-pack-title">
                             {pack.title} {pack.type || ""}
                           </strong>
+
+                          <span
+                            className={`gc-stock-badge ${
+                              inStock ? "gc-stock-badge-in" : "gc-stock-badge-out"
+                            }`}
+                          >
+                            {inStock ? "In Stock" : "Out of stock"}
+                          </span>
 
                           <span className="gc-pack-price">
                             {formatPrice(pack.price)}
