@@ -437,40 +437,53 @@ function GameCards() {
       return;
     }
 
-    const stepTimer = window.setTimeout(() => {
-      const interval = window.setInterval(() => {
-        const track = carousel.firstElementChild;
-        const firstCard = track?.firstElementChild;
-        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-        if (!firstCard || maxScroll <= 1) return;
+    let frameId;
+    let edgeDelayTimer;
+    let lastFrameTime = 0;
 
-        const trackStyle = window.getComputedStyle(track);
-        const gap = Number.parseFloat(trackStyle.columnGap) || 0;
-        const step = firstCard.getBoundingClientRect().width + gap;
-        const currentScroll = carousel.scrollLeft;
-        const nextScroll = currentScroll + popularDirectionRef.current * step;
+    const animate = (time) => {
+      if (!lastFrameTime) lastFrameTime = time;
+      const elapsed = Math.min((time - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = time;
 
-        if (nextScroll >= maxScroll - 1) {
-          popularDirectionRef.current = -1;
-        } else if (nextScroll <= 1) {
-          popularDirectionRef.current = 1;
-        }
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+      if (maxScroll <= 1) return;
 
-        carousel.scrollTo({
-          left: Math.max(0, Math.min(maxScroll, nextScroll)),
-          behavior: "smooth",
-        });
-      }, 4500);
+      const nextScroll =
+        carousel.scrollLeft + popularDirectionRef.current * 28 * elapsed;
 
-      popularResumeTimerRef.current = interval;
-    }, 1800);
+      if (nextScroll >= maxScroll) {
+        carousel.scrollLeft = maxScroll;
+        popularDirectionRef.current = -1;
+        lastFrameTime = 0;
+        edgeDelayTimer = window.setTimeout(() => {
+          frameId = window.requestAnimationFrame(animate);
+        }, 1400);
+        return;
+      }
+
+      if (nextScroll <= 0) {
+        carousel.scrollLeft = 0;
+        popularDirectionRef.current = 1;
+        lastFrameTime = 0;
+        edgeDelayTimer = window.setTimeout(() => {
+          frameId = window.requestAnimationFrame(animate);
+        }, 1400);
+        return;
+      }
+
+      carousel.scrollLeft = nextScroll;
+      frameId = window.requestAnimationFrame(animate);
+    };
+
+    const startTimer = window.setTimeout(() => {
+      frameId = window.requestAnimationFrame(animate);
+    }, 900);
 
     return () => {
-      window.clearTimeout(stepTimer);
-      if (popularResumeTimerRef.current !== null) {
-        window.clearInterval(popularResumeTimerRef.current);
-        popularResumeTimerRef.current = null;
-      }
+      window.clearTimeout(startTimer);
+      window.clearTimeout(edgeDelayTimer);
+      window.cancelAnimationFrame(frameId);
     };
   }, [popularCarouselInView, popularCarouselPaused, popularShortcuts.length]);
 
@@ -478,7 +491,6 @@ function GameCards() {
     () => () => {
       if (popularResumeTimerRef.current !== null) {
         window.clearTimeout(popularResumeTimerRef.current);
-        window.clearInterval(popularResumeTimerRef.current);
       }
     },
     []

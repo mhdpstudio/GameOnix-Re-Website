@@ -649,8 +649,9 @@
     overscroll-behavior-inline: contain;
     direction: ltr;
     scrollbar-width: none;
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+    touch-action: pan-x pan-y;
 }
 
 .gc-popular-carousel::-webkit-scrollbar {
@@ -669,7 +670,7 @@
 }
 
 .gc-popular-card .gc-product-image {
-    height: 145px;
+    height: 205px;
 }
 
 .gc-popular-card .gc-product-info {
@@ -2433,7 +2434,7 @@
     }
 
     .gc-popular-card .gc-product-image {
-        height: 130px;
+        height: 175px;
     }
 
     .gc-topbar {
