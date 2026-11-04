@@ -1085,31 +1085,41 @@
 }
 
 .gc-modal-overlay,
-.gc-checkout-body {
+.gc-checkout-body,
+.gc-checkout-left,
+.gc-checkout-right {
     scrollbar-color: var(--gc-action-accent) #1b1b1f;
     scrollbar-width: thin;
 }
 
 .gc-modal-overlay::-webkit-scrollbar,
-.gc-checkout-body::-webkit-scrollbar {
+.gc-checkout-body::-webkit-scrollbar,
+.gc-checkout-left::-webkit-scrollbar,
+.gc-checkout-right::-webkit-scrollbar {
     width: 10px;
 }
 
 .gc-modal-overlay::-webkit-scrollbar-track,
-.gc-checkout-body::-webkit-scrollbar-track {
+.gc-checkout-body::-webkit-scrollbar-track,
+.gc-checkout-left::-webkit-scrollbar-track,
+.gc-checkout-right::-webkit-scrollbar-track {
     border-radius: 10px;
     background: #1b1b1f;
 }
 
 .gc-modal-overlay::-webkit-scrollbar-thumb,
-.gc-checkout-body::-webkit-scrollbar-thumb {
+.gc-checkout-body::-webkit-scrollbar-thumb,
+.gc-checkout-left::-webkit-scrollbar-thumb,
+.gc-checkout-right::-webkit-scrollbar-thumb {
     border: 2px solid #1b1b1f;
     border-radius: 10px;
     background: var(--gc-action-accent);
 }
 
 .gc-modal-overlay::-webkit-scrollbar-thumb:hover,
-.gc-checkout-body::-webkit-scrollbar-thumb:hover {
+.gc-checkout-body::-webkit-scrollbar-thumb:hover,
+.gc-checkout-left::-webkit-scrollbar-thumb:hover,
+.gc-checkout-right::-webkit-scrollbar-thumb:hover {
     background: color-mix(in srgb, var(--gc-action-accent), white 18%);
 }
 
@@ -1308,16 +1318,20 @@
 
 .gc-checkout-body {
     display: grid;
+    flex: 1 1 auto;
     grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
     overscroll-behavior: contain;
 }
 
 .gc-checkout-left,
 .gc-checkout-right {
     min-width: 0;
+    min-height: 0;
     padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .gc-checkout-left {
@@ -2626,13 +2640,16 @@
 
     .gc-checkout-body {
         display: flex;
+        flex: 1 1 auto;
         flex-direction: column;
         overflow-y: auto;
     }
 
     .gc-checkout-left,
     .gc-checkout-right {
+        min-height: auto;
         padding: 14px;
+        overflow-y: visible;
     }
 
     .gc-checkout-left {
