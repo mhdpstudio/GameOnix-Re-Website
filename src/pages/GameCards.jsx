@@ -1431,6 +1431,16 @@ function GameCards() {
                     <small>Required to process an order</small>
                   </div>
 
+                  {!isGiftCardProduct && selectedProduct.idType && (
+                    <div className="gc-id-format-hint" role="note">
+                      <span className="gc-id-format-label">
+                        Required account ID format
+                      </span>
+                      <strong>{selectedProduct.idType}</strong>
+                      <small>Enter the ID exactly as it appears in the game.</small>
+                    </div>
+                  )}
+
                   {isGiftOrder ? (
                     <>
                       {!isGiftCardProduct && (

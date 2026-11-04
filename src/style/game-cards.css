@@ -1668,6 +1668,36 @@
     font-size: 10px;
 }
 
+.gc-id-format-hint {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px 12px;
+    border: 1px solid #7653a8;
+    border-radius: 10px;
+    background: linear-gradient(110deg, #302342, #211d2b);
+}
+
+.gc-id-format-label {
+    color: #c9a8ff;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.gc-id-format-hint strong {
+    color: #fff;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.gc-id-format-hint small {
+    color: #b7adca;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
 .gc-field {
     display: flex;
     flex-direction: column;
