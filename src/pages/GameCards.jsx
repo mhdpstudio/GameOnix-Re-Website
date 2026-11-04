@@ -1656,6 +1656,10 @@ function GameCards() {
                         <button
                           type="button"
                           key={`${method.name}-${method.logo}`}
+                          data-method={method.name
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, "-")
+                            .replace(/(^-|-$)/g, "")}
                           disabled={!method.av}
                           onClick={() => {
                             setSelectedPayment(method.name);
@@ -1687,12 +1691,14 @@ function GameCards() {
                             />
                           </span>
 
-                          <strong>{method.name}</strong>
-                          <small className="gc-payment-requirement">
-                            {method["mobile-number"]
-                              ? "Phone number required"
-                              : "No phone number needed"}
-                          </small>
+                          <span className="gc-payment-copy">
+                            <strong>{method.name}</strong>
+                            <small className="gc-payment-requirement">
+                              {method["mobile-number"]
+                                ? "Phone number required"
+                                : "No phone number needed"}
+                            </small>
+                          </span>
 
                           {selectedPayment === method.name && (
                             <span className="gc-payment-check">

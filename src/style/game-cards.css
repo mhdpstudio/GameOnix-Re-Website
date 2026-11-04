@@ -2002,9 +2002,9 @@
     align-items: center;
     justify-content: flex-start;
     min-width: 0;
-    min-height: 150px;
-    gap: 7px;
-    padding: 29px 8px 11px;
+    min-height: 154px;
+    gap: 8px;
+    padding: 28px 8px 12px;
     overflow: hidden;
     border: 1px solid #36363b;
     border-radius: 13px;
@@ -2054,10 +2054,11 @@
 
 .gc-payment-logo {
     display: grid;
-    width: 64px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 58px;
+    height: 42px;
+    flex: 0 0 42px;
     place-items: center;
+    overflow: hidden;
     line-height: 1;
 }
 
@@ -2065,10 +2066,18 @@
     display: block;
     width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
     object-fit: contain;
     object-position: center;
+}
+
+.gc-payment-method[data-method="vodafone-cash"] .gc-payment-logo {
+    width: 48px;
+}
+
+.gc-payment-method[data-method="wepay"] .gc-payment-logo {
+    width: 46px;
+    height: 40px;
+    flex-basis: 40px;
 }
 
 .gc-payment-logo-fallback {
@@ -2153,9 +2162,22 @@
 
 /* Payment labels */
 
-.gc-payment-method>strong {
+.gc-payment-copy {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+}
+
+.gc-payment-copy>strong {
+    display: block;
+    width: 100%;
     max-width: 100%;
-    min-height: 28px;
     color: #c8c8d0;
     font-size: 10px;
     font-weight: 800;
@@ -2165,8 +2187,9 @@
 }
 
 .gc-payment-requirement {
+    display: block;
+    width: 100%;
     max-width: 100%;
-    margin-top: -3px;
     color: #9696a1;
     font-size: 8px;
     line-height: 1.35;
@@ -2203,7 +2226,7 @@
     cursor: pointer;
 }
 
-.gc-payment-method.selected>strong {
+.gc-payment-method.selected .gc-payment-copy>strong {
     color: white;
 }
 
@@ -2760,7 +2783,7 @@
         font-size: 6px;
     }
 
-    .gc-payment-method>strong {
+    .gc-payment-copy>strong {
         font-size: 9px;
     }
 
@@ -2922,7 +2945,7 @@
     }
 
     .gc-pack-title,
-    .gc-payment-method>strong {
+    .gc-payment-copy>strong {
         overflow-wrap: anywhere;
     }
 
