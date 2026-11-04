@@ -440,19 +440,21 @@ function GameCards() {
     let frameId;
     let edgeDelayTimer;
     let lastFrameTime = 0;
+    let targetScroll = carousel.scrollLeft;
 
     const animate = (time) => {
       if (!lastFrameTime) lastFrameTime = time;
-      const elapsed = Math.min((time - lastFrameTime) / 1000, 0.05);
+      const elapsed = Math.min((time - lastFrameTime) / 1000, 0.15);
       lastFrameTime = time;
 
       const maxScroll = carousel.scrollWidth - carousel.clientWidth;
       if (maxScroll <= 1) return;
 
       const nextScroll =
-        carousel.scrollLeft + popularDirectionRef.current * 28 * elapsed;
+        targetScroll + popularDirectionRef.current * 55 * elapsed;
 
       if (nextScroll >= maxScroll) {
+        targetScroll = maxScroll;
         carousel.scrollLeft = maxScroll;
         popularDirectionRef.current = -1;
         lastFrameTime = 0;
@@ -463,6 +465,7 @@ function GameCards() {
       }
 
       if (nextScroll <= 0) {
+        targetScroll = 0;
         carousel.scrollLeft = 0;
         popularDirectionRef.current = 1;
         lastFrameTime = 0;
@@ -472,7 +475,8 @@ function GameCards() {
         return;
       }
 
-      carousel.scrollLeft = nextScroll;
+      targetScroll = nextScroll;
+      carousel.scrollLeft = Math.round(targetScroll);
       frameId = window.requestAnimationFrame(animate);
     };
 
