@@ -222,7 +222,7 @@ function GameCards() {
   const [walletBalanceError, setWalletBalanceError] = useState("");
   const [popularCarouselInView, setPopularCarouselInView] = useState(false);
   const [popularCarouselPaused, setPopularCarouselPaused] = useState(false);
-  const popularSectionRef = useRef(null);
+  const [popularSectionElement, setPopularSectionElement] = useState(null);
   const popularCarouselRef = useRef(null);
   const popularDirectionRef = useRef(1);
   const popularResumeTimerRef = useRef(null);
@@ -409,17 +409,21 @@ function GameCards() {
   );
 
   useEffect(() => {
-    const section = popularSectionRef.current;
-    if (!section || typeof IntersectionObserver === "undefined") return;
+    if (
+      !popularSectionElement ||
+      typeof IntersectionObserver === "undefined"
+    ) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => setPopularCarouselInView(entry.isIntersecting),
       { threshold: 0.15 }
     );
 
-    observer.observe(section);
+    observer.observe(popularSectionElement);
     return () => observer.disconnect();
-  }, []);
+  }, [popularSectionElement]);
 
   useEffect(() => {
     const carousel = popularCarouselRef.current;
@@ -1004,14 +1008,22 @@ function GameCards() {
               {popularShortcuts.length > 0 && (
                 <section
                   className="gc-popular-shortcuts"
-                  ref={popularSectionRef}
+                  ref={setPopularSectionElement}
                   aria-labelledby="gc-popular-shortcuts-title"
-                  onPointerEnter={() => {
+                  onPointerDown={() => {
                     popularInteractionRef.current.pointer = true;
                     pausePopularCarousel();
                   }}
-                  onPointerLeave={() => {
+                  onPointerUp={() => {
                     popularInteractionRef.current.pointer = false;
+                    schedulePopularCarouselResume();
+                  }}
+                  onPointerCancel={() => {
+                    popularInteractionRef.current.pointer = false;
+                    schedulePopularCarouselResume();
+                  }}
+                  onWheel={() => {
+                    pausePopularCarousel();
                     schedulePopularCarouselResume();
                   }}
                   onFocusCapture={() => {
