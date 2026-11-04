@@ -220,10 +220,8 @@ function GameCards() {
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
   const [walletBalanceError, setWalletBalanceError] = useState("");
-  const [popularCarouselInView, setPopularCarouselInView] = useState(false);
   const [popularCarouselPaused, setPopularCarouselPaused] = useState(false);
-  const [popularSectionElement, setPopularSectionElement] = useState(null);
-  const popularCarouselRef = useRef(null);
+  const [popularCarouselElement, setPopularCarouselElement] = useState(null);
   const popularDirectionRef = useRef(1);
   const popularResumeTimerRef = useRef(null);
   const popularInteractionRef = useRef({ pointer: false, focus: false });
@@ -409,99 +407,58 @@ function GameCards() {
   );
 
   useEffect(() => {
-    if (
-      !popularSectionElement ||
-      typeof IntersectionObserver === "undefined"
-    ) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setPopularCarouselInView(entry.isIntersecting),
-      { threshold: 0.15 }
-    );
-
-    observer.observe(popularSectionElement);
-    return () => observer.disconnect();
-  }, [popularSectionElement]);
-
-  useEffect(() => {
-    const carousel = popularCarouselRef.current;
+    const carousel = popularCarouselElement;
     if (
       !carousel ||
-      !popularCarouselInView ||
       popularCarouselPaused ||
-      popularShortcuts.length < 2 ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      popularShortcuts.length < 2
     ) {
       return;
     }
-
-    let frameId;
+    let intervalId;
+    let startTimer;
     let edgeDelayTimer;
-    let lastFrameTime = 0;
-    let targetScroll = carousel.scrollLeft;
 
-    const animate = (time) => {
-      if (!lastFrameTime) lastFrameTime = time;
-      const elapsed = Math.min((time - lastFrameTime) / 1000, 0.15);
-      lastFrameTime = time;
+    const start = () => {
+      intervalId = window.setInterval(() => {
+        if (document.hidden) return;
 
-      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-      if (maxScroll <= 1) return;
+        const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        if (maxScroll <= 1) return;
 
-      const nextScroll =
-        targetScroll + popularDirectionRef.current * 55 * elapsed;
+        const nextScroll =
+          carousel.scrollLeft + popularDirectionRef.current;
+        if (nextScroll >= maxScroll) {
+          carousel.scrollLeft = maxScroll;
+          popularDirectionRef.current = -1;
+          window.clearInterval(intervalId);
+          edgeDelayTimer = window.setTimeout(start, 1400);
+          return;
+        }
 
-      if (nextScroll >= maxScroll) {
-        targetScroll = maxScroll;
-        carousel.scrollLeft = maxScroll;
-        popularDirectionRef.current = -1;
-        lastFrameTime = 0;
-        edgeDelayTimer = window.setTimeout(() => {
-          frameId = window.requestAnimationFrame(animate);
-        }, 1400);
-        return;
-      }
+        if (nextScroll <= 0) {
+          carousel.scrollLeft = 0;
+          popularDirectionRef.current = 1;
+          window.clearInterval(intervalId);
+          edgeDelayTimer = window.setTimeout(start, 1400);
+          return;
+        }
 
-      if (nextScroll <= 0) {
-        targetScroll = 0;
-        carousel.scrollLeft = 0;
-        popularDirectionRef.current = 1;
-        lastFrameTime = 0;
-        edgeDelayTimer = window.setTimeout(() => {
-          frameId = window.requestAnimationFrame(animate);
-        }, 1400);
-        return;
-      }
-
-      targetScroll = nextScroll;
-      carousel.scrollLeft = Math.round(targetScroll);
-      frameId = window.requestAnimationFrame(animate);
+        carousel.scrollLeft = nextScroll;
+      }, 30);
     };
 
-    const startTimer = window.setTimeout(() => {
-      frameId = window.requestAnimationFrame(animate);
-    }, 900);
+    startTimer = window.setTimeout(start, 900);
 
     return () => {
+      window.clearInterval(intervalId);
       window.clearTimeout(startTimer);
       window.clearTimeout(edgeDelayTimer);
-      window.cancelAnimationFrame(frameId);
     };
-  }, [popularCarouselInView, popularCarouselPaused, popularShortcuts.length]);
-
-  useEffect(
-    () => () => {
-      if (popularResumeTimerRef.current !== null) {
-        window.clearTimeout(popularResumeTimerRef.current);
-      }
-    },
-    []
-  );
+  }, [popularCarouselElement, popularCarouselPaused, popularShortcuts.length]);
 
   function scrollPopularCarousel(direction) {
-    const carousel = popularCarouselRef.current;
+    const carousel = popularCarouselElement;
     if (!carousel) return;
 
     carousel.scrollBy({
@@ -514,7 +471,6 @@ function GameCards() {
     setPopularCarouselPaused(true);
     if (popularResumeTimerRef.current !== null) {
       window.clearTimeout(popularResumeTimerRef.current);
-      window.clearInterval(popularResumeTimerRef.current);
       popularResumeTimerRef.current = null;
     }
   }
@@ -1024,7 +980,6 @@ function GameCards() {
               {popularShortcuts.length > 0 && (
                 <section
                   className="gc-popular-shortcuts"
-                  ref={setPopularSectionElement}
                   aria-labelledby="gc-popular-shortcuts-title"
                   onPointerDown={() => {
                     popularInteractionRef.current.pointer = true;
@@ -1087,7 +1042,10 @@ function GameCards() {
                     </div>
                   </div>
 
-                  <div className="gc-popular-carousel" ref={popularCarouselRef}>
+                  <div
+                    className="gc-popular-carousel"
+                    ref={setPopularCarouselElement}
+                  >
                     <div className="gc-popular-track">
                       {popularShortcuts.map(({ product, popularPackCount }) => {
                         const packs = (product.packs || []).filter(
