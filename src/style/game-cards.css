@@ -582,10 +582,100 @@
 
 /* Product cards */
 
+.gc-popular-shortcuts,
+.gc-catalog-section {
+    margin-top: 24px;
+}
+
+.gc-popular-shortcuts {
+    padding: 18px;
+    border: 1px solid #39313f;
+    border-radius: 16px;
+    background:
+        radial-gradient(ellipse at 0% 0%, #a34fff12, transparent 55%),
+        linear-gradient(145deg, #1d1b20, #171719);
+}
+
+.gc-catalog-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.gc-catalog-section-heading h3 {
+    margin: 4px 0 0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 850;
+}
+
+.gc-shortcut-limit {
+    flex-shrink: 0;
+    color: #9a8da9;
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.gc-shortcut-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.gc-shortcut-button {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #36333b;
+    border-radius: 11px;
+    background: #171619;
+    color: #ffb878;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s, transform 0.18s;
+}
+
+.gc-shortcut-button:hover {
+    transform: translateY(-2px);
+    border-color: #9b653b;
+    background: #211d1a;
+}
+
+.gc-shortcut-button > svg {
+    grid-row: span 2;
+    font-size: 13px;
+}
+
+.gc-shortcut-button > span {
+    overflow: hidden;
+    color: #f5f2f8;
+    font-size: 11px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gc-shortcut-button > small {
+    overflow: hidden;
+    color: #9d98a3;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .gc-product-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 17px;
+}
+
+.gc-product-card[id] {
+    scroll-margin-top: 24px;
 }
 
 .gc-product-card {
@@ -2262,6 +2352,10 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
+    .gc-shortcut-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .gc-hero {
         padding: 40px;
     }
@@ -2299,6 +2393,20 @@
 
     .gc-container {
         width: calc(100% - 28px);
+    }
+
+    .gc-popular-shortcuts {
+        padding: 14px;
+    }
+
+    .gc-shortcut-list {
+        gap: 7px;
+    }
+
+    .gc-shortcut-button {
+        grid-template-columns: 15px minmax(0, 1fr);
+        column-gap: 6px;
+        padding: 9px;
     }
 
     .gc-topbar {

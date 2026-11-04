@@ -82,6 +82,15 @@ function isPackInStock(pack) {
   return pack?.stock !== false;
 }
 
+function getProductKind(product) {
+  const kind = String(product?.kind || "").trim().toLowerCase();
+  if (kind === "game" || kind === "gift-card") return kind;
+
+  return String(product?.type || "").trim().toLowerCase() === "gift cards"
+    ? "gift-card"
+    : "game";
+}
+
 function ProductImage({ src, alt, className = "" }) {
   const [failed, setFailed] = useState(false);
 
@@ -364,6 +373,31 @@ function GameCards() {
 
     return products;
   }, [catalog, activeCategory, search, popularOnly, sortBy]);
+
+  const popularShortcuts = useMemo(
+    () =>
+      filteredCatalog
+        .map((product, index) => ({
+          product,
+          index,
+          popularPackCount: (product.packs || []).filter(
+            (pack) => pack?.able !== false && pack.popular === true
+          ).length,
+        }))
+        .filter(({ popularPackCount }) => popularPackCount > 0)
+        .sort(
+          (a, b) =>
+            b.popularPackCount - a.popularPackCount || a.index - b.index
+        )
+        .slice(0, 8),
+    [filteredCatalog]
+  );
+  const gameProducts = filteredCatalog.filter(
+    (product) => getProductKind(product) === "game"
+  );
+  const giftCardProducts = filteredCatalog.filter(
+    (product) => getProductKind(product) === "gift-card"
+  );
 
   const visibleCatalog = catalog.filter((product) => product?.able !== false);
   const totalPacks = visibleCatalog.reduce(
@@ -850,84 +884,158 @@ function GameCards() {
               </button>
             </div>
           ) : (
-            <div className="gc-product-grid">
-              {filteredCatalog.map((product) => {
-                const packs = (product.packs || []).filter(
-                  (pack) => pack?.able !== false
-                );
-                const inStockPacks = packs.filter(isPackInStock);
-                const isOutOfStock =
-                  packs.length > 0 && inStockPacks.length === 0;
-                const popular = packs.some((pack) => pack.popular);
-                const productType = String(product.type || "").trim();
-                const isGiftCards = productType.toLowerCase() === "gift cards";
+            <>
+              {popularShortcuts.length > 0 && (
+                <section
+                  className="gc-popular-shortcuts"
+                  aria-labelledby="gc-popular-shortcuts-title"
+                >
+                  <div className="gc-catalog-section-heading">
+                    <div>
+                      <span className="gc-section-kicker">TRENDING NOW</span>
+                      <h3 id="gc-popular-shortcuts-title">Popular picks</h3>
+                    </div>
+                    <span className="gc-shortcut-limit">Top {popularShortcuts.length}</span>
+                  </div>
 
-                return (
-                  <article
-                    className={`gc-product-card${isOutOfStock ? " out-of-stock" : ""}`}
-                    key={product.id}
+                  <div className="gc-shortcut-list">
+                    {popularShortcuts.map(({ product, popularPackCount }) => (
+                      <button
+                        type="button"
+                        className="gc-shortcut-button"
+                        key={product.id}
+                        onClick={() =>
+                          document
+                            .getElementById(`gc-product-${product.id}`)
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            })
+                        }
+                      >
+                        <FontAwesomeIcon icon={faFire} />
+                        <span>{product.name}</span>
+                        <small>{popularPackCount} popular packs</small>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {[
+                {
+                  id: "gc-game-top-up",
+                  title: "Game Top-up",
+                  products: gameProducts,
+                },
+                {
+                  id: "gc-gift-cards",
+                  title: "Gift Cards",
+                  products: giftCardProducts,
+                },
+              ]
+                .filter((section) => section.products.length > 0)
+                .map((section) => (
+                  <section
+                    className="gc-catalog-section"
+                    id={section.id}
+                    key={section.id}
+                    aria-labelledby={`${section.id}-title`}
                   >
-                    <button
-                      type="button"
-                      className="gc-product-click"
-                      onClick={() => openProduct(product)}
-                      disabled={isOutOfStock}
-                      aria-label={
-                        isOutOfStock
-                          ? `${product.name} - Out of stock`
-                          : `Choose ${product.name}`
-                      }
-                    >
-                      <div className="gc-product-image">
-                        <ProductImage
-                          src={getImageUrl(product.image)}
-                          alt={product.name}
-                        />
+                    <div className="gc-catalog-section-heading">
+                      <div>
+                        <span className="gc-section-kicker">EXPLORE BY TYPE</span>
+                        <h3 id={`${section.id}-title`}>{section.title}</h3>
+                      </div>
+                      <span className="gc-shortcut-limit">
+                        {section.products.length} products
+                      </span>
+                    </div>
 
-                        {productType && (
-                          <span
-                            className={`gc-product-type${isGiftCards ? " gift" : ""}`}
+                    <div className="gc-product-grid">
+                      {section.products.map((product) => {
+                        const packs = (product.packs || []).filter(
+                          (pack) => pack?.able !== false
+                        );
+                        const inStockPacks = packs.filter(isPackInStock);
+                        const isOutOfStock =
+                          packs.length > 0 && inStockPacks.length === 0;
+                        const popular = packs.some((pack) => pack.popular);
+                        const productType = String(product.type || "").trim();
+                        const isGiftCards =
+                          productType.toLowerCase() === "gift cards";
+
+                        return (
+                          <article
+                            className={`gc-product-card${isOutOfStock ? " out-of-stock" : ""}`}
+                            key={product.id}
+                            id={`gc-product-${product.id}`}
                           >
-                            {productType}
-                          </span>
-                        )}
+                            <button
+                              type="button"
+                              className="gc-product-click"
+                              onClick={() => openProduct(product)}
+                              disabled={isOutOfStock}
+                              aria-label={
+                                isOutOfStock
+                                  ? `${product.name} - Out of stock`
+                                  : `Choose ${product.name}`
+                              }
+                            >
+                              <div className="gc-product-image">
+                                <ProductImage
+                                  src={getImageUrl(product.image)}
+                                  alt={product.name}
+                                />
 
-                        {popular && (
-                          <span className="gc-popular-badge">
-                            <FontAwesomeIcon icon={faFire} /> Popular
-                          </span>
-                        )}
+                                {productType && (
+                                  <span
+                                    className={`gc-product-type${isGiftCards ? " gift" : ""}`}
+                                  >
+                                    {productType}
+                                  </span>
+                                )}
 
-                        <span className="gc-product-open">
-                          <FontAwesomeIcon icon={faArrowRight} />
-                        </span>
-                      </div>
+                                {popular && (
+                                  <span className="gc-popular-badge">
+                                    <FontAwesomeIcon icon={faFire} /> Popular
+                                  </span>
+                                )}
 
-                      <div className="gc-product-info">
-                        <span className="gc-pack-count">
-                          {inStockPacks.length} available packs
-                        </span>
-                        {isOutOfStock && (
-                          <span className="gc-stock-badge gc-stock-badge-out gc-product-stock-badge">
-                            Out of stock
-                          </span>
-                        )}
+                                <span className="gc-product-open">
+                                  <FontAwesomeIcon icon={faArrowRight} />
+                                </span>
+                              </div>
 
-                        <div className="gc-product-title">
-                          <h3>{product.name}</h3>
-                        </div>
+                              <div className="gc-product-info">
+                                <span className="gc-pack-count">
+                                  {inStockPacks.length} available packs
+                                </span>
+                                {isOutOfStock && (
+                                  <span className="gc-stock-badge gc-stock-badge-out gc-product-stock-badge">
+                                    Out of stock
+                                  </span>
+                                )}
 
-                        <div className="gc-product-footer">
-                          <span className="gc-view-link">
-                            Choose pack <FontAwesomeIcon icon={faArrowRight} />
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
+                                <div className="gc-product-title">
+                                  <h3>{product.name}</h3>
+                                </div>
+
+                                <div className="gc-product-footer">
+                                  <span className="gc-view-link">
+                                    Choose pack{" "}
+                                    <FontAwesomeIcon icon={faArrowRight} />
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+            </>
           )}
         </section>
 
