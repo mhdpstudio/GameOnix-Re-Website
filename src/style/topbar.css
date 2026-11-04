@@ -402,8 +402,7 @@
 }
 
 .topbar-notifications-trigger,
-.topbar-profile-trigger,
-.topbar-signout-trigger {
+.topbar-profile-trigger {
   min-height: 38px;
   display: inline-flex;
   align-items: center;
@@ -433,24 +432,6 @@
   color: #f5f3ff;
   background: rgba(167, 139, 250, 0.1);
   border-color: rgba(167, 139, 250, 0.2);
-}
-
-.topbar-signout-trigger {
-  width: 38px;
-  flex: 0 0 auto;
-  color: #aaa6b5;
-  font-size: 14px;
-}
-
-.topbar-signout-trigger:hover:not(:disabled) {
-  color: #ff9b9b;
-  background: rgba(255, 90, 90, 0.1);
-  border-color: rgba(255, 110, 110, 0.2);
-}
-
-.topbar-signout-trigger:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .topbar-notification-dot,
@@ -1077,26 +1058,49 @@
   font-size: 10px;
 }
 
-.topbar-profile-popover > a {
+.topbar-profile-popover > a,
+.topbar-profile-popover > .topbar-profile-signout {
+  width: 100%;
   min-height: 39px;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 10px;
   color: #d8d3e4;
+  background: transparent;
+  border: 0;
   border-radius: 8px;
+  font: inherit;
   font-size: 11px;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.topbar-profile-popover > a:hover {
+.topbar-profile-popover > a:hover,
+.topbar-profile-popover > .topbar-profile-signout:hover:not(:disabled) {
   color: #fff;
   background: rgba(167, 139, 250, 0.1);
 }
 
-.topbar-profile-popover > a svg {
+.topbar-profile-popover > a svg,
+.topbar-profile-popover > .topbar-profile-signout svg {
   color: #b69cff;
   font-size: 12px;
+}
+
+.topbar-profile-popover > .topbar-profile-signout:hover:not(:disabled) {
+  color: #ff9b9b;
+  background: rgba(255, 90, 90, 0.1);
+}
+
+.topbar-profile-popover > .topbar-profile-signout:hover:not(:disabled) svg {
+  color: #ff9b9b;
+}
+
+.topbar-profile-popover > .topbar-profile-signout:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .topbar-profile-popover > .topbar-auth-link,
@@ -1254,11 +1258,6 @@
   .topbar-profile-trigger {
     min-height: 36px;
     padding: 2px;
-  }
-
-  .topbar-signout-trigger {
-    width: 32px;
-    min-height: 36px;
   }
 
   .topbar-profile-chevron {

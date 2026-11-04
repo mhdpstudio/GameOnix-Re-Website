@@ -1356,6 +1356,25 @@ function Topbar() {
                                             <FontAwesomeIcon icon={faGear} />
                                             <span>Profile settings</span>
                                         </Link>
+                                        <button
+                                            type="button"
+                                            className="topbar-profile-signout"
+                                            role="menuitem"
+                                            onClick={() => {
+                                                setOpenAccountPanel(null);
+                                                setLogoutConfirmOpen(true);
+                                            }}
+                                            disabled={loggingOut}
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={faRightFromBracket}
+                                            />
+                                            <span>
+                                                {loggingOut
+                                                    ? "Signing out..."
+                                                    : "Sign out"}
+                                            </span>
+                                        </button>
                                     </nav>
                                 )}
                                 {openAccountPanel === "profile" && !user && (
@@ -1394,21 +1413,6 @@ function Topbar() {
                                     </section>
                                 )}
                             </div>
-                            {user && (
-                                <>
-                                    <span className="topbar-account-divider" aria-hidden="true" />
-                                    <button
-                                        type="button"
-                                        className="topbar-signout-trigger"
-                                        onClick={() => setLogoutConfirmOpen(true)}
-                                        disabled={loggingOut}
-                                        aria-label={loggingOut ? "Signing out" : "Sign out"}
-                                        title={loggingOut ? "Signing out..." : "Sign out"}
-                                    >
-                                        <FontAwesomeIcon icon={faRightFromBracket} />
-                                    </button>
-                                </>
-                            )}
                     </div>
                 </div>
             </div>
