@@ -1040,7 +1040,12 @@ function Topbar() {
                                                                 disabled={notificationActionLoading}
                                                             >
                                                                 <span className="topbar-notification-item-icon">
-                                                                    {details?.gameIcon ? (
+                                                                    {details?.imageData ? (
+                                                                        <img
+                                                                            src={details.imageData}
+                                                                            alt=""
+                                                                        />
+                                                                    ) : details?.gameIcon ? (
                                                                         <>
                                                                             <img
                                                                                 src={details.gameIcon}
@@ -1197,6 +1202,11 @@ function Topbar() {
                                                                                 </div>
                                                                             )}
                                                                         </>
+                                                                    ) : notification.type === "direct_message" ? (
+                                                                        <div className="topbar-notification-detail-row">
+                                                                            <span>Type</span>
+                                                                            <strong>Private message</strong>
+                                                                        </div>
                                                                     ) : (
                                                                         <>
                                                                             <div className="topbar-notification-detail-row">
@@ -1265,6 +1275,13 @@ function Topbar() {
                                                                                 {statusLabel}
                                                                             </div>
                                                                         </>
+                                                                    )}
+                                                                    {typeof details?.imageData === "string" && (
+                                                                        <img
+                                                                            className="topbar-notification-image"
+                                                                            src={details.imageData}
+                                                                            alt="Image attached to this notification"
+                                                                        />
                                                                     )}
                                                                 </div>
                                                             )}

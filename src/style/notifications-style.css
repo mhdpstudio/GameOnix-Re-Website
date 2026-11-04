@@ -76,6 +76,116 @@
   color: #ff9da5;
 }
 
+.notifications-compose {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 20px;
+  border: 1px solid rgb(167 139 250 / 18%);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 100% 0, rgb(139 92 246 / 9%), transparent 48%),
+    var(--bg-secondary);
+}
+
+.notifications-compose-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.notifications-compose-heading h2 {
+  margin: 6px 0 0;
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+.notifications-compose-heading > span,
+.notifications-compose-image small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.notifications-compose-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.notifications-compose-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.notifications-compose-fields input,
+.notifications-compose-fields textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.notifications-compose-fields textarea {
+  resize: vertical;
+}
+
+.notifications-compose-fields input:focus,
+.notifications-compose-fields textarea:focus {
+  outline: 2px solid rgb(141 112 255 / 55%);
+  outline-offset: 1px;
+}
+
+.notifications-compose-message,
+.notifications-compose-image {
+  grid-column: 1 / -1;
+}
+
+.notifications-compose-image input {
+  padding: 8px;
+}
+
+.notifications-compose-image small {
+  font-weight: 400;
+}
+
+.notifications-compose-success {
+  margin: 0;
+  color: #a5edc4;
+  font-size: 12px;
+}
+
+.notifications-compose-submit {
+  min-height: 38px;
+  justify-self: end;
+  padding: 0 15px;
+  border: 1px solid rgb(167 139 250 / 25%);
+  border-radius: 8px;
+  background: rgb(139 92 246 / 16%);
+  color: #e5d7ff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notifications-compose-submit:hover:not(:disabled) {
+  background: rgb(139 92 246 / 27%);
+}
+
+.notifications-compose-submit:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .notifications-board {
   overflow: hidden;
   border: 1px solid var(--border);
@@ -326,6 +436,16 @@
   gap: 6px;
 }
 
+.notifications-message-image {
+  display: block;
+  width: min(100%, 560px);
+  max-height: 420px;
+  border: 1px solid rgb(167 139 250 / 18%);
+  border-radius: 10px;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .notifications-reply-badge {
   width: fit-content;
   display: inline-flex;
@@ -426,6 +546,15 @@
   .notifications-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .notifications-compose-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .notifications-compose-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -79,6 +79,7 @@ function getDetails(notification) {
       return (
         key !== "gameIcon" &&
         key !== "gameLink" &&
+        key !== "imageData" &&
         !(key === "gameName" && details.gameTitle) &&
         !(key === "topic" && details.topicLabel) &&
         value !== null &&
@@ -97,14 +98,64 @@ function getDetails(notification) {
     }));
 }
 
+async function compressNotificationImage(file) {
+  if (!file) return "";
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Choose a JPEG, PNG, or WebP image.");
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Choose an image smaller than 10 MB.");
+  }
+
+  const image = await createImageBitmap(file);
+  try {
+    for (
+      let maxDimension = 1200;
+      maxDimension >= 300;
+      maxDimension = Math.floor(maxDimension * 0.8)
+    ) {
+      const scale = Math.min(
+        1,
+        maxDimension / Math.max(image.width, image.height)
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Unable to process this image.");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of [0.82, 0.68, 0.54, 0.4, 0.28]) {
+        const imageData = canvas.toDataURL("image/jpeg", quality);
+        const base64 = imageData.split(",")[1];
+        const byteLength = Math.floor((base64.length * 3) / 4);
+        if (byteLength <= 30 * 1024) return imageData;
+      }
+    }
+  } finally {
+    image.close();
+  }
+
+  throw new Error("This image could not be compressed enough to send.");
+}
+
 function Notifications() {
   const { user, authLoading } = useAuth();
   const [notifications, setNotifications] = useState([]);
+  const [canSend, setCanSend] = useState(false);
+  const [canSendOwner, setCanSendOwner] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [senderUsername, setSenderUsername] = useState("");
+  const [senderTitle, setSenderTitle] = useState("A message from GameOnix");
+  const [senderMessage, setSenderMessage] = useState("");
+  const [senderImage, setSenderImage] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState("");
+  const senderFormRef = useRef(null);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.readAt).length,
@@ -138,9 +189,13 @@ function Notifications() {
         throw new Error(data.error || "Unable to load your notifications.");
       }
       setNotifications(data.notifications);
+      setCanSend(data.canSend === true);
+      setCanSendOwner(data.canSend === true ? user.username : "");
     } catch (loadError) {
       console.error("Notifications page load failed:", loadError);
       setError(loadError.message || "Unable to load your notifications.");
+      setCanSend(false);
+      setCanSendOwner("");
     } finally {
       setLoading(false);
     }
@@ -149,10 +204,17 @@ function Notifications() {
   useEffect(() => {
     if (!user) return undefined;
 
-    const timeout = window.setTimeout(() => {
-      loadNotifications();
-    }, 0);
-    return () => window.clearTimeout(timeout);
+    const initialLoad = window.setTimeout(loadNotifications, 0);
+    const interval = window.setInterval(loadNotifications, 60_000);
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, loadNotifications);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.clearInterval(interval);
+      window.removeEventListener(
+        NOTIFICATIONS_UPDATED_EVENT,
+        loadNotifications
+      );
+    };
   }, [user, loadNotifications]);
 
   async function updateNotifications(method, body) {
@@ -181,6 +243,53 @@ function Notifications() {
       return null;
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function sendDirectMessage(event) {
+    event.preventDefault();
+    if (!canSend || sending) return;
+
+    setSending(true);
+    setError("");
+    setSendSuccess("");
+    try {
+      const token = await getCommunityApiToken();
+      const imageData = await compressNotificationImage(senderImage);
+      const response = await fetch(NOTIFICATIONS_URL, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "omit",
+        body: JSON.stringify({
+          action: "send",
+          username: senderUsername.trim(),
+          title: senderTitle.trim(),
+          message: senderMessage.trim(),
+          imageData,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to send this notification.");
+      }
+
+      setSenderUsername("");
+      setSenderTitle("A message from GameOnix");
+      setSenderMessage("");
+      setSenderImage(null);
+      senderFormRef.current?.reset();
+      setSendSuccess("The private notification was sent.");
+      notifyNotificationCountChanged();
+      loadNotifications();
+    } catch (sendError) {
+      console.error("Direct notification send failed:", sendError);
+      setError(sendError.message || "Unable to send this notification.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -300,6 +409,80 @@ function Notifications() {
         </div>
       </header>
 
+      {canSend && canSendOwner === user.username && (
+        <form
+          ref={senderFormRef}
+          className="notifications-compose"
+          onSubmit={sendDirectMessage}
+        >
+          <div className="notifications-compose-heading">
+            <div>
+              <span className="notifications-kicker">ADMIN TOOLS</span>
+              <h2>Send a private notification</h2>
+            </div>
+            <span>Only the selected account can view it.</span>
+          </div>
+          <div className="notifications-compose-fields">
+            <label>
+              Recipient username
+              <input
+                type="text"
+                value={senderUsername}
+                onChange={(event) => setSenderUsername(event.target.value)}
+                maxLength={64}
+                autoComplete="off"
+                required
+              />
+            </label>
+            <label>
+              Title
+              <input
+                type="text"
+                value={senderTitle}
+                onChange={(event) => setSenderTitle(event.target.value)}
+                maxLength={100}
+                required
+              />
+            </label>
+            <label className="notifications-compose-message">
+              Message
+              <textarea
+                value={senderMessage}
+                onChange={(event) => setSenderMessage(event.target.value)}
+                maxLength={2000}
+                rows={4}
+                required
+              />
+            </label>
+            <label className="notifications-compose-image">
+              Image (optional)
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) =>
+                  setSenderImage(event.target.files?.[0] || null)
+                }
+              />
+              <small>
+                JPEG, PNG, or WebP; compressed to fit the private notification.
+              </small>
+            </label>
+          </div>
+          {sendSuccess && (
+            <p className="notifications-compose-success" role="status">
+              {sendSuccess}
+            </p>
+          )}
+          <button
+            className="notifications-compose-submit"
+            type="submit"
+            disabled={sending}
+          >
+            {sending ? "Sending..." : "Send notification"}
+          </button>
+        </form>
+      )}
+
       <section className="notifications-board" aria-label="Your notifications">
         <div className="notifications-toolbar">
           <div className="notifications-filters" aria-label="Filter notifications">
@@ -376,7 +559,9 @@ function Notifications() {
                     disabled={actionLoading}
                   >
                     <span className="notifications-card-icon">
-                      {details.gameIcon ? (
+                      {details.imageData ? (
+                        <img src={details.imageData} alt="" />
+                      ) : details.gameIcon ? (
                         <img src={details.gameIcon} alt="" />
                       ) : (
                         <FontAwesomeIcon
@@ -431,6 +616,13 @@ function Notifications() {
                           <strong>{row.value}</strong>
                         </div>
                       ))}
+                      {typeof details.imageData === "string" && (
+                        <img
+                          className="notifications-message-image"
+                          src={details.imageData}
+                          alt="Image attached to this notification"
+                        />
+                      )}
                       {details.slug && (
                         <Link
                           className="notifications-game-link"
