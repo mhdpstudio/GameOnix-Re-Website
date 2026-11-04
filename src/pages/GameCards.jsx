@@ -224,7 +224,9 @@ function GameCards() {
   const isGiftCardProduct = ["gift card", "gift cards"].includes(
     String(selectedProduct?.type || "").trim().toLowerCase()
   );
-  const giftEmailSuggestion = isGift
+  const canSendGift = selectedProduct?.gift === true;
+  const isGiftOrder = canSendGift && isGift;
+  const giftEmailSuggestion = isGiftOrder
     ? getLiveSuggestion("gift-email", email)
     : null;
 
@@ -496,17 +498,17 @@ function GameCards() {
       return;
     }
 
-    if (!isGiftCardProduct && isGift && !recipient.trim()) {
+    if (!isGiftCardProduct && isGiftOrder && !recipient.trim()) {
       setCheckoutMessage("اكتب بيانات المستلم عشان تكمل.");
       return;
     }
 
-    if (isGiftCardProduct && isGift && !email.trim()) {
+    if (isGiftCardProduct && isGiftOrder && !email.trim()) {
       setCheckoutMessage("Enter the recipient's email to send the gift card codes.");
       return;
     }
 
-    if (isGift && email.trim()) {
+    if (isGiftOrder && email.trim()) {
       const suggestion = getSuggestion("gift-email", email);
 
       if (suggestion) {
@@ -525,7 +527,7 @@ function GameCards() {
       }
     }
 
-    if (!isGiftCardProduct && !isGift && !playerId.trim()) {
+    if (!isGiftCardProduct && !isGiftOrder && !playerId.trim()) {
       setCheckoutMessage("اكتب Player ID عشان تكمل.");
       return;
     }
@@ -583,8 +585,8 @@ function GameCards() {
             whatsappNumber: whatsappNumber.trim(),
             playerId: playerId.trim(),
             serverId: serverId.trim(),
-            contactEmail: isGift ? email.trim() : "",
-            isGift,
+            contactEmail: isGiftOrder ? email.trim() : "",
+            isGift: isGiftOrder,
             recipient: recipient.trim(),
           }),
         });
@@ -1097,27 +1099,29 @@ function GameCards() {
                   </div>
                 </section>
 
-                <label className="gc-gift-toggle">
-                  <span className="gc-gift-icon">
-                    <FontAwesomeIcon icon={faGift} />
-                  </span>
+                {canSendGift && (
+                  <label className="gc-gift-toggle">
+                    <span className="gc-gift-icon">
+                      <FontAwesomeIcon icon={faGift} />
+                    </span>
 
-                  <span className="gc-gift-copy">
-                    <strong>Send as a gift</strong>
-                    <small>Enter the recipient's details</small>
-                  </span>
+                    <span className="gc-gift-copy">
+                      <strong>Send as a gift</strong>
+                      <small>Enter the recipient's details</small>
+                    </span>
 
-                  <input
-                    type="checkbox"
-                    checked={isGift}
-                    onChange={(event) => {
-                      setIsGift(event.target.checked);
-                      setCheckoutMessage("");
-                    }}
-                  />
+                    <input
+                      type="checkbox"
+                      checked={isGift}
+                      onChange={(event) => {
+                        setIsGift(event.target.checked);
+                        setCheckoutMessage("");
+                      }}
+                    />
 
-                  <span className="gc-switch" />
-                </label>
+                    <span className="gc-switch" />
+                  </label>
+                )}
 
                 <div className="gc-fields-card">
                   <div className="gc-fields-heading">
@@ -1125,7 +1129,7 @@ function GameCards() {
                     <small>Required to process an order</small>
                   </div>
 
-                  {isGift ? (
+                  {isGiftOrder ? (
                     <>
                       {!isGiftCardProduct && (
                         <label className="gc-field">
