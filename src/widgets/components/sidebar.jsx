@@ -20,6 +20,7 @@ import {
   faBell,
   faReceipt,
   faHeadset,
+  faScrewdriverWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "../../context/AuthContext";
@@ -62,6 +63,13 @@ const navigation = [
         to: "/notifications",
         icon: faBell,
         requiresAuth: true,
+      },
+      {
+        label: "Admin Actions",
+        to: "/admin-actions",
+        icon: faScrewdriverWrench,
+        requiresAuth: true,
+        requiresAdmin: true,
       },
       { label: "Support", to: "/support", icon: faHeadset },
     ],
@@ -192,6 +200,10 @@ function Sidebar({ collapsed, onToggle }) {
     username: "",
     count: 0,
   });
+  const [adminActionsAccess, setAdminActionsAccess] = useState({
+    username: "",
+    allowed: false,
+  });
 
   useEffect(() => {
     if (!user || authLoading) return undefined;
@@ -218,8 +230,16 @@ function Sidebar({ collapsed, onToggle }) {
             (notification) => !notification.readAt
           ).length,
         });
+        setAdminActionsAccess({
+          username: user.username,
+          allowed: data.canSend === true,
+        });
       } catch (error) {
         if (active) {
+          setAdminActionsAccess({
+            username: user.username,
+            allowed: false,
+          });
           console.error("Sidebar notification count load failed:", error);
         }
       }
@@ -311,7 +331,13 @@ function Sidebar({ collapsed, onToggle }) {
               )}
 
               {group.items
-                .filter((item) => !item.requiresAuth || user)
+                .filter(
+                  (item) =>
+                    (!item.requiresAuth || user) &&
+                    (!item.requiresAdmin ||
+                      (adminActionsAccess.username === user?.username &&
+                        adminActionsAccess.allowed))
+                )
                 .map((item) => (
                 <NavLink
                   key={item.to}

@@ -142,21 +142,11 @@ async function compressNotificationImage(file) {
 function Notifications() {
   const { user, authLoading } = useAuth();
   const [notifications, setNotifications] = useState([]);
-  const [canSend, setCanSend] = useState(false);
-  const [canSendOwner, setCanSendOwner] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState("all");
-  const [senderUsername, setSenderUsername] = useState("");
-  const [senderTitle, setSenderTitle] = useState("A message from GameOnix");
-  const [senderMessage, setSenderMessage] = useState("");
-  const [senderImage, setSenderImage] = useState(null);
-  const [sending, setSending] = useState(false);
-  const [sendSuccess, setSendSuccess] = useState("");
-  const senderFormRef = useRef(null);
-
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.readAt).length,
     [notifications]
@@ -189,13 +179,9 @@ function Notifications() {
         throw new Error(data.error || "Unable to load your notifications.");
       }
       setNotifications(data.notifications);
-      setCanSend(data.canSend === true);
-      setCanSendOwner(data.canSend === true ? user.username : "");
     } catch (loadError) {
       console.error("Notifications page load failed:", loadError);
       setError(loadError.message || "Unable to load your notifications.");
-      setCanSend(false);
-      setCanSendOwner("");
     } finally {
       setLoading(false);
     }
@@ -243,53 +229,6 @@ function Notifications() {
       return null;
     } finally {
       setActionLoading(false);
-    }
-  }
-
-  async function sendDirectMessage(event) {
-    event.preventDefault();
-    if (!canSend || sending) return;
-
-    setSending(true);
-    setError("");
-    setSendSuccess("");
-    try {
-      const token = await getCommunityApiToken();
-      const imageData = await compressNotificationImage(senderImage);
-      const response = await fetch(NOTIFICATIONS_URL, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: "omit",
-        body: JSON.stringify({
-          action: "send",
-          username: senderUsername.trim(),
-          title: senderTitle.trim(),
-          message: senderMessage.trim(),
-          imageData,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to send this notification.");
-      }
-
-      setSenderUsername("");
-      setSenderTitle("A message from GameOnix");
-      setSenderMessage("");
-      setSenderImage(null);
-      senderFormRef.current?.reset();
-      setSendSuccess("The private notification was sent.");
-      notifyNotificationCountChanged();
-      loadNotifications();
-    } catch (sendError) {
-      console.error("Direct notification send failed:", sendError);
-      setError(sendError.message || "Unable to send this notification.");
-    } finally {
-      setSending(false);
     }
   }
 
@@ -408,80 +347,6 @@ function Notifications() {
           </button>
         </div>
       </header>
-
-      {canSend && canSendOwner === user.username && (
-        <form
-          ref={senderFormRef}
-          className="notifications-compose"
-          onSubmit={sendDirectMessage}
-        >
-          <div className="notifications-compose-heading">
-            <div>
-              <span className="notifications-kicker">ADMIN TOOLS</span>
-              <h2>Send a private notification</h2>
-            </div>
-            <span>Only the selected account can view it.</span>
-          </div>
-          <div className="notifications-compose-fields">
-            <label>
-              Recipient username
-              <input
-                type="text"
-                value={senderUsername}
-                onChange={(event) => setSenderUsername(event.target.value)}
-                maxLength={64}
-                autoComplete="off"
-                required
-              />
-            </label>
-            <label>
-              Title
-              <input
-                type="text"
-                value={senderTitle}
-                onChange={(event) => setSenderTitle(event.target.value)}
-                maxLength={100}
-                required
-              />
-            </label>
-            <label className="notifications-compose-message">
-              Message
-              <textarea
-                value={senderMessage}
-                onChange={(event) => setSenderMessage(event.target.value)}
-                maxLength={2000}
-                rows={4}
-                required
-              />
-            </label>
-            <label className="notifications-compose-image">
-              Image (optional)
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(event) =>
-                  setSenderImage(event.target.files?.[0] || null)
-                }
-              />
-              <small>
-                JPEG, PNG, or WebP; compressed to fit the private notification.
-              </small>
-            </label>
-          </div>
-          {sendSuccess && (
-            <p className="notifications-compose-success" role="status">
-              {sendSuccess}
-            </p>
-          )}
-          <button
-            className="notifications-compose-submit"
-            type="submit"
-            disabled={sending}
-          >
-            {sending ? "Sending..." : "Send notification"}
-          </button>
-        </form>
-      )}
 
       <section className="notifications-board" aria-label="Your notifications">
         <div className="notifications-toolbar">
@@ -639,6 +504,291 @@ function Notifications() {
           </div>
         )}
       </section>
+    </main>
+  );
+}
+
+export function AdminActions() {
+  const { user, authLoading } = useAuth();
+  const [adminAccess, setAdminAccess] = useState({
+    username: "",
+    allowed: false,
+  });
+  const canManage =
+    adminAccess.username === user?.username && adminAccess.allowed;
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notificationSuccess, setNotificationSuccess] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+  const [recipientUsername, setRecipientUsername] = useState("");
+  const [notificationTitle, setNotificationTitle] = useState(
+    "A message from GameOnix"
+  );
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationImage, setNotificationImage] = useState(null);
+  const [resetEmail, setResetEmail] = useState("");
+  const notificationFormRef = useRef(null);
+
+  const loadAdminAccess = useCallback(async () => {
+    if (!user) return;
+    try {
+      const token = await getCommunityApiToken();
+      const response = await fetch(NOTIFICATIONS_URL, {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "omit",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(data.notifications)) {
+        throw new Error(data.error || "Unable to verify admin access.");
+      }
+
+      setAdminAccess({
+        username: user.username,
+        allowed: data.canSend === true,
+      });
+      setError(
+        data.canSend === true ? "" : "Admin access is required for this page."
+      );
+    } catch (accessError) {
+      console.error("Admin actions access check failed:", accessError);
+      setAdminAccess({ username: user.username, allowed: false });
+      setError(accessError.message || "Unable to verify admin access.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const timer = window.setTimeout(loadAdminAccess, 0);
+    return () => window.clearTimeout(timer);
+  }, [authLoading, user, loadAdminAccess]);
+
+  async function sendAdminAction(body) {
+    const token = await getCommunityApiToken();
+    const response = await fetch(NOTIFICATIONS_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "omit",
+      body: JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to complete this admin action.");
+    }
+    return data;
+  }
+
+  async function sendDirectMessage(event) {
+    event.preventDefault();
+    if (!canManage || busy) return;
+
+    setBusy(true);
+    setError("");
+    setNotificationSuccess("");
+    try {
+      const imageData = await compressNotificationImage(notificationImage);
+      await sendAdminAction({
+        action: "send",
+        username: recipientUsername.trim(),
+        title: notificationTitle.trim(),
+        message: notificationMessage.trim(),
+        imageData,
+      });
+
+      setRecipientUsername("");
+      setNotificationTitle("A message from GameOnix");
+      setNotificationMessage("");
+      setNotificationImage(null);
+      notificationFormRef.current?.reset();
+      setNotificationSuccess("The private notification was sent.");
+      notifyNotificationCountChanged();
+    } catch (sendError) {
+      console.error("Direct notification send failed:", sendError);
+      setError(sendError.message || "Unable to send this notification.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendPasswordResetLink(event) {
+    event.preventDefault();
+    if (!canManage || busy) return;
+
+    setBusy(true);
+    setError("");
+    setResetSuccess("");
+    try {
+      const data = await sendAdminAction({
+        action: "send-password-reset-link",
+        email: resetEmail.trim(),
+      });
+      setResetEmail("");
+      setResetSuccess(
+        data.message || "If an account exists, a reset link was sent."
+      );
+    } catch (sendError) {
+      console.error("Admin password reset link request failed:", sendError);
+      setError(sendError.message || "Unable to send the reset link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (authLoading || (loading && user)) {
+    return (
+      <main className="notifications-page">
+        <div className="notifications-state">Checking admin access...</div>
+      </main>
+    );
+  }
+
+  if (!user || !canManage) {
+    return (
+      <main className="notifications-page">
+        <section className="notifications-access-card">
+          <h1>Admin Actions</h1>
+          <p>
+            {!user
+              ? "Sign in with an administrator account to continue."
+              : error || "Admin access is required for this page."}
+          </p>
+          {!user && <Link to="/login">Sign in</Link>}
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="notifications-page">
+      <header className="notifications-header">
+        <div>
+          <span className="notifications-kicker">ADMIN TOOLS</span>
+          <h1>Admin Actions</h1>
+          <p>Send private account notifications and password reset links.</p>
+        </div>
+      </header>
+
+      {error && (
+        <div className="notifications-error" role="alert">
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form
+        ref={notificationFormRef}
+        className="notifications-compose"
+        onSubmit={sendDirectMessage}
+      >
+        <div className="notifications-compose-heading">
+          <div>
+            <span className="notifications-kicker">ACCOUNT MESSAGES</span>
+            <h2>Send a private notification</h2>
+          </div>
+          <span>Only the selected account can view it.</span>
+        </div>
+        <div className="notifications-compose-fields">
+          <label>
+            Recipient username
+            <input
+              type="text"
+              value={recipientUsername}
+              onChange={(event) => setRecipientUsername(event.target.value)}
+              maxLength={64}
+              autoComplete="off"
+              required
+            />
+          </label>
+          <label>
+            Title
+            <input
+              type="text"
+              value={notificationTitle}
+              onChange={(event) => setNotificationTitle(event.target.value)}
+              maxLength={100}
+              required
+            />
+          </label>
+          <label className="notifications-compose-message">
+            Message
+            <textarea
+              value={notificationMessage}
+              onChange={(event) => setNotificationMessage(event.target.value)}
+              maxLength={2000}
+              rows={4}
+              required
+            />
+          </label>
+          <label className="notifications-compose-image">
+            Image (optional)
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) =>
+                setNotificationImage(event.target.files?.[0] || null)
+              }
+            />
+            <small>
+              JPEG, PNG, or WebP; compressed to fit the private notification.
+            </small>
+          </label>
+        </div>
+        {notificationSuccess && (
+          <p className="notifications-compose-success" role="status">
+            {notificationSuccess}
+          </p>
+        )}
+        <button
+          className="notifications-compose-submit"
+          type="submit"
+          disabled={busy}
+        >
+          {busy ? "Sending..." : "Send notification"}
+        </button>
+      </form>
+
+      <form className="notifications-compose" onSubmit={sendPasswordResetLink}>
+        <div className="notifications-compose-heading">
+          <div>
+            <span className="notifications-kicker">ACCOUNT RECOVERY</span>
+            <h2>Send a password reset link</h2>
+          </div>
+          <span>The link expires in 15 minutes and is single-use.</span>
+        </div>
+        <div className="notifications-compose-fields">
+          <label>
+            Account email
+            <input
+              type="email"
+              value={resetEmail}
+              onChange={(event) => setResetEmail(event.target.value)}
+              maxLength={254}
+              autoComplete="email"
+              required
+            />
+          </label>
+        </div>
+        {resetSuccess && (
+          <p className="notifications-compose-success" role="status">
+            {resetSuccess}
+          </p>
+        )}
+        <button
+          className="notifications-compose-submit"
+          type="submit"
+          disabled={busy}
+        >
+          {busy ? "Sending..." : "Send reset link"}
+        </button>
+      </form>
     </main>
   );
 }

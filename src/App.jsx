@@ -15,7 +15,7 @@ import SearchResults from "./pages/search-results";
 import GameCards from "./pages/GameCards";
 import Wallet from "./pages/Wallet";
 import GameRequest from "./pages/game-request";
-import Notifications from "./pages/Notifications";
+import Notifications, { AdminActions } from "./pages/Notifications";
 import Orders from "./pages/Orders";
 import Support from "./pages/Support";
 
@@ -36,6 +36,7 @@ function App() {
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/request-game" element={<GameRequest />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/admin-actions" element={<AdminActions />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/support" element={<Support />} />
 

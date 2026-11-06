@@ -15,6 +15,7 @@ const pageTitles = {
   "/profile": "Your Profile",
   "/wallet": "Wallet",
   "/notifications": "Notifications",
+  "/admin-actions": "Admin Actions",
   "/request-game": "Request a Game",
   "/orders": "My Orders",
   "/support": "Support",
@@ -45,6 +46,7 @@ const PRIVATE_ROUTES = [
   "/search",
   "/request-game",
   "/notifications",
+  "/admin-actions",
   "/orders",
   "/shopping/game-cards",
 ];

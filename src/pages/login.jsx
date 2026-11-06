@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -37,7 +37,12 @@ function Login() {
     !location.state.from.startsWith("//")
       ? location.state.from
       : "/";
-  const [mode, setMode] = useState("login");
+  const passwordResetToken =
+    new URLSearchParams(location.search).get("resetToken") || "";
+  const [mode, setMode] = useState(
+    passwordResetToken ? "reset" : "login"
+  );
+  const [resetToken, setResetToken] = useState(passwordResetToken);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -78,6 +83,12 @@ function Login() {
   const isVerify = mode === "verify";
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
+
+  useEffect(() => {
+    if (passwordResetToken) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate, passwordResetToken]);
 
   const identitySuggestion = getLiveSuggestion(
     "login-email",
@@ -511,36 +522,39 @@ function Login() {
   async function handleResetPasswordSubmit(event) {
     event.preventDefault();
 
+    const token = resetToken.trim();
     const email = resetData.email.trim().toLowerCase();
     const code = resetData.code.trim();
     const password = resetData.password;
     const confirmPassword = resetData.confirmPassword;
 
-    if (!email) {
-      showFeedback("Please enter a valid email address.");
-      return;
-    }
+    if (!token) {
+      if (!email) {
+        showFeedback("Please enter a valid email address.");
+        return;
+      }
 
-    const emailSuggestion = getSuggestion("reset-email", email);
+      const emailSuggestion = getSuggestion("reset-email", email);
 
-    if (emailSuggestion) {
-      setResetData((previous) => ({ ...previous, email: emailSuggestion }));
+      if (emailSuggestion) {
+        setResetData((previous) => ({ ...previous, email: emailSuggestion }));
 
-      showFeedback(
-        `Did you mean ${emailSuggestion}? We corrected the address. Check it and reset the password again.`,
-        "info"
-      );
-      return;
-    }
+        showFeedback(
+          `Did you mean ${emailSuggestion}? We corrected the address. Check it and reset the password again.`,
+          "info"
+        );
+        return;
+      }
 
-    if (!isValidEmail(email)) {
-      showFeedback("Please enter a valid email address.");
-      return;
-    }
+      if (!isValidEmail(email)) {
+        showFeedback("Please enter a valid email address.");
+        return;
+      }
 
-    if (!/^\d{6}$/.test(code)) {
-      showFeedback("Enter the 6-digit password reset code.");
-      return;
+      if (!/^\d{6}$/.test(code)) {
+        showFeedback("Enter the 6-digit password reset code.");
+        return;
+      }
     }
 
     if (password.length < 8 || password.length > 72) {
@@ -558,16 +572,18 @@ function Login() {
 
     try {
       const data = await postJson("reset-password", {
-        email,
-        code,
+        ...(token ? { token } : { email, code }),
         password,
         confirmPassword,
       });
 
-      setLoginData({
-        identity: email,
-        password: "",
-      });
+      if (email) {
+        setLoginData({
+          identity: email,
+          password: "",
+        });
+      }
+      setResetToken("");
 
       setResetData({
         email,
@@ -600,6 +616,7 @@ function Login() {
     if (isSubmitting) return;
 
     setMessage("");
+    setResetToken("");
     setMode("login");
   }
 
@@ -607,6 +624,7 @@ function Login() {
     if (isSubmitting) return;
 
     setMessage("");
+    setResetToken("");
     setMode("forgot");
   }
 
@@ -1269,64 +1287,68 @@ function Login() {
                 onSubmit={handleResetPasswordSubmit}
                 noValidate
               >
-                <div className="auth-field">
-                  <label htmlFor="reset-email">Email address</label>
+                {!resetToken && (
+                  <>
+                    <div className="auth-field">
+                      <label htmlFor="reset-email">Email address</label>
 
-                  <div className="auth-input-wrap">
-                    <FontAwesomeIcon
-                      icon={faEnvelope}
-                      className="auth-input-icon"
-                    />
+                      <div className="auth-input-wrap">
+                        <FontAwesomeIcon
+                          icon={faEnvelope}
+                          className="auth-input-icon"
+                        />
 
-                    <input
-                      id="reset-email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      value={resetData.email}
-                      onChange={handleResetChange}
-                      required
-                    />
-                  </div>
+                        <input
+                          id="reset-email"
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          value={resetData.email}
+                          onChange={handleResetChange}
+                          required
+                        />
+                      </div>
 
-                  <EmailSuggestion
-                    suggestion={resetEmailSuggestion}
-                    onAccept={(next) => {
-                      setResetData((previous) => ({
-                        ...previous,
-                        email: next,
-                      }));
-                      setMessage("");
-                    }}
-                    onDismiss={() =>
-                      keepTypedEmail("reset-email", resetData.email)
-                    }
-                  />
-                </div>
+                      <EmailSuggestion
+                        suggestion={resetEmailSuggestion}
+                        onAccept={(next) => {
+                          setResetData((previous) => ({
+                            ...previous,
+                            email: next,
+                          }));
+                          setMessage("");
+                        }}
+                        onDismiss={() =>
+                          keepTypedEmail("reset-email", resetData.email)
+                        }
+                      />
+                    </div>
 
-                <div className="auth-field">
-                  <label htmlFor="reset-code">6-digit reset code</label>
+                    <div className="auth-field">
+                      <label htmlFor="reset-code">6-digit reset code</label>
 
-                  <div className="auth-input-wrap">
-                    <FontAwesomeIcon
-                      icon={faKey}
-                      className="auth-input-icon"
-                    />
+                      <div className="auth-input-wrap">
+                        <FontAwesomeIcon
+                          icon={faKey}
+                          className="auth-input-icon"
+                        />
 
-                    <input
-                      id="reset-code"
-                      name="code"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="123456"
-                      maxLength={6}
-                      value={resetData.code}
-                      onChange={handleResetChange}
-                      required
-                    />
-                  </div>
-                </div>
+                        <input
+                          id="reset-code"
+                          name="code"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          placeholder="123456"
+                          maxLength={6}
+                          value={resetData.code}
+                          onChange={handleResetChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="auth-field">
                   <label htmlFor="reset-password">New password</label>
@@ -1418,14 +1440,16 @@ function Login() {
                   />
                 </button>
 
-                <button
-                  type="button"
-                  className="auth-text-button"
-                  onClick={backToForgotPassword}
-                  disabled={isSubmitting}
-                >
-                  Request another code
-                </button>
+                {!resetToken && (
+                  <button
+                    type="button"
+                    className="auth-text-button"
+                    onClick={backToForgotPassword}
+                    disabled={isSubmitting}
+                  >
+                    Request another code
+                  </button>
+                )}
               </form>
             )}
 
